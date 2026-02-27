@@ -1,0 +1,19 @@
+{
+  // Prettier as default formatter
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  // Format on save
+  "editor.formatOnSave": true,
+
+  // Auto-fix ESLint rules (including Prettier)
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // Ensure ESLint validates these file types
+  "eslint.validate": ["javascript", "typescript"],
+
+  // Always use LF line endings in VSCode
+  "files.eol": "\n",
+  "prettier.endOfLine": "lf"
+}

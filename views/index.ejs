@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Home</title>
+        <%- include("partials/header.ejs") %>
+                    <% if (locals.currentUser) { %>
+                      <li class="nav-item ">
+                        <a class="nav-link roboto-condensed "  href="/logout" >
+                          Welcome <span style="color: #D83232;"><%- currentUser %></span>, Logout?
+                        </a>
+                       </li>
+                    <% } else {%>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link roboto-condensed "  href="/login" >
+                              Login
+                            </a>
+                            </li>
+                    <%}%>
+                     
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </nav>
+<div class="paddingtop">
+    <div class="container-fluid" id="header">
+        <div  class="d-flex gap-3 flex-column-reverse flex-lg-row container align-items-lg-center">
+            <div id="headertext" class="  d-flex align-items-center p-3 ">
+                <div>
+                    <h1 class="bungee-regular " style=" color: white;">Killing a few  </h1>
+                    <h1 class="roboto-condensed" style="color: #D83232;">zombies won't hurt!</h1>
+                    <a href="#anchor1"><button  class="btn learnmore">Learn more</button></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br id="anchor1">
+    <div  style="background-color: rgba(216, 50, 50, 0.654);" class="container-fluid divspacing p-3 p-md-5">
+        <div class="container d-flex flex-column gap-3 flex-lg-row align-items-center  ">
+            <div   class="wrapcontent1 halfsized  " >
+                <div class=""  style=" color: white;">
+                    <h2 class="bungee-regular subheads"> About the Game</h2>
+                    <p>Set in the zombie apocalypse, Left 4 Dead™ 2 (L4D2) is the highly anticipated sequel to the award-winning Left 4 Dead, the #1 co-op game of 2008.
+                    This co-operative action horror FPS takes you and your friends through the cities, swamps and cemeteries of the Deep South, from Savannah to New Orleans across five expansive campaigns.</p>
+                </div>
+            </div>
+            <div class="halfsized" id="aboutimg">
+                <img src="/images/227839663-left-4-dead-2-characters-Coach.png"  class="img-fluid" alt="">
+            </div>
+        </div>
+    </div>
+    <div class="container  d-flex  flex-column row-gap-3 divspacing gap-3" style=" color: white; ">
+        <div class="container-fluid">
+            <div class="d-flex wrapcontent1 flex-column justify-content-center align-items-center gamefeatures" >
+                <h2 class="text-center bungee-regular subheads ">Game Features</h2>
+            </div>
+            <div class="accordion accordion-flush" id="accordionExample">
+                <div class="accordion-item mt-3 ">
+                <h3 class="accordion-header">
+                    <button class="accordion-button  roboto-condensed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        Weapons
+                    </button>
+                </h3>
+                <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <div class="d-flex flex-column gap-3 flex-lg-row align-items-md-center p-3">
+                            <div class="halfsized" >
+                                <div>
+                                    <h3 style="color: white;"  class="roboto-condensed ">Weapons</h3>
+                                    <p>Each player starts the game with a semiautomatic pistol, an M1911.[14] It is the only weapon with unlimited ammo, and the only weapon that can be used while incapacitated. (If a second pistol is found, the player can dual wield them.)  </p>
+                                </div>
+                            </div>
+                            <div class="halfsized">
+                                <img src="/images/download (3) 1.jpg"  class="img-fluid"  alt="">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <div class="accordion-item ">
+                <h3 class="accordion-header ">
+                    <button class="accordion-button  collapsed roboto-condensed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                        Game modes
+                    </button>
+                </h3>
+                <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <div class="d-flex flex-column gap-3 flex-lg-row p-3 align-items-md-center">
+                            <div class="halfsized">
+                                <div>
+                                    <h3 style="color: white;"  class="roboto-condensed">Game Modes</h3>
+                                    <p>Left 4 Dead contains four game modes: Campaign, Versus, Survival, and Single-Player. Campaign consists of up to four human-controlled survivors who attempt to make their way between safe rooms and eventually to rescue. In this mode, the special infected are controlled by the AI.</p>
+                                </div>
+                            </div>
+                            <div class="halfsized">
+                                <img src="/images/400748-left-4-dead-2-windows-screenshot-main-menu.jpg" alt="" class="img-fluid" >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <div class="accordion-item  ">
+                <h3 class="accordion-header">
+                    <button class="accordion-button  collapsed roboto-condensed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                        Infected
+                    </button>
+                </h3>
+                <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <div class="d-flex flex-column gap-3 flex-lg-row p-3 align-items-md-center">
+                            <div class="halfsized">
+                                <div>
+                                    <h3 style="color: white;"  class="roboto-condensed">The Infected </h3>
+                                    <p>The Infected (sometimes referred to simply as Zombies by the survivors) are Left 4 Dead's take on the classic movie and pop-fiction zombie. Rather than being undead, they are living humans who have been Infected by the Green Flu virus, causing massively increased aggression and loss of many higher brain functions such as speech and self-preservation. </p>
+                                </div>
+                            </div>
+                            <div class="halfsized">
+                                <img src="/images/2263581440_preview_colored2-min.png" class="img-fluid" alt="">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+               
+            </div>
+          
+        </div>
+    </div>
+    <div class="container divspacing">
+        <div class="d-flex flex-column gap-3 ">
+            <div class="d-flex align-items-center">
+                <img src="/images/2925593-zat_l4d_02.jpg" alt="" class="img-fluid">
+            </div>
+            <div class="d-flex justify-content-end">
+                <aside>
+                    <h4 class="roboto-condensed" style="color: rgba(255, 255, 255, 0.589);">Gameplay</h4>
+                    <p>Helping to take L4D’s frantic, action-packed gameplay to the next level is AI Director 2.0. This improved Director has the ability to procedurally change the weather you’ll fight through and the pathways you’ll take.</p>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    
+ <%- include("partials/footer.ejs") %>
+

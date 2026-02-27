@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Share Advice</title>
+        
+        <%- include("partials/header.ejs") %>
+
+                    <% if (currentUser) { %>
+                      <li class="nav-item dropdown">
+                        <a class="nav-link roboto-condensed "  href="/logout" >
+                          Welcome <span style="color: #D83232;"><%- currentUser %></span>, Logout?
+                        </a>
+                       </li>
+                    <% } else {%>
+                      <li class="nav-item dropdown">
+                        <a class="nav-link roboto-condensed "  href="/login" >
+                          Login
+                        </a>
+                       </li>
+                    <%}%>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </nav>
+
+    <body style="background-color: black;">
+      <div class="container" >
+          <div  class=" background-color: black; ">
+            <div class="p-3" style=" width: 100%;background-color: rgba(0, 0, 0, 0.698);">
+             
+             
+              <form class="item d-flex flex-column justify-content-center" action="/add" method="post" style="height: 100vh;">
+                <div>
+                  <div class="form d-flex flex-column">
+                    <div class="box " id="adviceheading">
+                      <h2 style="color: white;" class="  roboto-condensed">Share Infected Advice</h2>
+                    </div>
+                    <textarea type="text"  name="newPost" placeholder="What's on your mind?"  autofocus="true" style=" height:200px;" required></textarea>
+                  <!-- <input type="text" name="newItem" placeholder="New Item" autocomplete="off" style="width:200px; height:200px;" autofocus="true" />-->
+                  <br>
+                    <button class="add bungee-regular" type="submit" name="list" value=<%#=listPost %>> + Post</button>
+                    <p class="p-3" style="color: white;">If you want to skip this and hear what others have to say then <a id="skip" href="/forumpost" > skip </a>  </p>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <%- include("partials/footer.ejs") %>
