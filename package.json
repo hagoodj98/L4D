@@ -8,8 +8,7 @@
     "dev": "nodemon index.js",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "build": "tailwindcss -i ./src/input.css -o ./public/style.css"
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
