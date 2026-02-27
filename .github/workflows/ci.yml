@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Install, Lint, Type Check, Test, Build
+    name: Games Forum CI Check
     runs-on: ubuntu-latest
 
     services:
