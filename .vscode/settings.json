@@ -15,5 +15,8 @@
 
   // Always use LF line endings in VSCode
   "files.eol": "\n",
-  "prettier.endOfLine": "lf"
+  "prettier.endOfLine": "lf",
+  "files.associations": {
+    "*.ejs": "html"
+  }
 }

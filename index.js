@@ -134,7 +134,7 @@ app.get("/forumpost", async (req, res) => {
 
     res.render("forumpost.ejs", {
       currentUser: req.user.display_name,
-      listUser: users,
+      listUsers: users,
     });
   } else {
     res.redirect("/login");
@@ -202,6 +202,34 @@ app.post("/ascend", async (req, res) => {
     });
   }
 });
+app.post("/like-post", async (req, res) => {
+  if (req.isAuthenticated()) {
+    // Handle the like post logic here
+    console.log("Like button clicked for post ID:", req.body.post_id);
+    console.log(req.user);
+
+    //check to see if the user has already liked the post
+    const checkLike = await db.query(
+      "SELECT * FROM posts_reactions WHERE post_id = $1 AND user_id = $2 AND reaction_type = 'like'",
+      [req.body.post_id, req.user.id],
+    );
+    if (checkLike.rows.length > 0) {
+      console.log("User has already liked this post.");
+      // Optionally, you could remove the like here if you want to allow unliking
+      await db.query(
+        "DELETE FROM posts_reactions WHERE post_id = $1 AND user_id = $2 AND reaction_type = 'like'",
+        [req.body.post_id, req.user.id],
+      );
+      return res.redirect("/forumpost");
+    }
+    await db.query(
+      "INSERT INTO posts_reactions (post_id, user_id, reaction_type) VALUES ($1, $2, $3)",
+      [req.body.post_id, req.user.id, "like"],
+    );
+    res.redirect("/forumpost");
+  }
+});
+
 app.post("/descend", async (req, res) => {
   const result = await db.query(
     "SELECT * FROM users JOIN posts ON users.id = posts.user_id ORDER BY created_at ASC",

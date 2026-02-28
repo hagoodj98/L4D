@@ -9,5 +9,32 @@ CREATE TABLE IF NOT EXISTS posts (
   id SERIAL PRIMARY KEY,
   post TEXT NOT NULL,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+  id SERIAL PRIMARY KEY,
+  comment TEXT NOT NULL,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS posts_reactions (
+  id SERIAL PRIMARY KEY,
+  reaction_type VARCHAR(10) CHECK (reaction_type IN ('like', 'dislike')) NOT NULL,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, post_id)
+);
+
+CREATE TABLE IF NOT EXISTS reactions_comments (
+  id SERIAL PRIMARY KEY,
+  reaction_type VARCHAR(10) CHECK (reaction_type IN ('like', 'dislike')) NOT NULL,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  comment_id INTEGER NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, comment_id)
 );
