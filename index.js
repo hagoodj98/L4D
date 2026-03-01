@@ -7,6 +7,7 @@ import { Strategy } from "passport-local";
 //import GoogleStrategy from "passport-google-oauth2";
 import session from "express-session";
 import env from "dotenv";
+import e from "express";
 
 const app = express();
 const port = 3000;
@@ -261,6 +262,19 @@ app.post("/dislike-post", async (req, res) => {
         [req.body.post_id, req.user.id],
       );
       return res.redirect("/forumpost");
+    } else if (checkDislike.rows.length === 0) {
+      // Check if the user has liked the post and remove the like if it exists
+      const checkLike = await db.query(
+        "SELECT * FROM posts_reactions WHERE post_id = $1 AND user_id = $2 AND reaction_type = 'like'",
+        [req.body.post_id, req.user.id],
+      );
+      if (checkLike.rows.length > 0) {
+        console.log("User has already liked this post. Removing like.");
+        await db.query(
+          "DELETE FROM posts_reactions WHERE post_id = $1 AND user_id = $2 AND reaction_type = 'like'",
+          [req.body.post_id, req.user.id],
+        );
+      }
     }
     await db.query(
       "INSERT INTO posts_reactions (post_id, user_id, reaction_type) VALUES ($1, $2, $3)",
