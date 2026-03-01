@@ -221,10 +221,50 @@ app.post("/like-post", async (req, res) => {
         [req.body.post_id, req.user.id],
       );
       return res.redirect("/forumpost");
+    } else if (checkLike.rows.length === 0) {
+      // Check if the user has disliked the post and remove the dislike if it exists
+      const checkDislike = await db.query(
+        "SELECT * FROM posts_reactions WHERE post_id = $1 AND user_id = $2 AND reaction_type = 'dislike'",
+        [req.body.post_id, req.user.id],
+      );
+      if (checkDislike.rows.length > 0) {
+        console.log("User has already disliked this post. Removing dislike.");
+        await db.query(
+          "DELETE FROM posts_reactions WHERE post_id = $1 AND user_id = $2 AND reaction_type = 'dislike'",
+          [req.body.post_id, req.user.id],
+        );
+      }
     }
     await db.query(
       "INSERT INTO posts_reactions (post_id, user_id, reaction_type) VALUES ($1, $2, $3)",
       [req.body.post_id, req.user.id, "like"],
+    );
+    res.redirect("/forumpost");
+  }
+});
+app.post("/dislike-post", async (req, res) => {
+  if (req.isAuthenticated()) {
+    // Handle the dislike post logic here
+    console.log("Dislike button clicked for post ID:", req.body.post_id);
+    console.log(req.user);
+
+    //check to see if the user has already disliked the post
+    const checkDislike = await db.query(
+      "SELECT * FROM posts_reactions WHERE post_id = $1 AND user_id = $2 AND reaction_type = 'dislike'",
+      [req.body.post_id, req.user.id],
+    );
+    if (checkDislike.rows.length > 0) {
+      console.log("User has already disliked this post.");
+      // Optionally, you could remove the dislike here if you want to allow undisliking
+      await db.query(
+        "DELETE FROM posts_reactions WHERE post_id = $1 AND user_id = $2 AND reaction_type = 'dislike'",
+        [req.body.post_id, req.user.id],
+      );
+      return res.redirect("/forumpost");
+    }
+    await db.query(
+      "INSERT INTO posts_reactions (post_id, user_id, reaction_type) VALUES ($1, $2, $3)",
+      [req.body.post_id, req.user.id, "dislike"],
     );
     res.redirect("/forumpost");
   }
