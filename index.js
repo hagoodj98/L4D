@@ -47,6 +47,78 @@ if (process.env.NODE_ENV !== "test") {
   db.connect();
 }
 
+const getForumPosts = async (userId, sortDirection = "DESC") => {
+  const safeSortDirection = sortDirection === "ASC" ? "ASC" : "DESC";
+
+  const forumPostQuery = `
+      SELECT
+        p.id,
+        p.updated_at,
+        p.post,
+        p.user_id,
+        p.created_at,
+        COALESCE(rc.likes, 0) AS likes,
+        COALESCE(rc.dislikes, 0) AS dislikes,
+        COALESCE(rep.reply_count, 0) AS reply_count,
+        cur_pr.reaction_type AS user_reaction,
+        u.display_name,
+        COALESCE(rp.replies, '[]'::json) AS replies
+      FROM posts p
+      LEFT JOIN (
+        SELECT
+          post_id,
+          COUNT(*) FILTER (WHERE reaction_type = 'like') AS likes,
+          COUNT(*) FILTER (WHERE reaction_type = 'dislike') AS dislikes
+        FROM posts_reactions
+        GROUP BY post_id
+      ) rc ON rc.post_id = p.id
+      LEFT JOIN posts_reactions cur_pr
+        ON cur_pr.post_id = p.id AND cur_pr.user_id = $1
+      LEFT JOIN (
+        SELECT
+          post_id,
+          COUNT(*) AS reply_count
+        FROM replies
+        GROUP BY post_id
+      ) rep ON rep.post_id = p.id
+      LEFT JOIN users u ON u.id = p.user_id
+      LEFT JOIN LATERAL (
+        SELECT
+          r.post_id,
+          json_agg(
+            json_build_object(
+              'id', r.id,
+              'comment_post', r.comment_post,
+              'user_id', r.user_id,
+              'created_at', r.created_at,
+              'likes', COALESCE(rcc.likes, 0),
+              'dislikes', COALESCE(rcc.dislikes, 0),
+              'user_reaction', ccr.reaction_type,
+              'display_name', ru.display_name
+            )
+            ORDER BY r.created_at DESC
+          ) AS replies
+        FROM replies r
+        LEFT JOIN users ru ON ru.id = r.user_id
+        LEFT JOIN (
+          SELECT
+            comment_id,
+            COUNT(*) FILTER (WHERE reaction_type = 'like') AS likes,
+            COUNT(*) FILTER (WHERE reaction_type = 'dislike') AS dislikes
+          FROM reactions_comments
+          GROUP BY comment_id
+        ) rcc ON rcc.comment_id = r.id
+        LEFT JOIN reactions_comments ccr
+          ON ccr.comment_id = r.id AND ccr.user_id = $1
+        WHERE r.post_id = p.id
+        GROUP BY r.post_id
+      ) rp ON true
+      ORDER BY p.created_at ${safeSortDirection};
+    `;
+
+  return db.query(forumPostQuery, [userId]);
+};
+
 app.get("/", (req, res) => {
   if (req.isAuthenticated()) {
     res.render("index.ejs", {
@@ -131,94 +203,7 @@ app.get("/logout", (req, res, next) => {
 
 app.get("/forumpost", async (req, res) => {
   if (req.isAuthenticated()) {
-    const forumPostQuery = `
-     WITH reaction_counts AS (
-        SELECT
-          post_id,
-          COUNT(*) FILTER (WHERE reaction_type = 'like') AS likes,
-          COUNT(*) FILTER (WHERE reaction_type = 'dislike') AS dislikes
-        FROM posts_reactions
-        GROUP BY post_id
-      ),
-      current_user_post_reactions AS (
-        SELECT
-          post_id,
-          reaction_type
-        FROM posts_reactions
-        WHERE user_id = $1
-      ),
-      reactions_comments_counts AS (
-        SELECT
-          comment_id,
-          COUNT(*) FILTER (WHERE reaction_type = 'like') AS likes,
-          COUNT(*) FILTER (WHERE reaction_type = 'dislike') AS dislikes
-        FROM reactions_comments
-        GROUP BY comment_id
-      ),
-      current_user_comment_reactions AS (
-        SELECT
-          comment_id,
-          reaction_type
-        FROM reactions_comments
-        WHERE user_id = $1
-      ),
-      reply_counts AS (
-        SELECT
-          post_id,
-          COUNT(*) AS reply_count
-        FROM replies
-        GROUP BY post_id
-      ),
-      replies AS (
-        SELECT
-          r.id,
-          r.post_id,
-          r.comment_post,
-          r.user_id,
-          r.created_at,
-          u.display_name
-        FROM replies r
-        JOIN users u ON u.id = r.user_id
-      )
-      SELECT
-        p.id,
-        p.updated_at,
-        p.post,
-        p.user_id,
-        p.created_at,
-        COALESCE(rc.likes, 0) AS likes,
-        COALESCE(rc.dislikes, 0) AS dislikes,
-        COALESCE(rep.reply_count, 0) AS reply_count,
-        cur_pr.reaction_type AS user_reaction,
-        u.display_name,
-        COALESCE(rp.replies, '[]'::json) AS replies
-      FROM posts p
-      LEFT JOIN reaction_counts rc ON rc.post_id = p.id
-      LEFT JOIN current_user_post_reactions cur_pr ON cur_pr.post_id = p.id
-      LEFT JOIN reply_counts rep ON rep.post_id = p.id
-      LEFT JOIN users u ON u.id = p.user_id
-      LEFT JOIN LATERAL (
-        SELECT
-          post_id,
-          json_agg(json_build_object(
-            'id', id,
-            'comment_post', comment_post,
-            'user_id', user_id,
-            'created_at', created_at,
-            'likes', COALESCE(rcc.likes, 0),
-            'dislikes', COALESCE(rcc.dislikes, 0),
-            'user_reaction', ccr.reaction_type,
-            'display_name', display_name
-          ) ORDER BY created_at DESC) AS replies
-        FROM replies
-        LEFT JOIN reactions_comments_counts rcc ON rcc.comment_id = replies.id
-        LEFT JOIN current_user_comment_reactions ccr ON ccr.comment_id = replies.id
-        GROUP BY post_id
-      ) rp ON rp.post_id = p.id
-      ORDER BY p.created_at DESC;
-    `;
-
-    const result = await db.query(forumPostQuery, [req.user.id]);
+    const result = await getForumPosts(req.user.id, "DESC");
 
     res.render("forumpost.ejs", {
       currentUser: req.user.display_name,
@@ -280,14 +265,14 @@ app.post("/register", async (req, res) => {
 
 app.post("/ascend", async (req, res) => {
   if (req.isAuthenticated()) {
-    const result = await db.query(
-      "SELECT * FROM users JOIN posts ON users.id = posts.user_id ORDER BY created_at DESC",
-    );
-    const users = result.rows;
+    const result = await getForumPosts(req.user.id, "ASC");
+
     res.render("forumpost.ejs", {
       currentUser: req.user.display_name,
-      listAllContent: users,
+      listAllContent: result.rows,
     });
+  } else {
+    res.redirect("/login");
   }
 });
 app.post("/post-reaction", async (req, res) => {
@@ -354,18 +339,16 @@ app.post("/post-reaction", async (req, res) => {
 });
 
 app.post("/descend", async (req, res) => {
-  const result = await db.query(
-    `
-      SELECT * FROM users 
-      JOIN posts ON users.id = posts.user_id
-      ORDER BY created_at ASC`,
-  );
-  const users = result.rows;
+  if (req.isAuthenticated()) {
+    const result = await getForumPosts(req.user.id, "DESC");
 
-  res.render("forumpost.ejs", {
-    currentUser: req.user.display_name,
-    listUser: users,
-  });
+    res.render("forumpost.ejs", {
+      currentUser: req.user.display_name,
+      listAllContent: result.rows,
+    });
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.post("/add", async (req, res) => {
