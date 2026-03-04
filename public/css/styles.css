@@ -1,172 +1,198 @@
-
 .bungee-regular {
-    font-family: "Bungee", sans-serif;
-    font-weight: 400;
-    font-style: normal;
-  }
-  .roboto-condensed{
-    font-family: "Roboto Condensed", sans-serif;
-    font-optical-sizing: auto;
-    font-weight: 500;
-    font-style: normal;
-  }
-  #skip{
-    color: #6E9731;
-    text-decoration: none;
+  font-family: "Bungee", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+.roboto-condensed {
+  font-family: "Roboto Condensed", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+}
+#skip {
+  color: #6e9731;
+  text-decoration: none;
 }
 .accordion {
-    --bs-accordion-btn-bg: black;
-    --bs-accordion-active-bg: #DAA404;
-    --bs-accordion-active-color: white;
-    --bs-accordion-btn-focus-box-shadow: none;
-    --bs-accordion-bg: #0D0D0D;
-    --bs-accordion-color: white;
+  --bs-accordion-btn-bg: black;
+  --bs-accordion-active-bg: #daa404;
+  --bs-accordion-active-color: white;
+  --bs-accordion-btn-focus-box-shadow: none;
+  --bs-accordion-bg: #0d0d0d;
+  --bs-accordion-color: white;
 }
 .accordion-button:not(.collapsed) {
-    box-shadow: none;
+  box-shadow: none;
+}
+
+.active {
+  display: block;
+}
+.reply {
+  background-color: transparent;
+  border: none;
+  color: white;
+  font-size: 14px;
+  margin: 4px 2px;
+  transition-duration: 0.4s;
+  cursor: pointer;
+}
+.reply:hover {
+  color: #6e9731;
 }
 
 .accordion-button:after {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-plus' viewBox='0 0 16 16'%3E%3Cpath d='M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-plus' viewBox='0 0 16 16'%3E%3Cpath d='M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4'/%3E%3C/svg%3E");
 }
 .accordion-button:not(.collapsed)::after {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-dash' viewBox='0 0 16 16'%3E%3Cpath d='M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-dash' viewBox='0 0 16 16'%3E%3Cpath d='M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8'/%3E%3C/svg%3E");
 }
-.learnmore{
-    border: 2px solid #D83232;
-    color: #D83232;
+.learnmore {
+  border: 2px solid #d83232;
+  color: #d83232;
 }
-.learnmore:hover{
-    background-color: #D83232;
-    color: white;
-}
-
-.accordion-button{
-    color: white;
-    font-size: inherit;
-}
-.accordion-item{
-    border-bottom: 1px solid white;
+.learnmore:hover {
+  background-color: #d83232;
+  color: white;
 }
 
-.nav-item a:hover{
-    color: #6e9631;
+.accordion-button {
+  color: white;
+  font-size: inherit;
 }
-.nav-item a{
-    color: white;
+.accordion-item {
+  border-bottom: 1px solid white;
 }
 
-#skip:hover{
-color: white;
+.nav-item a:hover {
+  color: #6e9631;
 }
-.center{
-    margin: auto;
-  
-    padding: 30px;
+.nav-item a {
+  color: white;
+}
+.postButton {
+  background-color: transparent;
+  border: none;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+.postButton:hover {
+  color: #6e9731;
+}
 
-    color: white;
+.postButton.reaction-color {
+  color: #3d4be1;
 }
-#header{
-    
-    background-image: url('/images/what-are-some-of-the-things-would-you-like-to-see-in-a-v0-p6lgj5bqinac1 1.jpg');
-    background-size: cover;
-    background-attachment: fixed;
-    background-attachment: fixed;
-    background-position:  top center;
+#skip:hover {
+  color: white;
 }
-#survivors{
-    background-image: url('/images/EGS_REBELLION_ZOMBIEARMY4_Left4Dead-CharacterPack01_C1_1920x1080_1920x1080-cb9040d2a1344b3b04475d33406ff4f2.jpeg');
-     background-size: cover;
-    background-attachment: fixed;
-    background-position:  top center;
+.center {
+  margin: auto;
+
+  padding: 30px;
+
+  color: white;
 }
-#specialinfected{
-    background-image: url('/images/Left_4_dead_2_monster 1.jpg');
-    background-size: cover;
-    background-attachment: fixed;
-    background-position:  top center;
+#header {
+  background-image: url("/images/what-are-some-of-the-things-would-you-like-to-see-in-a-v0-p6lgj5bqinac1 1.jpg");
+  background-size: cover;
+  background-attachment: fixed;
+  background-attachment: fixed;
+  background-position: top center;
 }
-#community{
-    background-image: url('/images/0d172dd2466ff6ce059d7510e892d30b.jpg.f6f83ea1eb8b3bc2fb1cc8c535cb052b.jpg');
-    background-size: cover;
-    background-attachment: fixed;
-    background-position:  top center;
+#survivors {
+  background-image: url("/images/EGS_REBELLION_ZOMBIEARMY4_Left4Dead-CharacterPack01_C1_1920x1080_1920x1080-cb9040d2a1344b3b04475d33406ff4f2.jpeg");
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: top center;
 }
-#shareadvice{
-    background-image: url("../images/left-4-dead-bill-tank-gwdd4sgr7ln4hq54 1.jpg");
-    background-size: cover;
-    background-position: center;
+#specialinfected {
+  background-image: url("/images/Left_4_dead_2_monster 1.jpg");
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: top center;
 }
-#findsquad{
-    background-image: url("../images/Left-4-Dead-2-Characters.jpg");
-    background-size: cover;
-    background-position: center;
+#community {
+  background-image: url("/images/0d172dd2466ff6ce059d7510e892d30b.jpg.f6f83ea1eb8b3bc2fb1cc8c535cb052b.jpg");
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: top center;
 }
-#news{
-    background-image: url("../images/download (2) 1.jpg");
-    background-size: cover;
-    background-position: center;
+#shareadvice {
+  background-image: url("../images/left-4-dead-bill-tank-gwdd4sgr7ln4hq54 1.jpg");
+  background-size: cover;
+  background-position: center;
 }
-.h2Animate h3{
-    color: white;
-    padding: 15px;
+#findsquad {
+  background-image: url("../images/Left-4-Dead-2-Characters.jpg");
+  background-size: cover;
+  background-position: center;
+}
+#news {
+  background-image: url("../images/download (2) 1.jpg");
+  background-size: cover;
+  background-position: center;
+}
+.h2Animate h3 {
+  color: white;
+  padding: 15px;
 }
 .arrowactivated {
-    rotate: 180deg;
-    transition: 400ms;
+  rotate: 180deg;
+  transition: 400ms;
 }
-.linkbelowlogins{
-    color: gray;
+.linkbelowlogins {
+  color: gray;
 }
-.linkbelowlogins:hover{
-    color: white;
-}
-
-.login label{
-    display: block;
-    margin-top: 30px;
-    font-size: 20px;
-    font-weight: 500;
+.linkbelowlogins:hover {
+  color: white;
 }
 
-::placeholder{
-    color: rgba(0, 0, 0, 0.836);
+.login label {
+  display: block;
+  margin-top: 30px;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+::placeholder {
+  color: rgba(0, 0, 0, 0.836);
 }
 
 @media (min-width: 321px) {
-    .greenselected{     
-        color: #6e9631;
-    }
-    .navforummavbutton{
-        font-size: 23px;
-    }
-    .navforummavbutton:hover{
-        color:#6E9731;
-    }
-   #survivorstitle h1{
+  .greenselected {
+    color: #6e9631;
+  }
+  .navforummavbutton {
+    font-size: 23px;
+  }
+  .navforummavbutton:hover {
+    color: #6e9731;
+  }
+  #survivorstitle h1 {
     font-size: 50px;
-   }
-   .login{
+  }
+  .login {
     height: auto;
     width: 320px;
     padding: 50px 35px;
     border-radius: 10px;
     backdrop-filter: blur(10px);
-    
-    box-shadow: 0 0 40px rgba(8,7,16,0.6);
-}
-#header{
+
+    box-shadow: 0 0 40px rgba(8, 7, 16, 0.6);
+  }
+  #header {
     height: 500px;
-}
-.headers{
+  }
+  .headers {
     height: 500px;
-}
-.subheadingcontent{
+  }
+  .subheadingcontent {
     padding: 15px;
     position: relative;
- 
-}
-.login input{
+  }
+  .login input {
     display: block;
     height: 50px;
     width: 100%;
@@ -176,818 +202,782 @@ color: white;
     margin-top: 8px;
     font-size: 14px;
     font-weight: 300;
-}
-.buttonfontsize{
+  }
+  .buttonfontsize {
     font-size: 21px;
-}
-   #survivorstitle{
+  }
+  #survivorstitle {
     margin-top: -50px;
-   }
-    .danger {
-        border-color: #D83232;
-        color: #D83232;
-      }
-    
-      .danger:hover {
-        background: #D83232;
-        color: white;
-      }
-    #communitytitle{
-        margin-top: -41px;
-    }
-    #specialinfectedtitle h1{
-        font-size: 40px;
-    }
-    #communitytitle h1{
-        font-size: 40px;
-    }
-    .nav-link{
-        font-size: 19px;
-    }
-    .subheads{
-        margin: 30px 0;
-    }
-    ul li{
-        margin: 10px 0 20px 0;
-        list-style-type: none;
-    }
-    .divspacing{
-        margin-top: 120px;
-        margin-bottom: 120px;
-      }
-   
-    .infectedcontentright div{
-        width: 90%;
-        padding: 10px;
-    }
-    aside{
-        color: rgba(255, 255, 255, 0.634);
-        max-width: 300px;
-    }
-    .showcharactercontent{
-        display: none;
-    }
+  }
+  .danger {
+    border-color: #d83232;
+    color: #d83232;
+  }
 
-    aside p{
-        font-size: 12px;
-        font-style: italic;
-    }
-    .features{
-        padding: 10px;
-        border-radius: 5px;
-    }
-    .aboutsection{
-        margin-top: -10px;
-    }
-    h1{
-        font-size: 35px;
-    }
-    .leftfordeadtitles{
-        padding: 20px;
-    }
-    .infectedsubheads{
-        color: white;
-        padding: 50px 0px 0 10px;
-    }
-    .infectedsubheads h2, .infectedsubheadsright h2{
-        font-size: 30px;
-    }
-
-    .infectedsubheadsright{
-        color: white;
-        padding: 50px 0px 0 10px;
-    }
-    #forum{
-       height: 400px;
-    }
-    h2{
-        font-size: 25px;
-    }
-    .characterbio{
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0px;
-        left: 0;
-        padding: 20px;
-      
-    }
-    .characterbio button{
-        width: 100%;
-        padding: 5px;
-        background-color: #DAA404;
-        border: none;
-        color: white;
-    }
-    .characterbio button:hover{
- 
-        background-color: #6e973190;
-    
-    }
-.halfsized{
-    
-    width: 100%;
-}
-    h3{
-        font-size: 17px;
-    }
-    .charactercontent{
-       /* width: 100%;    
-        padding: 5px;*/
-        background-color: white;
-    }
-    .charactercontent p{
-      
-        background-color: white;
-    }
-
-
-    .center{
-   
-        width: 100%;
-        padding: 30px;
-    
-        color: white;
-    }
-    .formtitle{
-        font-size: 35px;
-    }
-    .infectedcontent{
-        max-width: 100%;
-        padding: 10px;
-        color: white;
-    }
-    button.add {
-        min-height: 50px;
-        width: 50px;
-        border-radius: 50%;
-        border-color: transparent;
-        background-color: #a683e3;
-        color: #fff;
-        font-size: 30px;
-        border-width: 0;
-      }
-      .paddingtop{
-        padding-top: 150px;
-    }
-      .navbar-brand{
-        display: none;
-      }
-  .subheadingcontent{
+  .danger:hover {
+    background: #d83232;
     color: white;
   }
-      .posts {
-        padding: 10px;
-    }
-      button.edit {
-        margin-left: 0px;
-        margin-right: 20px;
-        border: none;
-        background: none;
-      }
-  
-      .frontheader{
-        background-color: black;
-            
-    }
-    #headertext{
-        height: 500px;
-        z-index: 1;
-        /*margin-right: -200px;*/
-        background-color: black;
-     }
-  
-    .frontheader h1{
+  #communitytitle {
+    margin-top: -41px;
+  }
+  #specialinfectedtitle h1 {
+    font-size: 40px;
+  }
+  #communitytitle h1 {
+    font-size: 40px;
+  }
+  .nav-link {
+    font-size: 19px;
+  }
+  .subheads {
+    margin: 30px 0;
+  }
+  ul li {
+    margin: 10px 0 20px 0;
+    list-style-type: none;
+  }
+  .divspacing {
+    margin-top: 120px;
+    margin-bottom: 120px;
+  }
+
+  .infectedcontentright div {
+    width: 90%;
+    padding: 10px;
+  }
+  aside {
+    color: rgba(255, 255, 255, 0.634);
+    max-width: 300px;
+  }
+  .showcharactercontent {
+    display: none;
+  }
+
+  aside p {
+    font-size: 12px;
+    font-style: italic;
+  }
+  .features {
+    padding: 10px;
+    border-radius: 5px;
+  }
+  .aboutsection {
+    margin-top: -10px;
+  }
+  h1 {
     font-size: 35px;
-    }
-      .icon {
-        height: 20px;
-      }
-    nav{
-        transition: top 0.3s;
-    }
-    .navbar{
-        background-color: black;
-      }
-    .form{
-        margin: auto;
-        max-width: 100%;
-      
-    }
-    p{
-        line-height: 2em;
-        font-size: 16px;
-    }
-    .topspacingforum{
-        width: 100%;
-    }
- .headertext{
+  }
+  .leftfordeadtitles {
+    padding: 20px;
+  }
+  .infectedsubheads {
+    color: white;
+    padding: 50px 0px 0 10px;
+  }
+  .infectedsubheads h2,
+  .infectedsubheadsright h2 {
+    font-size: 30px;
+  }
+
+  .infectedsubheadsright {
+    color: white;
+    padding: 50px 0px 0 10px;
+  }
+  #forum {
+    height: 400px;
+  }
+  h2 {
+    font-size: 25px;
+  }
+  .characterbio {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0px;
+    left: 0;
+    padding: 20px;
+  }
+  .characterbio button {
+    width: 100%;
+    padding: 5px;
+    background-color: #daa404;
+    border: none;
+    color: white;
+  }
+  .characterbio button:hover {
+    background-color: #6e973190;
+  }
+  .halfsized {
+    width: 100%;
+  }
+  h3 {
+    font-size: 17px;
+  }
+  .charactercontent {
+    /* width: 100%;    
+        padding: 5px;*/
+    background-color: white;
+  }
+  .charactercontent p {
+    background-color: white;
+  }
+
+  .center {
+    width: 100%;
+    padding: 30px;
+
+    color: white;
+  }
+  .formtitle {
+    font-size: 35px;
+  }
+  .infectedcontent {
+    max-width: 100%;
+    padding: 10px;
+    color: white;
+  }
+  button.add {
+    min-height: 50px;
+    width: 50px;
+    border-radius: 50%;
+    border-color: transparent;
+    background-color: #a683e3;
+    color: #fff;
+    font-size: 30px;
+    border-width: 0;
+  }
+  .paddingtop {
+    padding-top: 150px;
+  }
+  .navbar-brand {
+    display: none;
+  }
+  .subheadingcontent {
+    color: white;
+  }
+  .posts {
+    padding: 10px;
+  }
+  button.edit {
+    margin-left: 0px;
+    margin-right: 20px;
+    border: none;
+    background: none;
+  }
+
+  .frontheader {
+    background-color: black;
+  }
+  #headertext {
+    height: 500px;
+    z-index: 1;
+    /*margin-right: -200px;*/
+    background-color: black;
+  }
+
+  .frontheader h1 {
+    font-size: 35px;
+  }
+  .icon {
+    height: 20px;
+  }
+  nav {
+    transition: top 0.3s;
+  }
+  .navbar {
+    background-color: black;
+  }
+  .form {
+    margin: auto;
+    max-width: 100%;
+  }
+  p {
+    line-height: 2em;
+    font-size: 16px;
+  }
+  .topspacingforum {
+    width: 100%;
+  }
+  .headertext {
     height: 500px;
     background-color: black;
- }
-    .characterssize{
-        width: 300px;
-    
-        height: 450px;
-        position: relative;
-       
-        background-color: white;
-    }
-    .forumsubheaders{
-        padding-top: 20px;
-    }
-    .overlay {
-        position: absolute; 
-        bottom: 0; 
-        background: rgb(0, 0, 0);
-        background: rgba(0, 0, 0, 0.8); /* Black see-through */
-        color: #f1f1f1; 
-        width: 100%;
-        transition: .5s ease;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        opacity:0;
-        height: 100%;
-        color: white;
-        font-size: 20px;
-        padding: 20px;
-        text-align: center;
-      }
-      .characterssize img{
-        width: 150px;
-    }
-     .actualcharactercontent{
-         padding: 10px;
-     }
-      .forumsections:hover .overlay {
-        opacity: 1;
-      }
-      .forumsections{
-        position: relative;
-        width: 100%;
-    }
-      .navbar-toggler-icon {
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
-        
-      }
-      .navbar-toggler{
-        border: 2px solid white;
-      }
-      footer{
-        padding: 20px;
-      }
-.posts{
+  }
+  .characterssize {
+    width: 300px;
+
+    height: 450px;
+    position: relative;
+
+    background-color: white;
+  }
+  .forumsubheaders {
+    padding-top: 20px;
+  }
+  .overlay {
+    position: absolute;
+    bottom: 0;
+    background: rgb(0, 0, 0);
+    background: rgba(0, 0, 0, 0.8); /* Black see-through */
+    color: #f1f1f1;
     width: 100%;
-}
-#footerpar p{
- font-size: 11px;
-}
-.survivorswholewrap{
+    transition: 0.5s ease;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    height: 100%;
+    color: white;
+    font-size: 20px;
+    padding: 20px;
+    text-align: center;
+  }
+  .characterssize img {
+    width: 150px;
+  }
+  .actualcharactercontent {
+    padding: 10px;
+  }
+  .forumsections:hover .overlay {
+    opacity: 1;
+  }
+  .forumsections {
+    position: relative;
+    width: 100%;
+  }
+  .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  }
+  .navbar-toggler {
+    border: 2px solid white;
+  }
+  footer {
+    padding: 20px;
+  }
+  .posts {
+    width: 100%;
+  }
+  #footerpar p {
+    font-size: 11px;
+  }
+  .survivorswholewrap {
     padding-top: 50px;
+  }
+}
+@media (min-width: 450px) {
+  .login {
+    height: auto;
+    width: 420px;
+    padding: 50px 35px;
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 40px rgba(8, 7, 16, 0.6);
+  }
+}
+@media (min-width: 576px) {
+  #communitytitle {
+    margin-top: -51px;
+    margin-left: 40px;
+  }
+  #communitytitle h1 {
+    font-size: 50px;
+  }
+  h1 {
+    font-size: 40px;
+  }
+
+  .headertext {
+    background-color: black;
+  }
+  .frontheader {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: black;
+
+    padding: 30px;
+    margin-left: 60px;
+    height: 510px;
+    width: 45%;
+  }
 }
 
-}
-@media(min-width: 450px) {
-    .login{
-        height: auto;
-        width: 420px;
-        padding: 50px 35px;
-        border-radius: 10px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 0 40px rgba(8,7,16,0.6);
-    }
+@media (min-width: 768px) {
+  .leftfordeadtitles {
+    padding: 30px;
+  }
+  .leftfordeadtitles h2 {
+    font-size: 30px;
+  }
+  .frontheader {
+    height: 510px;
+  }
+  .nav-link {
+    font-size: 20px;
+  }
+  .paddingtop {
+    padding-top: 190px;
+  }
+  #survivorstitle {
+    margin-top: -66px;
+  }
+  h2 {
+    font-size: 35px;
+  }
+  .login {
+    width: 600px;
+    /* background-color: rgba(255,255,255,0.13);*/
 
-}
-@media(min-width: 576px){
-    #communitytitle{
-        margin-top: -51px;
-        margin-left: 40px;
-    }
-    #communitytitle h1{
-        font-size: 50px;
-    }
-    h1{
-        font-size: 40px;
-    }
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 40px rgba(8, 7, 16, 0.6);
+    padding: 50px 35px;
+  }
+  .infectedsubheads {
+    margin-right: -50px;
+    color: white;
+    z-index: 1;
+  }
 
-    .headertext{
-       
-        
-        background-color: black;
-     }
-      .frontheader{
-        position: absolute;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-     background-color: black;
-     
- 
-     padding: 30px;
-     margin-left: 60px;
-     height: 510px;
-     width: 45%;
-  
-     }
-}
+  .headertext {
+    background-color: black;
+  }
+  .navbar-brand {
+    display: block;
+  }
+  label {
+    font-size: 22px;
+  }
+  .button {
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  .formtitle {
+    font-size: 55px;
+  }
+  h1 {
+    font-size: 55px;
+  }
+  .posts {
+    padding: 20px;
+  }
+  .button1 {
+    background-color: white;
+    color: black;
+  }
+  #delete:hover {
+    color: red;
+  }
 
+  #mainheaderdiv {
+    position: absolute;
 
-@media (min-width: 768px){
-    .leftfordeadtitles{
-        padding: 30px;
-    }
-    .leftfordeadtitles h2{
-        font-size: 30px;
-    }
-    .frontheader{
-      
-     height: 510px;
-  
-     }
-     .nav-link{
-        font-size: 20px;
-    }
-    .paddingtop{
-        padding-top: 190px;
-    }
-       #survivorstitle{
-        margin-top: -66px;
-       }
-    h2{
-          font-size: 35px;
-      }
-      .login{
-       width: 600px;
-       /* background-color: rgba(255,255,255,0.13);*/
-    
-        border-radius: 10px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 0 40px rgba(8,7,16,0.6);
-        padding: 50px 35px;
-    }
-      .infectedsubheads{
-        margin-right: -50px;
-        color: white;
-        z-index: 1;
-    }
+    top: 1px;
+    max-width: 950px;
+  }
+  #mainheaderdivforspecialinfected {
+    position: absolute;
+    bottom: 400px;
+    max-width: 900px;
+    width: 100%;
+  }
+  .button1:hover {
+    background-color: #6e9731;
+    color: white;
+  }
+  #aboutimg {
+    min-width: 50%;
+  }
+  .button2 {
+    background-color: white;
+    color: black;
+  }
+  button.add {
+    min-height: 50px;
+    width: 50px;
+    border-radius: 50%;
+    border-color: transparent;
+    background-color: #a683e3;
+    color: #fff;
+    font-size: 30px;
+    border-width: 0;
+  }
 
-    .headertext{
-        background-color: black;
-     }
-    .navbar-brand{
-        display: block;
-      }
-    label{
-        font-size: 22px;
-    }
-    .button {
-        border: none;
-        color: white;
-        padding: 8px 16px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 16px;
-        margin: 4px 2px;
-        transition-duration: 0.4s;
-        cursor: pointer;
-        border-radius: 5px;
-      }
-      .formtitle{
-        font-size: 55px;
-    }
-    h1{
-        font-size: 55px;
-    }
-    .posts {
-        padding: 20px;
-    }
-      .button1 {
-        background-color: white; 
-        color: black; 
-      }
-      #delete:hover{
-        color: red;
-      }
-   
-      #mainheaderdiv{
-       
-         position: absolute;
-    
-        top: 1px;
-         max-width: 950px;
-       }
-       #mainheaderdivforspecialinfected{
-       
-        position: absolute;
-        bottom: 400px;
-        max-width: 900px;
-        width: 100%;
-       }
-      .button1:hover {
-        background-color: #6E9731;
-        color: white;
-      }
-      #aboutimg{
-        min-width: 50%;
-      }
-      .button2 {
-        background-color: white; 
-        color: black; 
-      }
-      button.add {
-        min-height: 50px;
-        width: 50px;
-        border-radius: 50%;
-        border-color: transparent;
-        background-color: #a683e3;
-        color: #fff;
-        font-size: 30px;
-        border-width: 0;
-      }
-      
-      button.edit {
-        margin-left: 0px;
-        
-        border: none;
-        background: none;
-      }
-      
-      .icon {
-        height: 20px;
-      }
-      .button2:hover {
-        background-color: #6E9731;
-        color: white;
-      }
-    ::placeholder {
-        color: lightgray;
-        opacity: 1;
-      }
-    .specialinfectedphotandsubhead{
-        width: 75%;
-    }
-    .infectedsubheads h2{
-        font-size: 60px;
-    }
-    .forumsubheaders h2{
-        font-size: 22px;
-        color: white;
-    }
-    #forum{
-        padding: 30px;
-        margin: 20px 0px;
-        max-width: 70%;
-        margin: auto;
-    }
+  button.edit {
+    margin-left: 0px;
 
-.center{
-   
+    border: none;
+    background: none;
+  }
+
+  .icon {
+    height: 20px;
+  }
+  .button2:hover {
+    background-color: #6e9731;
+    color: white;
+  }
+  ::placeholder {
+    color: lightgray;
+    opacity: 1;
+  }
+  .specialinfectedphotandsubhead {
+    width: 75%;
+  }
+  .infectedsubheads h2 {
+    font-size: 60px;
+  }
+  .forumsubheaders h2 {
+    font-size: 22px;
+    color: white;
+  }
+  #forum {
+    padding: 30px;
+    margin: 20px 0px;
+    max-width: 70%;
+    margin: auto;
+  }
+
+  .center {
     min-width: 40%;
     max-width: 50%;
     padding: 30px;
 
     color: white;
-}
-    .forumsubheaders{
-        font-size: 12px;
-        padding: 20px 0px 20px 0px;
-    }
-    .topspacingforum{
-        width: 50%;
-    }
-    .forumsections{
-        position: relative;
-        width: 100%;
-    }
-    .forumblocks{
-        width: 100%;
-    }
-    .frontheader{
-       position: absolute;
-        z-index: 9999;
+  }
+  .forumsubheaders {
+    font-size: 12px;
+    padding: 20px 0px 20px 0px;
+  }
+  .topspacingforum {
+    width: 50%;
+  }
+  .forumsections {
+    position: relative;
+    width: 100%;
+  }
+  .forumblocks {
+    width: 100%;
+  }
+  .frontheader {
+    position: absolute;
+    z-index: 9999;
     background-color: black;
-    
+
     padding: 30px;
     margin-left: 100px;
     height: 1050px;
     width: 45%;
- 
-    }
-    .frontheaderforspecialinfected{
-        position: absolute;
-        background-color: black;
-        padding: 30px;
-      
-        height: 350px;
-        width: 100%
-    }
-   
- 
-    #footerpar{
-        max-width: 75%;
-        margin: auto;
-    }
-    #footerpar p{
-        font-size: 15px;
-    }
-    .textareapost{
-        background-color: red;
-        padding: 10px;
-        overflow-y: auto;
-        resize: none;
-    }
-    .overlay {
-        position: absolute; 
-       
-        background: rgb(0, 0, 0);
-        background: rgba(0, 0, 0, 0.8); /* Black see-through */
-        color: #f1f1f1; 
-       
-        transition: .5s ease;
-        opacity:0;
-      
-        color: white;
-        font-size: 20px;
-        padding: 20px;
-      }
-      #communitytitle{
-        margin-top: -68px;
-       
-    }
-    #specialinfectedtitle{
-        margin-top: -89px;
-    }
-   
+  }
+  .frontheaderforspecialinfected {
+    position: absolute;
+    background-color: black;
+    padding: 30px;
 
-    #specialinfectedtitle h1, #survivorstitle h1, #communitytitle h1{
-        font-size: 70px;
-    }
+    height: 350px;
+    width: 100%;
+  }
 
-      .text {
-       
-        color: white;
-   
-        border:  2px solid red;
-        
-      }
-      .forumsections:hover .overlay {
-        opacity: 1;
-      }
-      
-    aside{
-        color: rgba(255, 255, 255, 0.68);
-        font-style: italic;
-        max-width: 200px;
-    }
- /*.halfsized div{
+  #footerpar {
+    max-width: 75%;
+    margin: auto;
+  }
+  #footerpar p {
+    font-size: 15px;
+  }
+  .textareapost {
+    background-color: red;
+    padding: 10px;
+    overflow-y: auto;
+    resize: none;
+  }
+  .overlay {
+    position: absolute;
+
+    background: rgb(0, 0, 0);
+    background: rgba(0, 0, 0, 0.8); /* Black see-through */
+    color: #f1f1f1;
+
+    transition: 0.5s ease;
+    opacity: 0;
+
+    color: white;
+    font-size: 20px;
+    padding: 20px;
+  }
+  #communitytitle {
+    margin-top: -68px;
+  }
+  #specialinfectedtitle {
+    margin-top: -89px;
+  }
+
+  #specialinfectedtitle h1,
+  #survivorstitle h1,
+  #communitytitle h1 {
+    font-size: 70px;
+  }
+
+  .text {
+    color: white;
+
+    border: 2px solid red;
+  }
+  .forumsections:hover .overlay {
+    opacity: 1;
+  }
+
+  aside {
+    color: rgba(255, 255, 255, 0.68);
+    font-style: italic;
+    max-width: 200px;
+  }
+  /*.halfsized div{
     padding: 20px;
  }*/
-    aside p{
-        font-size: 15px;
-    
-    }
-    .gamefeatures{
-        max-width: 75%;
-        margin: auto;
-    }
- 
-    #navform{
-        max-width: 35%;
-      }
-    #adviceheading h2{
-        font-size: 30px;
-    }
-    .features{
-        padding: 35px;
-    }
-    
-    .features div p {
-        font-size: 20px;
-    }
-  
-    .charactercontent{
-        width: 70%;
-        padding: 30px;
-    }
-    .form{
-        max-width: 500px;
-       
-    }
+  aside p {
+    font-size: 15px;
+  }
+  .gamefeatures {
+    max-width: 75%;
+    margin: auto;
+  }
 
-    .characterssize{
-        width: 300px;
-    
-        height: 350px;
-        position: relative;
-        border-radius: 10px;
-        background-color: white;
-    }
-  .navbar{
+  #navform {
+    max-width: 35%;
+  }
+  #adviceheading h2 {
+    font-size: 30px;
+  }
+  .features {
+    padding: 35px;
+  }
+
+  .features div p {
+    font-size: 20px;
+  }
+
+  .charactercontent {
+    width: 70%;
+    padding: 30px;
+  }
+  .form {
+    max-width: 500px;
+  }
+
+  .characterssize {
+    width: 300px;
+
+    height: 350px;
+    position: relative;
+    border-radius: 10px;
+    background-color: white;
+  }
+  .navbar {
     background-color: black;
   }
-  h3{
-    color: #151E11;
+  h3 {
+    color: #151e11;
     font-size: 30px;
-}
-  .actualcharactercontent{
-   width: 75%;
-
-}
-.actualcharacterimageright{
+  }
+  .actualcharactercontent {
+    width: 75%;
+  }
+  .actualcharacterimageright {
     width: 50%;
-}
-    ul li{
-        margin: 10px 0 20px 0;
-        list-style-type: none;
-    }
-    .nav-link{
-        color: white;   
-    }
-    .nav-link :hover{
-        color: #6e9631;   
-    }
-    nav{
-        transition: top 0.3s;
-    }
+  }
+  ul li {
+    margin: 10px 0 20px 0;
+    list-style-type: none;
+  }
+  .nav-link {
+    color: white;
+  }
+  .nav-link :hover {
+    color: #6e9631;
+  }
+  nav {
+    transition: top 0.3s;
+  }
 
-    p{
-        line-height: 2em;
-        font-size: 18px;
-    }
-}
-@media(min-width: 992px){
-    .infectedcontent{
-        max-width: 60%;
-        padding: 30px;
-    }
-   .features div{
-    width: 50%;
-   }
-   .nav-link{
+  p {
+    line-height: 2em;
     font-size: 18px;
+  }
 }
-   .login{
+@media (min-width: 992px) {
+  .infectedcontent {
+    max-width: 60%;
+    padding: 30px;
+  }
+  .features div {
+    width: 50%;
+  }
+  .nav-link {
+    font-size: 18px;
+  }
+  .login {
     height: auto;
     width: 700px;
-   /* background-color: rgba(255,255,255,0.13);*/
+    /* background-color: rgba(255,255,255,0.13);*/
     border-radius: 10px;
     backdrop-filter: blur(10px);
-    box-shadow: 0 0 40px rgba(8,7,16,0.6);
+    box-shadow: 0 0 40px rgba(8, 7, 16, 0.6);
     padding: 50px 35px;
-}
-.headertext{
+  }
+  .headertext {
     height: 900px;
     z-index: 1;
     padding-left: 30px;
-   /* margin-left: -200px;*/
+    /* margin-left: -200px;*/
     background-color: black;
- }
- .headers{
+  }
+  .headers {
     height: 900px;
- }
- #header{
+  }
+  #header {
     height: 900px;
-}
- #headertext{
+  }
+  #headertext {
     height: 900px;
     z-index: 1;
     /*margin-right: -200px;*/
     background-color: black;
- }
-.halfsized{
+  }
+  .halfsized {
     width: 100%;
   }
   .halfsized img {
     margin: auto;
   }
-
 }
 
-@media (min-width: 1200px){
-    .halfsized{
-        width: 50%;
-      }
-
-    
-    
-}
-
-@media(min-width: 1423px) {
-    .survivorswholewrap{
-        padding-top: 150px;
-    }
-    #survivorsheaderposition{
-        height: 920px;
-    }
-
-}
-
-.splatter{
-    width: 30px;
-}
-
-.xbox{
-    width: 250px; 
-}
-
-.source{
-    width: 160px;
-}
-.center{
-    min-width: 40%;
-    max-width: 50%;
-}
-.valve{
-    width: 180px;
-}
-.steam3{
-    width: 120px;
-}
-
-.characterssize img{
-    width: 200px;
-}
-.headertitle{
-    position: absolute;
-    bottom: 0;
-}
-.infectedcontentleft div{
+@media (min-width: 1200px) {
+  .halfsized {
     width: 50%;
-
+  }
 }
-.infectedcontentright div{
-    width: 50%;
-    
+
+@media (min-width: 1423px) {
+  .survivorswholewrap {
+    padding-top: 150px;
+  }
+  #survivorsheaderposition {
+    height: 920px;
+  }
+}
+
+.splatter {
+  width: 30px;
+}
+
+.xbox {
+  width: 250px;
+}
+
+.source {
+  width: 160px;
+}
+.center {
+  min-width: 40%;
+  max-width: 50%;
+}
+.valve {
+  width: 180px;
+}
+.steam3 {
+  width: 120px;
+}
+
+.characterssize img {
+  width: 200px;
+}
+.headertitle {
+  position: absolute;
+  bottom: 0;
+}
+.infectedcontentleft div {
+  width: 50%;
+}
+.infectedcontentright div {
+  width: 50%;
 }
 
 h4 {
-    color: rgba(0, 0, 0, 0.441);
-    font-style: italic;
-    font-size: 14px;
+  color: rgba(0, 0, 0, 0.441);
+  font-style: italic;
+  font-size: 14px;
 }
-h3{
-    color: #151E11;
-}
-
-.charactercontent p{
-    font-size: 18px;
-}      
-.subhead{
-    color: white;
-    margin-top: -104px;
-    margin-left: 60px;
+h3 {
+  color: #151e11;
 }
 
-.subhead h2{
-    font-size: 105px;
+.charactercontent p {
+  font-size: 18px;
+}
+.subhead {
+  color: white;
+  margin-top: -104px;
+  margin-left: 60px;
+}
+
+.subhead h2 {
+  font-size: 105px;
 }
 
 @keyframes example {
-    from {
-        opacity: 0;
-        transform: translateX(-100px);
-    
-    }
-    to {
-        opacity: 1;
-        transform: translateX(1px);
-    }
+  from {
+    opacity: 0;
+    transform: translateX(-100px);
   }
-.intro{
-    animation: example .50s;
+  to {
+    opacity: 1;
+    transform: translateX(1px);
+  }
+}
+.intro {
+  animation: example 0.5s;
 }
 
 @media (min-width: 992px) {
-    .contentleft{
-        padding:  25px 0px 10px 100px;
-    }
-    .contentright{
-        padding:  25px 100px 10px 0px;
-    }
+  .contentleft {
+    padding: 25px 0px 10px 100px;
+  }
+  .contentright {
+    padding: 25px 100px 10px 0px;
+  }
 }
-  textarea[type=text], select {
-    width: 100%;
-    padding: 12px 20px;
-    margin: 8px 0;
-    display: inline-block;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-  }
-  button[type=submit] {
-    width: 100%;
-    background-color: #f23030;;
-    color: white;
-    padding: 14px 20px;
+textarea[type="text"],
+select {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+button[type="submit"] {
+  width: 100%;
+  background-color: #f23030;
+  color: white;
+  padding: 14px 20px;
 
-    margin: 8px 0;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  button[type=submit]:hover {
-    background-color: #f23030aa;;
-  }
-  
+  margin: 8px 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+button[type="submit"]:hover {
+  background-color: #f23030aa;
+}

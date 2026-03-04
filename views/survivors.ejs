@@ -1,199 +1,343 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>L4D Characters</title>
-        <%- include("partials/header.ejs") %>
-        
-                    <% if (locals.currentUser) { %>
-                      <li class="nav-item ">
-                        <a class="nav-link roboto-condensed "  href="/logout" >
-                          Welcome<span style="color: #D83232;"> <%- currentUser %></span>, Logout?
-                        </a>
-                       </li>
-                    <% } else {%>
-
-                        <li class="nav-item dropdown">
-                            <a class="nav-link roboto-condensed "  href="/login" >
-                              Login
-                            </a>
-                            </li>
-                    <% } %>
-                     
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </nav>
-
-
-<div  class="paddingtop">
-    <div class="container-fluid headers" id="survivors">
-        <div  class="d-flex  gap-3 flex-column-reverse flex-lg-row-reverse container align-items-lg-center">
-          
-            <div class="headertext d-flex align-items-center p-3 ">
-                <div>
-                    <h1 class="bungee-regular" style="color: white;">Survi<span style="color: #D83232;">vors</span></h1>
-                    <a href="#anchor2"><button  class="btn learnmore">Learn more</button></a>
-                </div>
-            </div>
+<%- include("partials/header.ejs") %>
+<div class="paddingtop">
+  <div class="container-fluid headers" id="survivors">
+    <div
+      class="d-flex gap-3 flex-column-reverse flex-lg-row-reverse container align-items-lg-center"
+    >
+      <div class="headertext d-flex align-items-center p-3">
+        <div>
+          <h1 class="bungee-regular" style="color: white">
+            Survi<span style="color: #d83232">vors</span>
+          </h1>
+          <a href="#anchor2"
+            ><button class="btn learnmore">Learn more</button></a
+          >
         </div>
+      </div>
     </div>
-    <div class="p-4 " style=" background-color: #D83232">
-        <h3 class="text-center   bungee-regular subheads px-5" style="color:white;">Left 4 Dead Characters</h3>
+  </div>
+  <div class="p-4" style="background-color: #d83232">
+    <h3 class="text-center bungee-regular subheads px-5" style="color: white">
+      Left 4 Dead Characters
+    </h3>
+  </div>
+  <div
+    id="anchor2"
+    class="container-lg d-flex flex-column justify-content-center"
+  >
+    <div style="background-color: white">
+      <div class="d-flex justify-content-center flex-wrap p-3">
+        <div
+          class="d-flex flex-column-reverse align-items-center flex-md-row-reverse"
+        >
+          <div id="louiscontent" class="charactercontent showcharactercontent">
+            <div class="actualcharactercontent">
+              <div
+                style="width: 10%; border-bottom: 4px solid red; margin: 10px 0"
+              ></div>
+              <p>
+                Louis is one of the four playable Survivors in Left 4 Dead. His
+                original concept was an assistant manager at a local retail
+                electronics chain store, but in the game, he is a Junior Systems
+                Analyst at “Franklin Brothers” in the IT department located in
+                Philadelphia PA, until the second day after the first Infection.
+                In official media, he is usually seen wielding a Submachine Gun
+                or dual Pistols.
+              </p>
+            </div>
+          </div>
+          <div class="characterssize d-flex flex-column align-items-center">
+            <div>
+              <img src="/images/Louis_profile 1.jpg" class="img-fluid" alt="" />
+            </div>
+            <div
+              class="learnaboutcharacter characterbio d-flex flex-column justify-content-end"
+            >
+              <a href="#anchorlouis"
+                ><button
+                  class="buttonsanddivsradius roboto-condensed"
+                  id="louis"
+                >
+                  Louis
+                </button></a
+              >
+            </div>
+          </div>
+        </div>
+        <div
+          class="d-flex flex-column-reverse align-items-center flex-md-row-reverse"
+        >
+          <div id="zoeycontent" class="charactercontent showcharactercontent">
+            <div class="actualcharactercontent">
+              <div
+                style="width: 10%; border-bottom: 4px solid red; margin: 10px 0"
+              ></div>
+              <p>
+                Zoey is one of the four playable Survivors in Left 4 Dead. Her
+                original design was based on Alesia Glidewell, who also worked
+                with Valve on Portal as a model for the character Chell.
+                However, when the character designs were updated later in
+                development, Zoey was made to resemble actress/model Sonja
+                Kinski instead. In official media, she is usually seen wielding
+                dual Pistols.
+              </p>
+            </div>
+          </div>
+          <div class="characterssize d-flex flex-column align-items-center">
+            <div>
+              <img
+                src="/images/Zoey_Profile 1.jpg"
+                class="img-fluid"
+                alt="Zoey Profile"
+              />
+            </div>
+            <div
+              class="learnaboutcharacter characterbio d-flex flex-column justify-content-end"
+            >
+              <a href="#anchorzoey"
+                ><button
+                  class="buttonsanddivsradius roboto-condensed"
+                  id="zoey"
+                >
+                  Zoey
+                </button></a
+              >
+            </div>
+          </div>
+        </div>
+        <div
+          class="d-flex flex-column-reverse align-items-center flex-md-row-reverse"
+        >
+          <div
+            id="franciscontent"
+            class="charactercontent showcharactercontent"
+          >
+            <div class="actualcharactercontent">
+              <div
+                style="width: 10%; border-bottom: 4px solid red; margin: 10px 0"
+              ></div>
+              <p>
+                Francis is one of the four playable Survivors in Left 4 Dead. He
+                is a tough biker with tattoos covering his arms and neck. His
+                tattoos identify him as a member of "Hells Legion", a name
+                possibly inspired by the real-world Hells Angels Motorcycle
+                Club. In official media, he can usually be seen wielding either
+                the Pump Shotgun or the Auto Shotgun.
+              </p>
+            </div>
+          </div>
+          <div class="characterssize d-flex flex-column align-items-center">
+            <img src="/images/Francis_Profile 1.jpg" class="img-fluid" alt="" />
+            <div
+              class="learnaboutcharacter characterbio d-flex flex-column justify-content-end"
+            >
+              <a href="#anchorfrancis"
+                ><button
+                  class="buttonsanddivsradius roboto-condensed"
+                  id="francis"
+                >
+                  Francis
+                </button></a
+              >
+            </div>
+          </div>
+        </div>
+        <div
+          class="d-flex flex-column-reverse align-items-center flex-md-row-reverse"
+        >
+          <div id="billcontent" class="charactercontent showcharactercontent">
+            <div class="actualcharactercontent">
+              <div
+                style="width: 10%; border-bottom: 4px solid red; margin: 10px 0"
+              ></div>
+              <p>
+                William "Bill" Overbeck is one of the four playable Survivors in
+                Left 4 Dead. He is a Vietnam veteran who served in the U.S. Army
+                1st Special Forces Group, and is the oldest of the group. He is
+                usually seen wielding the Assault Rifle (which appears as the
+                M16A2, a real-life assault rifle used by the U.S. Military after
+                the Vietnam War). He often has a lit cigarette in his mouth that
+                only extinguishes when he dies.
+              </p>
+            </div>
+          </div>
+          <div class="characterssize d-flex flex-column align-items-center">
+            <img src="/images/Bill_Profile 1.jpg" class="img-fluid" alt="" />
+            <div
+              class="learnaboutcharacter characterbio d-flex flex-column justify-content-end"
+            >
+              <a href="#anchorbill"
+                ><button
+                  class="buttonsanddivsradius roboto-condensed"
+                  id="bill"
+                >
+                  Bill
+                </button></a
+              >
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div id="anchor2"  class="container-lg d-flex flex-column justify-content-center " >
-        <div  style="background-color: white;">
-            
-            <div class=" d-flex justify-content-center  flex-wrap p-3" >
-                <div class=" d-flex flex-column-reverse align-items-center flex-md-row-reverse ">
-                    <div id="louiscontent" class="charactercontent showcharactercontent"  >
-                        <div class="actualcharactercontent"  >
-                            <div style="width: 10%; border-bottom: 4px solid red; margin: 10px 0;">
-                                
-                            </div>
-                            <p> Louis is one of the four playable Survivors in Left 4 Dead. His original concept was an assistant manager at a local retail electronics chain store, but in the game, he is a Junior Systems Analyst at “Franklin Brothers” in the IT department located in Philadelphia PA, until the second day after the first Infection. In official media, he is usually seen wielding a Submachine Gun or dual Pistols.</p>
-                        </div>
-                    </div>     
-                    <div class="characterssize d-flex flex-column align-items-center">
-                        <div >
-                            <img src="/images/Louis_profile 1.jpg"   class=" img-fluid   " alt="">
-                        </div>
-                        <div class="learnaboutcharacter characterbio  d-flex flex-column justify-content-end">
-                            <a href="#anchorlouis"><button class="buttonsanddivsradius roboto-condensed" id="louis">Louis</button></a>
-                        </div>
-                    </div>      
-                </div>
-                <div class="d-flex flex-column-reverse align-items-center flex-md-row-reverse">
-                    <div id="zoeycontent" class="charactercontent showcharactercontent" >
-                        <div class="actualcharactercontent"  >
-                            <div style="width: 10%; border-bottom: 4px solid red; margin: 10px 0;">
-                                
-                            </div>
-                            <p>Zoey is one of the four playable Survivors in Left 4 Dead. Her original design was based on Alesia Glidewell, who also worked with Valve on Portal as a model for the character Chell. However, when the character designs were updated later in development, Zoey was made to resemble actress/model Sonja Kinski instead. In official media, she is usually seen wielding dual Pistols.</p>
-                        </div>
-                    </div>
-                    <div class="characterssize   d-flex flex-column align-items-center" >
-                        <div >
-                            <img src="/images/Zoey_Profile 1.jpg"  class="img-fluid  " alt="">
+  </div>
+  <div class="p-4" style="background-color: #d83232">
+    <h3 class="bungee-regular subheads text-center" style="color: white">
+      Left 4 Dead 2 Characters
+    </h3>
+  </div>
+  <div class="container-lg d-flex flex-column justify-content-center">
+    <div
+      style="background-color: white"
+      class="d-flex justify-content-center flex-wrap p-3"
+    >
+      <div
+        style="position: relative"
+        class="d-flex flex-column-reverse align-items-center flex-md-row-reverse"
+        id="anchorellis"
+      >
+        <div id="elliscontent" class="showcharactercontent charactercontent">
+          <div class="actualcharactercontent">
+            <div
+              style="width: 10%; border-bottom: 4px solid red; margin: 10px 0"
+            ></div>
+            <p>
+              Ellis (also known as El) is one of the four playable Survivors in
+              Left 4 Dead 2. He is the youngest of the group. A junior mechanic
+              by trade in the city of Savannah, he presents himself as a goofy,
+              beer-loving country guy with an unsophisticated and sometimes
+              naive world view.Ellis (also known as El) is one of the four
+              playable Survivors in Left 4 Dead 2. He is the youngest of the
+              group.
+            </p>
+          </div>
+        </div>
+        <div class="characterssize d-flex flex-column align-items-center">
+          <img
+            src="/images/EllisWeaponsRender 1.jpg"
+            class="img-fluid"
+            alt=""
+          />
+          <div
+            class="learnaboutcharacter characterbio d-flex flex-column justify-content-end"
+          >
+            <a href="#anchorellis"
+              ><button class="buttonsanddivsradius roboto-condensed" id="ellis">
+                Ellis
+              </button></a
+            >
+          </div>
+        </div>
+      </div>
+      <div
+        class="d-flex flex-column-reverse align-items-center flex-md-row-reverse"
+        id="anchorrochelle"
+      >
+        <div id="rochellecontent" class="charactercontent showcharactercontent">
+          <div class="actualcharactercontent">
+            <div
+              style="width: 10%; border-bottom: 4px solid red; margin: 10px 0"
+            ></div>
+            <p>
+              Rochelle (also known as Ro) is one of the four playable Survivors
+              in Left 4 Dead 2. She was employed as an associate producer on a
+              television news station in which role she was sent on assignment
+              to Savannah (the location of the first campaign) to cover The
+              Infection's breaking story.
+            </p>
+          </div>
+        </div>
+        <div class="characterssize d-flex flex-column align-items-center">
+          <img
+            src="/images/RochelleWeaponsRender 1.jpg"
+            class="img-fluid"
+            alt=""
+          />
+          <div
+            class="learnaboutcharacter characterbio d-flex flex-column justify-content-end"
+          >
+            <a href="#anchorrochelle"
+              ><button
+                class="buttonsanddivsradius roboto-condensed"
+                id="rochelle"
+              >
+                Rochelle
+              </button></a
+            >
+          </div>
+        </div>
+      </div>
+      <div
+        class="d-flex flex-column-reverse align-items-center flex-md-row-reverse"
+        id="anchorcoach"
+      >
+        <div id="coachcontent" class="charactercontent showcharactercontent">
+          <div class="actualcharactercontent">
+            <div
+              style="width: 10%; border-bottom: 4px solid red; margin: 10px 0"
+            ></div>
+            <p>
+              Coach (real name unknown) is one of the four playable Survivors in
+              Left 4 Dead 2. He was a high-school health teacher and coordinator
+              for the freshman football team before the Infection hit his
+              hometown of Savannah. He is the oldest of the group and takes it
+              upon himself to motivate his fellow Survivors.
+            </p>
+          </div>
+        </div>
+        <div class="characterssize d-flex flex-column align-items-center">
+          <img
+            src="/images/CoachWeaponsRender 1.jpg"
+            class="img-fluid"
+            alt=""
+          />
+          <div
+            class="learnaboutcharacter characterbio d-flex flex-column justify-content-end"
+          >
+            <a href="#anchorcoach"
+              ><button class="buttonsanddivsradius roboto-condensed" id="coach">
+                Coach
+              </button></a
+            >
+          </div>
+        </div>
+      </div>
 
-                        </div>
-                        <div class="learnaboutcharacter characterbio d-flex flex-column justify-content-end" >
-                            <a href="#anchorzoey"><button class="buttonsanddivsradius roboto-condensed" id="zoey">Zoey</button></a>
-                        </div>
-                    </div> 
-                </div>  
-                <div class="d-flex flex-column-reverse align-items-center flex-md-row-reverse">
-                    <div id="franciscontent" class="charactercontent showcharactercontent">
-                        <div class="actualcharactercontent"   >
-                            <div style="width: 10%; border-bottom: 4px solid red; margin: 10px 0;">
-                                
-                            </div>
-                            <p>Francis is one of the four playable Survivors in Left 4 Dead. He is a tough biker with tattoos covering his arms and neck. His tattoos identify him as a member of "Hells Legion", a name possibly inspired by the real-world Hells Angels Motorcycle Club. In official media, he can usually be seen wielding either the Pump Shotgun or the Auto Shotgun.</p>
-                        </div>
-                    </div>
-                    <div class="characterssize d-flex flex-column align-items-center">
-                        <img src="/images/Francis_Profile 1.jpg"  class=" img-fluid " alt="">
-                        <div class="learnaboutcharacter characterbio  d-flex flex-column justify-content-end">
-                    
-                            <a href="#anchorfrancis"><button class="buttonsanddivsradius roboto-condensed" id="francis">Francis</button></a>
-                        </div>
-                    </div>
-                </div>   
-                <div class="d-flex flex-column-reverse align-items-center flex-md-row-reverse">
-                    <div id="billcontent" class="charactercontent showcharactercontent">
-                        <div class="actualcharactercontent ">
-                            <div style="width: 10%; border-bottom: 4px solid red; margin: 10px 0;">
-                                
-                            </div>
-                            <p>William "Bill" Overbeck is one of the four playable Survivors in Left 4 Dead. He is a Vietnam veteran who served in the U.S. Army 1st Special Forces Group, and is the oldest of the group. He is usually seen wielding the Assault Rifle (which appears as the M16A2, a real-life assault rifle used by the U.S. Military after the Vietnam War). He often has a lit cigarette in his mouth that only extinguishes when he dies.</p>
-                        </div>
-                    </div>
-                    <div class="characterssize d-flex flex-column align-items-center">
-                        <img src="/images/Bill_Profile 1.jpg" class="img-fluid " alt="">
-                        <div class="learnaboutcharacter characterbio  d-flex flex-column justify-content-end">
-                            <a href="#anchorbill"><button class="buttonsanddivsradius roboto-condensed" id="bill">Bill</button></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      <div
+        class="d-flex flex-column-reverse align-items-center flex-md-row-reverse"
+        id="anchornick"
+      >
+        <div id="nickcontent" class="charactercontent showcharactercontent">
+          <div class="actualcharactercontent">
+            <div
+              style="width: 10%; border-bottom: 4px solid red; margin: 10px 0"
+            ></div>
+            <p>
+              Nicolas, or Nick is one of the four playable Survivors in Left 4
+              Dead 2. He is a gambler with a shady―even violent―past. He seems
+              reluctant to be a part of the group at all and takes the role of
+              "the complainer," finding fault in other people's plans, the
+              increasingly sorry state of his once-fine suit and his teammates'
+              character flaws, as he judges them. This makes him difficult for
+              the others to get along with at first, but that changes as time
+              goes by, as he learns to trust them and proves himself a valuable
+              part of the team.
+            </p>
+          </div>
         </div>
-    </div>
-    <div class="p-4"  style=" background-color: #D83232">
-        <h3 class=" bungee-regular subheads text-center  " style="color:white;">Left 4 Dead 2 Characters</h3>
-    </div>
-    <div class="container-lg d-flex flex-column justify-content-center ">
-        <div style="background-color: white;" class=" d-flex justify-content-center flex-wrap p-3">
-            
-            <div style="position: relative; " class="d-flex flex-column-reverse align-items-center flex-md-row-reverse" id="anchorellis">
-                <div id="elliscontent"  class="showcharactercontent charactercontent" >
-                    <div class="actualcharactercontent "  >
-                        <div style="width: 10%; border-bottom: 4px solid red; margin: 10px 0;">
-                                
-                        </div>
-                        <p>Ellis (also known as El) is one of the four playable Survivors in Left 4 Dead 2. He is the youngest of the group. A junior mechanic by trade in the city of Savannah, he presents himself as a goofy, beer-loving country guy with an unsophisticated and sometimes naive world view.Ellis (also known as El) is one of the four playable Survivors in Left 4 Dead 2. He is the youngest of the group. 
-                        </p>
-                    </div>
-                </div>
-                <div class="characterssize d-flex flex-column align-items-center">
-                    <img src="/images/EllisWeaponsRender 1.jpg" class=" img-fluid  " alt="">
-                    <div class="learnaboutcharacter characterbio  d-flex flex-column justify-content-end">
-                        <a href="#anchorellis"><button class="buttonsanddivsradius roboto-condensed" id="ellis">Ellis</button></a>
-                    </div>
-                </div> 
-            </div>
-            <div class="d-flex flex-column-reverse align-items-center flex-md-row-reverse" id="anchorrochelle">
-                <div id="rochellecontent" class="charactercontent showcharactercontent" >
-                    <div class="actualcharactercontent">
-                        <div style="width: 10%; border-bottom: 4px solid red; margin: 10px 0;">
-                                
-                        </div>
-                        <p>Rochelle (also known as Ro) is one of the four playable Survivors in Left 4 Dead 2. She was employed as an associate producer on a television news station in which role she was sent on assignment to Savannah (the location of the first campaign) to cover The Infection's breaking story.</p>
-                    </div>
-                </div>
-                <div class="characterssize d-flex flex-column align-items-center">
-                    <img src="/images/RochelleWeaponsRender 1.jpg"  class="img-fluid " alt="">
-                    <div class="learnaboutcharacter characterbio  d-flex flex-column justify-content-end">
-                        <a href="#anchorrochelle"><button class="buttonsanddivsradius roboto-condensed" id="rochelle">Rochelle</button></a>
-                    </div>
-                </div>
-            </div>
-            <div class="d-flex flex-column-reverse align-items-center flex-md-row-reverse" id="anchorcoach">
-                <div id="coachcontent"  class="charactercontent showcharactercontent">
-                    <div class="actualcharactercontent"  >
-                        <div style="width: 10%; border-bottom: 4px solid red; margin: 10px 0;">
-                                
-                        </div>
-                        <p>Coach (real name unknown) is one of the four playable Survivors in Left 4 Dead 2. He was a high-school health teacher and coordinator for the freshman football team before the Infection hit his hometown of Savannah. He is the oldest of the group and takes it upon himself to motivate his fellow Survivors.</p>
-                    </div>
-                </div>
-                <div class="characterssize d-flex flex-column align-items-center">
-                    <img src="/images/CoachWeaponsRender 1.jpg"  class="  img-fluid " alt="">
-                    <div class="learnaboutcharacter characterbio  d-flex flex-column justify-content-end">
-                    <a href="#anchorcoach"><button class="buttonsanddivsradius roboto-condensed " id="coach">Coach</button></a> 
-                    </div>
-                </div>
-            </div>
-            
-            <div class="d-flex flex-column-reverse align-items-center flex-md-row-reverse" id="anchornick">
-                <div id="nickcontent" class="charactercontent showcharactercontent" >
-                    <div class="actualcharactercontent"  >
-                        <div style="width: 10%; border-bottom: 4px solid red; margin: 10px 0;">
-                                
-                        </div>
-                        <p>Nicolas, or Nick is one of the four playable Survivors in Left 4 Dead 2. He is a gambler with a shady―even violent―past. He seems reluctant to be a part of the group at all and takes the role of "the complainer," finding fault in other people's plans, the increasingly sorry state of his once-fine suit and his teammates' character flaws, as he judges them. This makes him difficult for the others to get along with at first, but that changes as time goes by, as he learns to trust them and proves himself a valuable part of the team.</p>
-                    </div>
-                </div>
-                <div class="characterssize d-flex flex-column align-items-center">
-                    <img src="/images/NickWeaponsRender 1.jpg"  class=" img-fluid " alt="">
-                    <div class="learnaboutcharacter characterbio  d-flex flex-column justify-content-end">
-                    <a href="#anchornick"><button class="buttonsanddivsradius roboto-condensed" id="nick">Nick</button></a>
-                        
-                    </div>
-                </div>
-            </div>
+        <div class="characterssize d-flex flex-column align-items-center">
+          <img src="/images/NickWeaponsRender 1.jpg" class="img-fluid" alt="" />
+          <div
+            class="learnaboutcharacter characterbio d-flex flex-column justify-content-end"
+          >
+            <a href="#anchornick"
+              ><button class="buttonsanddivsradius roboto-condensed" id="nick">
+                Nick
+              </button></a
+            >
+          </div>
         </div>
+      </div>
     </div>
-  
+  </div>
+</div>
 <%- include("partials/footer.ejs") %>
-
-

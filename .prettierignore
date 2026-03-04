@@ -1,0 +1,4 @@
+views/partials/head.ejs
+views/partials/header.ejs
+views/partials/footer.ejs
+views/partials/end.ejs

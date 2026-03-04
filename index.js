@@ -7,9 +7,9 @@ import { Strategy } from "passport-local";
 //import GoogleStrategy from "passport-google-oauth2";
 import session from "express-session";
 import env from "dotenv";
-import e from "express";
 
 const app = express();
+
 const port = 3000;
 
 const saltRounds = 10;
@@ -31,6 +31,10 @@ app.use(express.static("public"));
 
 app.use(passport.initialize());
 app.use(passport.session());
+app.use((req, res, next) => {
+  res.locals.user = req.user ? req.user.display_name : null;
+  next();
+});
 
 const db = new pg.Client({
   user: process.env.PG_USER,
@@ -121,21 +125,104 @@ app.get("/logout", (req, res, next) => {
     if (err) {
       return next(err);
     }
-    res.redirect("/community");
+    res.redirect("/login");
   });
 });
 
 app.get("/forumpost", async (req, res) => {
   if (req.isAuthenticated()) {
-    const result = await db.query(
-      "SELECT * FROM users JOIN posts ON users.id = posts.user_id",
-    );
+    const forumPostQuery = `
+     WITH reaction_counts AS (
+        SELECT
+          post_id,
+          COUNT(*) FILTER (WHERE reaction_type = 'like') AS likes,
+          COUNT(*) FILTER (WHERE reaction_type = 'dislike') AS dislikes
+        FROM posts_reactions
+        GROUP BY post_id
+      ),
+      current_user_post_reactions AS (
+        SELECT
+          post_id,
+          reaction_type
+        FROM posts_reactions
+        WHERE user_id = $1
+      ),
+      reactions_comments_counts AS (
+        SELECT
+          comment_id,
+          COUNT(*) FILTER (WHERE reaction_type = 'like') AS likes,
+          COUNT(*) FILTER (WHERE reaction_type = 'dislike') AS dislikes
+        FROM reactions_comments
+        GROUP BY comment_id
+      ),
+      current_user_comment_reactions AS (
+        SELECT
+          comment_id,
+          reaction_type
+        FROM reactions_comments
+        WHERE user_id = $1
+      ),
+      reply_counts AS (
+        SELECT
+          post_id,
+          COUNT(*) AS reply_count
+        FROM replies
+        GROUP BY post_id
+      ),
+      replies AS (
+        SELECT
+          r.id,
+          r.post_id,
+          r.comment_post,
+          r.user_id,
+          r.created_at,
+          u.display_name
+        FROM replies r
+        JOIN users u ON u.id = r.user_id
+      )
+      SELECT
+        p.id,
+        p.updated_at,
+        p.post,
+        p.user_id,
+        p.created_at,
+        COALESCE(rc.likes, 0) AS likes,
+        COALESCE(rc.dislikes, 0) AS dislikes,
+        COALESCE(rep.reply_count, 0) AS reply_count,
+        cur_pr.reaction_type AS user_reaction,
+        u.display_name,
+        COALESCE(rp.replies, '[]'::json) AS replies
+      FROM posts p
+      LEFT JOIN reaction_counts rc ON rc.post_id = p.id
+      LEFT JOIN current_user_post_reactions cur_pr ON cur_pr.post_id = p.id
+      LEFT JOIN reply_counts rep ON rep.post_id = p.id
+      LEFT JOIN users u ON u.id = p.user_id
+      LEFT JOIN LATERAL (
+        SELECT
+          post_id,
+          json_agg(json_build_object(
+            'id', id,
+            'comment_post', comment_post,
+            'user_id', user_id,
+            'created_at', created_at,
+            'likes', COALESCE(rcc.likes, 0),
+            'dislikes', COALESCE(rcc.dislikes, 0),
+            'user_reaction', ccr.reaction_type,
+            'display_name', display_name
+          ) ORDER BY created_at DESC) AS replies
+        FROM replies
+        LEFT JOIN reactions_comments_counts rcc ON rcc.comment_id = replies.id
+        LEFT JOIN current_user_comment_reactions ccr ON ccr.comment_id = replies.id
+        GROUP BY post_id
+      ) rp ON rp.post_id = p.id
+      ORDER BY p.created_at DESC;
+    `;
 
-    const users = result.rows;
+    const result = await db.query(forumPostQuery, [req.user.id]);
 
     res.render("forumpost.ejs", {
       currentUser: req.user.display_name,
-      listUsers: users,
+      listAllContent: result.rows,
     });
   } else {
     res.redirect("/login");
@@ -199,94 +286,79 @@ app.post("/ascend", async (req, res) => {
     const users = result.rows;
     res.render("forumpost.ejs", {
       currentUser: req.user.display_name,
-      listUser: users,
+      listAllContent: users,
     });
   }
 });
-app.post("/like-post", async (req, res) => {
-  if (req.isAuthenticated()) {
-    // Handle the like post logic here
-    console.log("Like button clicked for post ID:", req.body.post_id);
-    console.log(req.user);
+app.post("/post-reaction", async (req, res) => {
+  if (!req.isAuthenticated()) return res.redirect("/login");
 
-    //check to see if the user has already liked the post
-    const checkLike = await db.query(
-      "SELECT * FROM posts_reactions WHERE post_id = $1 AND user_id = $2 AND reaction_type = 'like'",
-      [req.body.post_id, req.user.id],
-    );
-    if (checkLike.rows.length > 0) {
-      console.log("User has already liked this post.");
-      // Optionally, you could remove the like here if you want to allow unliking
-      await db.query(
-        "DELETE FROM posts_reactions WHERE post_id = $1 AND user_id = $2 AND reaction_type = 'like'",
-        [req.body.post_id, req.user.id],
-      );
-      return res.redirect("/forumpost");
-    } else if (checkLike.rows.length === 0) {
-      // Check if the user has disliked the post and remove the dislike if it exists
-      const checkDislike = await db.query(
-        "SELECT * FROM posts_reactions WHERE post_id = $1 AND user_id = $2 AND reaction_type = 'dislike'",
-        [req.body.post_id, req.user.id],
-      );
-      if (checkDislike.rows.length > 0) {
-        console.log("User has already disliked this post. Removing dislike.");
-        await db.query(
-          "DELETE FROM posts_reactions WHERE post_id = $1 AND user_id = $2 AND reaction_type = 'dislike'",
-          [req.body.post_id, req.user.id],
-        );
-      }
-    }
-    await db.query(
-      "INSERT INTO posts_reactions (post_id, user_id, reaction_type) VALUES ($1, $2, $3)",
-      [req.body.post_id, req.user.id, "like"],
-    );
-    res.redirect("/forumpost");
-  }
-});
-app.post("/dislike-post", async (req, res) => {
-  if (req.isAuthenticated()) {
-    // Handle the dislike post logic here
-    console.log("Dislike button clicked for post ID:", req.body.post_id);
-    console.log(req.user);
+  const postId = req.body.post_id;
+  const commentId = req.body.comment_post_id;
+  const reaction = req.body.reaction || req.body.reaction_comment; // "like" | "dislike"
 
-    //check to see if the user has already disliked the post
-    const checkDislike = await db.query(
-      "SELECT * FROM posts_reactions WHERE post_id = $1 AND user_id = $2 AND reaction_type = 'dislike'",
-      [req.body.post_id, req.user.id],
+  if (commentId) {
+    // REPLY path: only touch reactions_comments
+    const existing = await db.query(
+      "SELECT reaction_type FROM reactions_comments WHERE comment_id = $1 AND user_id = $2",
+      [commentId, req.user.id],
     );
-    if (checkDislike.rows.length > 0) {
-      console.log("User has already disliked this post.");
-      // Optionally, you could remove the dislike here if you want to allow undisliking
+
+    if (existing.rows.length && existing.rows[0].reaction_type === reaction) {
       await db.query(
-        "DELETE FROM posts_reactions WHERE post_id = $1 AND user_id = $2 AND reaction_type = 'dislike'",
-        [req.body.post_id, req.user.id],
+        "DELETE FROM reactions_comments WHERE comment_id = $1 AND user_id = $2",
+        [commentId, req.user.id],
       );
-      return res.redirect("/forumpost");
-    } else if (checkDislike.rows.length === 0) {
-      // Check if the user has liked the post and remove the like if it exists
-      const checkLike = await db.query(
-        "SELECT * FROM posts_reactions WHERE post_id = $1 AND user_id = $2 AND reaction_type = 'like'",
-        [req.body.post_id, req.user.id],
+    } else {
+      //if insert hits a duplicate on this unique key… ON CONFLICT
+      //…update existing row instead of throwing error DO UPDATE
+      //the row you tried to insert (the “new incoming values”) are referenced as EXCLUDED in the DO UPDATE clause
+      await db.query(
+        `INSERT INTO reactions_comments (comment_id, user_id, reaction_type)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (user_id, comment_id)
+         DO UPDATE SET reaction_type = EXCLUDED.reaction_type`,
+        [commentId, req.user.id, reaction],
       );
-      if (checkLike.rows.length > 0) {
-        console.log("User has already liked this post. Removing like.");
-        await db.query(
-          "DELETE FROM posts_reactions WHERE post_id = $1 AND user_id = $2 AND reaction_type = 'like'",
-          [req.body.post_id, req.user.id],
-        );
-      }
     }
-    await db.query(
-      "INSERT INTO posts_reactions (post_id, user_id, reaction_type) VALUES ($1, $2, $3)",
-      [req.body.post_id, req.user.id, "dislike"],
-    );
-    res.redirect("/forumpost");
+
+    return res.redirect("/forumpost");
   }
+
+  if (postId) {
+    // POST path: only touch posts_reactions
+    const existing = await db.query(
+      "SELECT reaction_type FROM posts_reactions WHERE post_id = $1 AND user_id = $2",
+      [postId, req.user.id],
+    );
+
+    if (existing.rows.length && existing.rows[0].reaction_type === reaction) {
+      await db.query(
+        "DELETE FROM posts_reactions WHERE post_id = $1 AND user_id = $2",
+        [postId, req.user.id],
+      );
+    } else {
+      await db.query(
+        `INSERT INTO posts_reactions (post_id, user_id, reaction_type)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (user_id, post_id)
+         DO UPDATE SET reaction_type = EXCLUDED.reaction_type`,
+        [postId, req.user.id, reaction],
+      );
+    }
+
+    return res.redirect("/forumpost");
+  }
+
+  return res.status(400).send("Missing reaction target");
 });
 
 app.post("/descend", async (req, res) => {
   const result = await db.query(
-    "SELECT * FROM users JOIN posts ON users.id = posts.user_id ORDER BY created_at ASC",
+    `
+      SELECT * FROM users 
+      JOIN posts ON users.id = posts.user_id
+      ORDER BY created_at ASC`,
   );
   const users = result.rows;
 
@@ -308,6 +380,28 @@ app.post("/add", async (req, res) => {
     await db.query(
       "INSERT INTO posts (post, user_id, created_at) VALUES ($1, $2, $3)",
       [post, req.user.id, date],
+    );
+    res.redirect("/forumpost");
+  } catch (err) {
+    console.log(err);
+  }
+});
+app.post("/add-reply", async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.redirect("/login");
+  }
+
+  const comment_post = req.body.reply;
+  const post_id = req.body.post_id;
+
+  console.log(req.body);
+
+  try {
+    let date = new Date();
+
+    await db.query(
+      "INSERT INTO replies (comment_post, user_id, post_id, created_at) VALUES ($1, $2, $3, $4)",
+      [comment_post, req.user.id, post_id, date],
     );
     res.redirect("/forumpost");
   } catch (err) {
