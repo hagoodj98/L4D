@@ -1,112 +1,42 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>ZombieSlayers</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Bungee&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-      crossorigin="anonymous"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
-    />
-    <link rel="stylesheet" type="text/css" href="/css/reset.css" />
-    <link rel="stylesheet" type="text/css" href="/css/styles.css" />
-  </head>
-  <body style="background-color: black">
-    <!-- <div class="container_outer_img">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" type="text/css" href="css/reset.css">
+<link rel="stylesheet" type="text/css" href="/css/styles.css">
+</head>
+<body style=" background-color: black;">
+<!-- <div class="container_outer_img">
     <span cursor:pointer; onmouseover="openNav()" class="navhover"><img src="images/navarrow.svg"></span>
 </div>-->
-    <nav class="navbar navbar-expand-lg fixed-top">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="/"
-          ><img
-            src="/images/110623bcd586fd570536803d7413fc13 1.png"
-            width="200px"
-            class="img-fluid"
-            alt=""
-        /></a>
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="offcanvas"
-          data-bs-target="#offcanvasNavbar"
-          aria-controls="offcanvasNavbar"
-          aria-label="Toggle navigation"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div
-          class="offcanvas offcanvas-end"
-          style="background-color: #0d0d0d"
-          tabindex="-1"
-          id="offcanvasNavbar"
-          aria-labelledby="offcanvasNavbarLabel"
-        >
-          <div class="offcanvas-header">
-            <h5
-              class="offcanvas-title bungee-regular"
-              style="color: white"
-              id="offcanvasNavbarLabel"
-            >
-              ZombieSlayers
-            </h5>
-            <button
-              type="button"
-              class="btn-close btn-close-white"
-              data-bs-dismiss="offcanvas"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="offcanvas-body">
-            <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
-              <li class="nav-item">
-                <a
-                  class="nav-link roboto-condensed"
-                  aria-current="page"
-                  href="/"
-                  >Home</a
-                >
-              </li>
-              <li class="nav-item">
-                <a class="nav-link roboto-condensed" href="/survivors"
-                  >Survivors</a
-                >
-              </li>
-              <li class="nav-item">
-                <a class="nav-link roboto-condensed" href="/specialinfected"
-                  >Special Infected</a
-                >
-              </li>
-              <li class="nav-item dropdown">
-                <a class="nav-link roboto-condensed" href="/community">
-                  Community
-                </a>
-              </li>
-              <% if (locals.user) { %>
-              <li class="nav-item">
-                <a class="nav-link roboto-condensed" href="/logout"
-                  >Hey <%- locals.user %>, Logout</a
-                >
-              </li>
-              <% } else { %>
-              <li class="nav-item">
-                <a class="nav-link roboto-condensed" href="/login"
-                  >Login</a
-                >
-              </li>
-              <% } %>
-            </ul>
-          </div>
+<nav class="navbar navbar-expand-lg fixed-top" >
+    <div class="container-fluid">
+      <a class="navbar-brand"  href="/"><img src="/images/110623bcd586fd570536803d7413fc13 1.png"   width="200px" class="img-fluid" alt=""></a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="offcanvas offcanvas-end " style="background-color: #0D0D0D;" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title bungee-regular" style="color: white" id="offcanvasNavbarLabel">ZombieSlayers</h5>
+          <button type="button" class="btn-close btn-close-white"  data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
-      </div>
-    </nav>
+        <div class="offcanvas-body">
+          <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+            <li class="nav-item">
+              <a class="nav-link  roboto-condensed "  aria-current="page" href="/">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link roboto-condensed"  href="/survivors">Survivors</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link roboto-condensed" href="/specialinfected">Special Infected</a>
+              </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link roboto-condensed " href="/community"  >
+                Community
+              </a>
+            </li>
+
+          

@@ -1,98 +1,93 @@
-<%- include("partials/header.ejs") %>
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>The Community</title>
+        <%- include("partials/header.ejs") %>
+                    <% if (locals.currentUser) { %>
+                      <li class="nav-item ">
+                        <a class="nav-link roboto-condensed "  href="/logout" >
+                          Welcome <span style="color: #D83232;"><%- currentUser %></span>, Logout?
+                        </a>
+                       </li>
+                    <% }else{ %>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link roboto-condensed "  href="/login" >
+                              Login
+                            </a>
+                            </li>
+                        <%}%>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </nav>
 <div class="paddingtop">
-  <div class="container-fluid headers" id="community">
-    <div
-      class="d-flex gap-3 flex-column-reverse flex-lg-row-reverse container align-items-lg-center"
-    >
-      <div class="headertext d-flex align-items-center p-3">
-        <div>
-          <h1 class="bungee-regular" style="color: #ffffff">
-            Your <span style="color: #d83232">Community</span>
-          </h1>
-          <a href="#anchor4"><button class="btn danger">Learn more</button></a>
+    <div class="container-fluid headers" id="community">
+        <div  class="d-flex  gap-3 flex-column-reverse flex-lg-row-reverse container align-items-lg-center">
+          
+            <div class="headertext d-flex align-items-center p-3 ">
+                <div>
+                    <h1 class="bungee-regular" style="color: #ffffff;">Your <span style="color: #D83232;">Community</span></h1>
+                <a href="#anchor4"><button  class="btn danger">Learn more</button></a>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 
-  <div class="container d-flex flex-column">
-    <div
-      id="forum"
-      class="d-flex container divspacing flex-column align-items-md-start justify-content-center"
-    >
-      <div id="anchor4">
-        <h2 style="color: #ffffff" class="roboto-condensed">Forum</h2>
-      </div>
-      <div>
-        <p style="color: white">
-          Below are some forum usage guidelines. They are posted here as a
-          general reminder in an effort to keep the forums friendly and usable
-          for everyone. The forums are for everyone, new and advanced users
-          alike.
-        </p>
-      </div>
-    </div>
-    <div class="d-flex justify-content-center" style="width: 100%">
-      <div class="topspacingforum">
-        <div class="forumsubheaders">
-          <h2 style="color: #ffffff" class="roboto-condensed">News</h2>
-        </div>
-        <div id="news" class="forumsections" style="height: 300px">
-          <a href="https://www.l4d.com/blog/">
-            <div
-              class="overlay d-flex justify-content-center align-items-center"
-            >
-              <div>
-                <span class="greenselected">More Info</span> about left 4 Dead
-              </div>
+    <div class="container d-flex flex-column ">
+        <div id="forum" class="d-flex container divspacing flex-column align-items-md-start justify-content-center ">
+            <div id="anchor4">
+                <h2 style="color: #ffffff;" class="roboto-condensed">Forum</h2>
             </div>
-          </a>
-        </div>
-      </div>
-    </div>
-    <div
-      class="d-flex flex-column align-items-center align-items-md-start flex-md-row gap-3 row-gap-3"
-    >
-      <div class="topspacingforum">
-        <div class="forumsubheaders">
-          <h2 style="color: #ffffff" class="roboto-condensed">
-            Share Infected Advice
-          </h2>
-        </div>
-        <div id="findsquad" class="forumsections" style="height: 300px">
-          <a href="https://discord.gg/xWHJvUHj">
-            <div
-              class="overlay d-flex justify-content-center align-items-center"
-            >
-              <div>
-                <span class="greenselected">Find a team</span><br />
-                to take down the infected!
-              </div>
+            <div>
+                <p style="color: white;">Below are some forum usage guidelines. They are posted here as a general reminder in an effort to keep the forums friendly and usable for everyone.  The forums are for everyone, new and advanced users alike.
+            </p>
             </div>
-          </a>
         </div>
-      </div>
-      <div class="topspacingforum">
-        <div class="forumsubheaders">
-          <h2 style="color: #ffffff" class="roboto-condensed">
-            Share Infected Advice
-          </h2>
-        </div>
-        <div id="shareadvice" class="forumsections" style="height: 300px">
-          <a href="/login">
-            <div
-              class="overlay d-flex justify-content-center align-items-center"
-            >
-              <div>
-                Anything on your mind?<br />
-                <span class="greenselected">Need some advice</span> <br />about
-                the Left 4 Dead?
-              </div>
+        <div class="d-flex justify-content-center" style=" width: 100%;">
+            <div class=" topspacingforum">
+                <div class="forumsubheaders">
+                    <h2 style="color: #ffffff;"  class="roboto-condensed">News</h2>
+                </div>
+                <div id="news" class="forumsections " style="height: 300px;" >
+                    <a href="https://www.l4d.com/blog/"  > 
+                        <div class="overlay d-flex justify-content-center align-items-center">
+                            <div ><span class="greenselected">More Info</span> about left 4 Dead</div>
+                        </div>
+                    </a>
+                </div>
             </div>
-          </a>
         </div>
-      </div>
+        <div class="d-flex flex-column align-items-center align-items-md-start  flex-md-row gap-3 row-gap-3 ">
+            <div class="topspacingforum">
+                <div class="forumsubheaders">
+                    <h2 style="color: #ffffff;"  class="roboto-condensed">Share Infected Advice</h2>
+                </div>
+                <div id="findsquad" class="forumsections " style="height: 300px;" >
+                    <a href="https://discord.gg/xWHJvUHj"  > 
+                        <div class="overlay d-flex justify-content-center align-items-center">
+                            <div >
+                                <span class="greenselected">Find a team</span><br> to take down the infected!
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="topspacingforum">
+                <div class="forumsubheaders">
+                    <h2 style="color: #ffffff;"  class="roboto-condensed">Share Infected Advice</h2>
+                </div>
+                <div id="shareadvice" class="forumsections " style="height: 300px;" >
+                    <a href="/login"  > 
+                        
+                        <div class="overlay d-flex justify-content-center align-items-center">
+                            <div >
+                                Anything on your mind?<br> <span class="greenselected">Need some advice</span> <br>about the Left 4 Dead?
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 <%- include("partials/footer.ejs") %>

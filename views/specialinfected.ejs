@@ -1,387 +1,215 @@
-<%- include("partials/header.ejs") %>
-<div class="paddingtop">
-  <div class="container-fluid headers" id="specialinfected">
-    <div
-      class="d-flex gap-3 flex-column-reverse flex-lg-row-reverse container align-items-lg-center"
-    >
-      <div class="headertext d-flex align-items-center p-3">
-        <div>
-          <h1 class="bungee-regular" style="color: white">
-            Special <span style="color: #d83232">Infected</span>
-          </h1>
-          <a href="#anchor3"><button class="btn danger">Learn more</button></a>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="container">
-    <div class="accordion accordion-flush" id="accordionExample">
-      <div class="accordion-item">
-        <h3 class="accordion-header" id="anchor3">
-          <button
-            class="accordion-button roboto-condensed"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#collapseOne"
-            aria-expanded="true"
-            aria-controls="collapseOne"
-          >
-            Hunter
-          </button>
-        </h3>
-        <div
-          id="collapseOne"
-          class="accordion-collapse collapse show"
-          data-bs-parent="#accordionExample"
-        >
-          <div class="accordion-body">
-            <div
-              class="d-flex flex-column flex-md-row gap-3 subheadingcontentsections"
-            >
-              <div class="d-flex align-items-lg-center halfsized p-1">
-                <p>
-                  The Hunter is the least visibly mutated Special Infected and
-                  superficially resembles a Common Infected. It has yet to be
-                  explained how the Hunter's mutations onset, whether it be
-                  genetic, biochemical, or a Hunter-specific strain of the
-                  virus, but the mutations seem to be sex-linked as only male
-                  Hunters have been observed. The Hunter's reaction to the
-                  Infection has granted him an increase in lower-body strength.
-                </p>
-              </div>
-              <div class="d-flex align-items-md-center halfsized">
-                <div>
-                  <img
-                    src="/images/the-hunter-is-hunting-or-something-v0-yrk1n7lixycd1 1.jpg"
-                    class="img-fluid"
-                    alt=""
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="accordion-item">
-        <h3 class="accordion-header">
-          <button
-            class="accordion-button collapsed roboto-condensed"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#collapseTwo"
-            aria-expanded="false"
-            aria-controls="collapseTwo"
-          >
-            Witch
-          </button>
-        </h3>
-        <div
-          id="collapseTwo"
-          class="accordion-collapse collapse"
-          data-bs-parent="#accordionExample"
-        >
-          <div class="accordion-body">
-            <div
-              class="d-flex flex-column flex-md-row gap-3 subheadingcontentsections"
-            >
-              <div class="d-flex align-items-lg-center halfsized p-1">
-                <p>
-                  The Witch is highly sensitive to light and the close presence
-                  of uninfected humans. She is completely unresponsive to
-                  Infected and the passage of nearby bullets.When alerted to the
-                  presence of an uninfected human or flashlight, she will look
-                  in the Survivor's direction and make a low warning growl: this
-                  signals an incipient attack. If the Survivor backs away a fair
-                  distance or is no longer in sight, she will gradually return
-                  to her wailing state, taking longer if the intensity of her
-                  warning growls is high.
-                </p>
-              </div>
-              <div class="d-flex align-items-md-center halfsized">
-                <div>
-                  <img src="/images/download 1.jpg" class="img-fluid" alt="" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="accordion-item">
-        <h3 class="accordion-header">
-          <button
-            class="accordion-button collapsed roboto-condensed"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#collapseThree"
-            aria-expanded="false"
-            aria-controls="collapseThree"
-          >
-            Charger
-          </button>
-        </h3>
-        <div
-          id="collapseThree"
-          class="accordion-collapse collapse"
-          data-bs-parent="#accordionExample"
-        >
-          <div class="accordion-body">
-            <div
-              class="d-flex flex-column flex-md-row gap-3 subheadingcontentsections"
-            >
-              <div class="d-flex align-items-lg-center halfsized p-1">
-                <p>
-                  The Charger is a Special Infected introduced in Left 4 Dead 2.
-                  His main purpose is to separate a group of Survivors who are
-                  close together by grabbing one and carrying them away while
-                  crashing into the rest of the group, sending them flying
-                  through the air. While he matches the Survivors' pace, he
-                  speeds up considerably when charging. However, the Charger
-                  cannot stop or turn during the charge until he hits a wall or
-                  travels a certain distance.
-                </p>
-              </div>
-              <div class="d-flex align-items-md-center halfsized">
-                <div>
-                  <img
-                    src="/images/download (1) 1.jpg"
-                    class="img-fluid"
-                    alt=""
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="accordion-item">
-        <h3 class="accordion-header">
-          <button
-            class="accordion-button collapsed roboto-condensed"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#collapseFour"
-            aria-expanded="false"
-            aria-controls="collapseFour"
-          >
-            Smoker
-          </button>
-        </h3>
-        <div
-          id="collapseFour"
-          class="accordion-collapse collapse"
-          data-bs-parent="#accordionExample"
-        >
-          <div class="accordion-body">
-            <div
-              class="d-flex flex-column flex-md-row gap-3 subheadingcontentsections"
-            >
-              <div class="d-flex align-items-lg-center halfsized p-1">
-                <p>
-                  The Smoker is a Special Infected characterized by his
-                  extremely long tongue. The Smoker's tongue can be launched out
-                  of his mouth at high speeds towards a Survivor, and when it
-                  reaches one of them, it automatically wraps around the
-                  target's body and drags them back towards the Smoker, where he
-                  begins clawing them. If an obstacle is in the way, then the
-                  tongue tightens and begins to choke the target.
-                </p>
-              </div>
-              <div class="d-flex align-items-md-center halfsized">
-                <div>
-                  <img src="/images/smoker_1 1.jpg" class="img-fluid" alt="" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="accordion-item">
-        <h3 class="accordion-header">
-          <button
-            class="accordion-button collapsed roboto-condensed"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#collapseFive"
-            aria-expanded="false"
-            aria-controls="collapseFive"
-          >
-            Boomer
-          </button>
-        </h3>
-        <div
-          id="collapseFive"
-          class="accordion-collapse collapse"
-          data-bs-parent="#accordionExample"
-        >
-          <div class="accordion-body">
-            <div
-              class="d-flex flex-column flex-md-row gap-3 subheadingcontentsections"
-            >
-              <div class="d-flex align-items-lg-center halfsized p-1">
-                <p>
-                  The Boomer is an extremely bloated Special Infected. Their
-                  mutation has caused them to produce immense quantities of bile
-                  which they attempt to vomit on the Survivors, temporarily
-                  blinding them and summoning a small Horde. Though fragile and
-                  slow, the Boomer can be dangerous to a Survivor team whose
-                  health or combat abilities are compromised.
-                </p>
-              </div>
-              <div class="d-flex align-items-md-center halfsized">
-                <div>
-                  <img
-                    src="/images/maxresdefault (4) 2.jpg"
-                    class="img-fluid"
-                    alt=""
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="accordion-item">
-        <h3 class="accordion-header">
-          <button
-            class="accordion-button collapsed roboto-condensed"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#collapseSix"
-            aria-expanded="false"
-            aria-controls="collapseSix"
-          >
-            Jockey
-          </button>
-        </h3>
-        <div
-          id="collapseSix"
-          class="accordion-collapse collapse"
-          data-bs-parent="#accordionExample"
-        >
-          <div class="accordion-body">
-            <div
-              class="d-flex flex-column flex-md-row gap-3 subheadingcontentsections"
-            >
-              <div class="d-flex align-items-lg-center halfsized p-1">
-                <p>
-                  The Jockey is a man of average height and a top heavy build,
-                  but due to his extreme hunchback, curving him downwards, he
-                  appears much shorter. He is balding and has light ginger hair,
-                  but no eyebrows. His eyes are wide open and his lips are
-                  missing, showing his rotting teeth. He wears a torn white tank
-                  top and blue shorts.
-                </p>
-              </div>
-              <div class="d-flex align-items-md-center halfsized">
-                <div>
-                  <img
-                    src="/images/c8m1_apartment0001 1.jpg"
-                    class="img-fluid"
-                    alt=""
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="accordion-item">
-        <h3 class="accordion-header">
-          <button
-            class="accordion-button collapsed roboto-condensed"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#collapseSeven"
-            aria-expanded="false"
-            aria-controls="collapseSeven"
-          >
-            Spitter
-          </button>
-        </h3>
-        <div
-          id="collapseSeven"
-          class="accordion-collapse collapse"
-          data-bs-parent="#accordionExample"
-        >
-          <div class="accordion-body">
-            <div
-              class="d-flex flex-column flex-md-row gap-3 subheadingcontentsections"
-            >
-              <div class="d-flex align-items-lg-center halfsized p-1">
-                <p>
-                  Her mutations enable her to spit out a ball of mutated stomach
-                  acid which, upon hitting the ground, spreads out into a large
-                  pool. Any Survivors standing within the pool of acid take
-                  increasing amounts of damage based on how long the acid has
-                  been down; this can be up to 76 health with a single
-                  spit.Overall, the Spitter's acid does the most total damage of
-                  any playable Infected, but is also the least reliable, as it
-                  only lasts for a short time, and once it pools out, it is
-                  stationary and relatively easy to escape.
-                </p>
-              </div>
-              <div class="d-flex align-items-md-center halfsized">
-                <div>
-                  <img
-                    src="/images/steamworkshop_webupload_previewfile_113762019_preview 1.jpg"
-                    class="img-fluid"
-                    alt=""
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="accordion-item">
-        <h3 class="accordion-header">
-          <button
-            class="accordion-button collapsed roboto-condensed"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#collapseEight"
-            aria-expanded="false"
-            aria-controls="collapseEight"
-          >
-            Tank
-          </button>
-        </h3>
-        <div
-          id="collapseEight"
-          class="accordion-collapse collapse"
-          data-bs-parent="#accordionExample"
-        >
-          <div class="accordion-body">
-            <div
-              class="d-flex flex-column flex-md-row gap-3 subheadingcontentsections"
-            >
-              <div class="d-flex align-items-lg-center halfsized p-1">
-                <p>
-                  The Tank is an exclusively male Special Infected who has
-                  experienced the most extensive physical mutations of any other
-                  class of Special Infected. Evidently, the most obvious trait
-                  is his extreme hypertrophy, or abnormally increased muscle
-                  mass. Ironically, the Tank is incredibly fast and agile
-                  despite his immense size and weight, able to keep up with a
-                  healthy Survivor and even climb up buildings like other
-                  Infected.
-                </p>
-              </div>
-              <div class="d-flex align-items-md-center halfsized">
-                <div>
-                  <img
-                    src="/images/maxresdefault (3) 1.jpg"
-                    class="img-fluid"
-                    alt=""
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Mutated Infected</title>
+        <%- include("partials/header.ejs") %>
 
-<%- include("partials/footer.ejs") %>
+                    <% if (locals.currentUser) { %>
+                      <li class="nav-item ">
+                        <a class="nav-link roboto-condensed "  href="/logout" >
+                          Welcome <span style="color: #D83232;"><%- currentUser %></span>, Logout?
+                        </a>
+                       </li>
+                    <% } else {%>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link roboto-condensed "  href="/login" >
+                              Login
+                            </a>
+                            </li>
+                    <% } %>
+                     
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </nav>
+<div class="paddingtop">
+
+    <div class="container-fluid headers" id="specialinfected">
+        <div  class="d-flex  gap-3 flex-column-reverse flex-lg-row-reverse container align-items-lg-center">
+          
+            <div class="headertext d-flex align-items-center p-3 ">
+                <div >
+                    <h1 class=" bungee-regular" style=" color: white;">Special <span style=" color: #D83232;">Infected</span> </h1>
+                    <a href="#anchor3"><button  class="btn danger">Learn more</button></a>
+                </div>
+            </div>
+        </div>
+    </div>
+        <div class="container">
+            <div class="accordion accordion-flush" id="accordionExample">
+                <div class="accordion-item  ">
+                <h3 class="accordion-header" id="anchor3">
+                    <button class="accordion-button  roboto-condensed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        Hunter
+                    </button>
+                </h3>
+                <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <div class=" d-flex flex-column flex-md-row gap-3 subheadingcontentsections ">
+                            <div class="d-flex align-items-lg-center halfsized p-1">
+                                <p>The Hunter is the least visibly mutated Special Infected and superficially resembles a Common Infected. It has yet to be explained how the Hunter's mutations onset, whether it be genetic, biochemical, or a Hunter-specific strain of the virus, but the mutations seem to be sex-linked as only male Hunters have been observed. The Hunter's reaction to the Infection has granted him an increase in lower-body strength.</p>
+                            </div>
+                            <div class=" d-flex align-items-md-center halfsized">
+                                <div>
+                                    <img src="/images/the-hunter-is-hunting-or-something-v0-yrk1n7lixycd1 1.jpg" class="img-fluid " alt="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <div class="accordion-item  ">
+                <h3 class="accordion-header ">
+                    <button class="accordion-button  collapsed roboto-condensed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                    Witch
+                    </button>
+                </h3>
+                <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <div class="d-flex flex-column flex-md-row gap-3 subheadingcontentsections">
+                            <div class="d-flex align-items-lg-center halfsized p-1">
+                                <p>The Witch is highly sensitive to light and the close presence of uninfected humans. She is completely unresponsive to Infected and the passage of nearby bullets.When alerted to the presence of an uninfected human or flashlight, she will look in the Survivor's direction and make a low warning growl: this signals an incipient attack. If the Survivor backs away a fair distance or is no longer in sight, she will gradually return to her wailing state, taking longer if the intensity of her warning growls is high.</p> 
+                            </div>
+                            <div class=" d-flex align-items-md-center halfsized">
+                                <div>
+                                    <img src="/images/download 1.jpg" class="img-fluid" alt="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <div class="accordion-item ">
+                <h3 class="accordion-header">
+                    <button class="accordion-button  collapsed roboto-condensed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                        Charger
+                    </button>
+                </h3>
+                <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <div class="d-flex flex-column flex-md-row gap-3 subheadingcontentsections">
+                            <div  class="d-flex align-items-lg-center halfsized p-1">
+                                <p>The Charger is a Special Infected introduced in Left 4 Dead 2. His main purpose is to separate a group of Survivors who are close together by grabbing one and carrying them away while crashing into the rest of the group, sending them flying through the air. While he matches the Survivors' pace, he speeds up considerably when charging. However, the Charger cannot stop or turn during the charge until he hits a wall or travels a certain distance.</p>
+                            </div>
+                            <div class=" d-flex align-items-md-center halfsized">
+                                <div>
+                                    <img src="/images/download (1) 1.jpg" class="img-fluid" alt="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <div class="accordion-item  ">
+                    <h3 class="accordion-header">
+                    <button class="accordion-button collapsed roboto-condensed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                        Smoker
+                    </button>
+                    </h3>
+                    <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <div class="d-flex flex-column flex-md-row gap-3 subheadingcontentsections">
+                            <div  class="d-flex align-items-lg-center halfsized p-1">
+                                <p>The Smoker is a Special Infected characterized by his extremely long tongue. The Smoker's tongue can be launched out of his mouth at high speeds towards a Survivor, and when it reaches one of them, it automatically wraps around the target's body and drags them back towards the Smoker, where he begins clawing them. If an obstacle is in the way, then the tongue tightens and begins to choke the target.</p>
+                            </div>
+                            <div class=" d-flex align-items-md-center halfsized">
+                                <div>
+                                    <img src="/images/smoker_1 1.jpg" class="img-fluid" alt="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                <div class="accordion-item ">
+                    <h3 class="accordion-header">
+                    <button class="accordion-button collapsed roboto-condensed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                        Boomer
+                    </button>
+                    </h3>
+                    <div id="collapseFive" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <div class="d-flex flex-column flex-md-row gap-3 subheadingcontentsections">
+                            <div  class="d-flex align-items-lg-center halfsized p-1">
+                                <p>The Boomer is an extremely bloated Special Infected. Their mutation has caused them to produce immense quantities of bile which they attempt to vomit on the Survivors, temporarily blinding them and summoning a small Horde. Though fragile and slow, the Boomer can be dangerous to a Survivor team whose health or combat abilities are compromised.</p>
+                            </div>
+                            <div class=" d-flex align-items-md-center halfsized">
+                                <div>
+                                    <img src="/images/maxresdefault (4) 2.jpg" class="img-fluid" alt="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                <div class="accordion-item ">
+                    <h3 class="accordion-header">
+                    <button class="accordion-button  collapsed roboto-condensed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+                        Jockey
+                    </button>
+                    </h3>
+                    <div id="collapseSix" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <div class="d-flex flex-column flex-md-row gap-3 subheadingcontentsections">
+                            <div  class="d-flex align-items-lg-center halfsized p-1">
+                                <p>The Jockey is a man of average height and a top heavy build, but due to his extreme hunchback, curving him downwards, he appears much shorter. He is balding and has light ginger hair, but no eyebrows. His eyes are wide open and his lips are missing, showing his rotting teeth. He wears a torn white tank top and blue shorts.</p>
+                            </div>
+                            <div class=" d-flex align-items-md-center halfsized">
+                                <div>
+                                    <img src="/images/c8m1_apartment0001 1.jpg" class="img-fluid" alt="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                <div class="accordion-item ">
+                    <h3 class="accordion-header">
+                    <button class="accordion-button  collapsed roboto-condensed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
+                        Spitter
+                    </button>
+                    </h3>
+                    <div id="collapseSeven" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <div class="d-flex flex-column flex-md-row gap-3 subheadingcontentsections" >
+                            <div class="d-flex align-items-lg-center halfsized p-1">
+                                <p>Her mutations enable her to spit out a ball of mutated stomach acid which, upon hitting the ground, spreads out into a large pool. Any Survivors standing within the pool of acid take increasing amounts of damage based on how long the acid has been down; this can be up to 76 health with a single spit.Overall, the Spitter's acid does the most total damage of any playable Infected, but is also the least reliable, as it only lasts for a short time, and once it pools out, it is stationary and relatively easy to escape.</p>
+                            </div>
+                            <div class="d-flex align-items-md-center  halfsized">
+                                <div>
+                                    <img src="/images/steamworkshop_webupload_previewfile_113762019_preview 1.jpg" class="img-fluid" alt="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                <div class="accordion-item ">
+                    <h3 class="accordion-header">
+                    <button class="accordion-button  collapsed roboto-condensed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEight" aria-expanded="false" aria-controls="collapseEight">
+                        Tank
+                    </button>
+                    </h3>
+                    <div id="collapseEight" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <div class="d-flex flex-column flex-md-row gap-3 subheadingcontentsections">
+                            <div class="d-flex align-items-lg-center halfsized p-1">
+                                <p>The Tank is an exclusively male Special Infected who has experienced the most extensive physical mutations of any other class of Special Infected. Evidently, the most obvious trait is his extreme hypertrophy, or abnormally increased muscle mass. Ironically, the Tank is incredibly fast and agile despite his immense size and weight, able to keep up with a healthy Survivor and even climb up buildings like other Infected.</p>
+                            </div>
+                            <div class=" d-flex align-items-md-center halfsized">
+                                <div>
+                                    <img src="/images/maxresdefault (3) 1.jpg" class="img-fluid" alt="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>  
+            </div>
+    </div>
+      
+     
+       
+    <%- include("partials/footer.ejs") %>
