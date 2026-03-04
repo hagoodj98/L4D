@@ -424,6 +424,7 @@ passport.use(
 );
 /*
 test
+testing updated rules
 */
 passport.serializeUser((user, cb) => {
   cb(null, user);
