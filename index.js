@@ -422,7 +422,9 @@ passport.use(
     }
   }),
 );
-//test
+/*
+test
+*/
 passport.serializeUser((user, cb) => {
   cb(null, user);
 });
