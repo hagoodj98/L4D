@@ -9,6 +9,7 @@ import session from "express-session";
 import env from "dotenv";
 
 const app = express();
+
 const port = 3000;
 
 const saltRounds = 10;
@@ -30,6 +31,10 @@ app.use(express.static("public"));
 
 app.use(passport.initialize());
 app.use(passport.session());
+app.use((req, res, next) => {
+  res.locals.user = req.user ? req.user.display_name : null;
+  next();
+});
 
 const db = new pg.Client({
   user: process.env.PG_USER,
@@ -41,6 +46,78 @@ const db = new pg.Client({
 if (process.env.NODE_ENV !== "test") {
   db.connect();
 }
+
+const getForumPosts = async (userId, sortDirection = "DESC") => {
+  const safeSortDirection = sortDirection === "ASC" ? "ASC" : "DESC";
+
+  const forumPostQuery = `
+      SELECT
+        p.id,
+        p.updated_at,
+        p.post,
+        p.user_id,
+        p.created_at,
+        COALESCE(rc.likes, 0) AS likes,
+        COALESCE(rc.dislikes, 0) AS dislikes,
+        COALESCE(rep.reply_count, 0) AS reply_count,
+        cur_pr.reaction_type AS user_reaction,
+        u.display_name,
+        COALESCE(rp.replies, '[]'::json) AS replies
+      FROM posts p
+      LEFT JOIN (
+        SELECT
+          post_id,
+          COUNT(*) FILTER (WHERE reaction_type = 'like') AS likes,
+          COUNT(*) FILTER (WHERE reaction_type = 'dislike') AS dislikes
+        FROM posts_reactions
+        GROUP BY post_id
+      ) rc ON rc.post_id = p.id
+      LEFT JOIN posts_reactions cur_pr
+        ON cur_pr.post_id = p.id AND cur_pr.user_id = $1
+      LEFT JOIN (
+        SELECT
+          post_id,
+          COUNT(*) AS reply_count
+        FROM replies
+        GROUP BY post_id
+      ) rep ON rep.post_id = p.id
+      LEFT JOIN users u ON u.id = p.user_id
+      LEFT JOIN LATERAL (
+        SELECT
+          r.post_id,
+          json_agg(
+            json_build_object(
+              'id', r.id,
+              'comment_post', r.comment_post,
+              'user_id', r.user_id,
+              'created_at', r.created_at,
+              'likes', COALESCE(rcc.likes, 0),
+              'dislikes', COALESCE(rcc.dislikes, 0),
+              'user_reaction', ccr.reaction_type,
+              'display_name', ru.display_name
+            )
+            ORDER BY r.created_at DESC
+          ) AS replies
+        FROM replies r
+        LEFT JOIN users ru ON ru.id = r.user_id
+        LEFT JOIN (
+          SELECT
+            comment_id,
+            COUNT(*) FILTER (WHERE reaction_type = 'like') AS likes,
+            COUNT(*) FILTER (WHERE reaction_type = 'dislike') AS dislikes
+          FROM reactions_comments
+          GROUP BY comment_id
+        ) rcc ON rcc.comment_id = r.id
+        LEFT JOIN reactions_comments ccr
+          ON ccr.comment_id = r.id AND ccr.user_id = $1
+        WHERE r.post_id = p.id
+        GROUP BY r.post_id
+      ) rp ON true
+      ORDER BY p.created_at ${safeSortDirection};
+    `;
+
+  return db.query(forumPostQuery, [userId]);
+};
 
 app.get("/", (req, res) => {
   if (req.isAuthenticated()) {
@@ -120,21 +197,17 @@ app.get("/logout", (req, res, next) => {
     if (err) {
       return next(err);
     }
-    res.redirect("/community");
+    res.redirect("/login");
   });
 });
 
 app.get("/forumpost", async (req, res) => {
   if (req.isAuthenticated()) {
-    const result = await db.query(
-      "SELECT * FROM users JOIN posts ON users.id = posts.user_id",
-    );
-
-    const users = result.rows;
+    const result = await getForumPosts(req.user.id, "DESC");
 
     res.render("forumpost.ejs", {
       currentUser: req.user.display_name,
-      listUser: users,
+      listAllContent: result.rows,
     });
   } else {
     res.redirect("/login");
@@ -192,26 +265,90 @@ app.post("/register", async (req, res) => {
 
 app.post("/ascend", async (req, res) => {
   if (req.isAuthenticated()) {
-    const result = await db.query(
-      "SELECT * FROM users JOIN posts ON users.id = posts.user_id ORDER BY created_at DESC",
-    );
-    const users = result.rows;
+    const result = await getForumPosts(req.user.id, "ASC");
+
     res.render("forumpost.ejs", {
       currentUser: req.user.display_name,
-      listUser: users,
+      listAllContent: result.rows,
     });
+  } else {
+    res.redirect("/login");
   }
 });
-app.post("/descend", async (req, res) => {
-  const result = await db.query(
-    "SELECT * FROM users JOIN posts ON users.id = posts.user_id ORDER BY created_at ASC",
-  );
-  const users = result.rows;
+app.post("/post-reaction", async (req, res) => {
+  if (!req.isAuthenticated()) return res.redirect("/login");
 
-  res.render("forumpost.ejs", {
-    currentUser: req.user.display_name,
-    listUser: users,
-  });
+  const postId = req.body.post_id;
+  const commentId = req.body.comment_post_id;
+  const reaction = req.body.reaction || req.body.reaction_comment; // "like" | "dislike"
+
+  if (commentId) {
+    // REPLY path: only touch reactions_comments
+    const existing = await db.query(
+      "SELECT reaction_type FROM reactions_comments WHERE comment_id = $1 AND user_id = $2",
+      [commentId, req.user.id],
+    );
+
+    if (existing.rows.length && existing.rows[0].reaction_type === reaction) {
+      await db.query(
+        "DELETE FROM reactions_comments WHERE comment_id = $1 AND user_id = $2",
+        [commentId, req.user.id],
+      );
+    } else {
+      //if insert hits a duplicate on this unique key… ON CONFLICT
+      //…update existing row instead of throwing error DO UPDATE
+      //the row you tried to insert (the “new incoming values”) are referenced as EXCLUDED in the DO UPDATE clause
+      await db.query(
+        `INSERT INTO reactions_comments (comment_id, user_id, reaction_type)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (user_id, comment_id)
+         DO UPDATE SET reaction_type = EXCLUDED.reaction_type`,
+        [commentId, req.user.id, reaction],
+      );
+    }
+
+    return res.redirect("/forumpost");
+  }
+
+  if (postId) {
+    // POST path: only touch posts_reactions
+    const existing = await db.query(
+      "SELECT reaction_type FROM posts_reactions WHERE post_id = $1 AND user_id = $2",
+      [postId, req.user.id],
+    );
+
+    if (existing.rows.length && existing.rows[0].reaction_type === reaction) {
+      await db.query(
+        "DELETE FROM posts_reactions WHERE post_id = $1 AND user_id = $2",
+        [postId, req.user.id],
+      );
+    } else {
+      await db.query(
+        `INSERT INTO posts_reactions (post_id, user_id, reaction_type)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (user_id, post_id)
+         DO UPDATE SET reaction_type = EXCLUDED.reaction_type`,
+        [postId, req.user.id, reaction],
+      );
+    }
+
+    return res.redirect("/forumpost");
+  }
+
+  return res.status(400).send("Missing reaction target");
+});
+
+app.post("/descend", async (req, res) => {
+  if (req.isAuthenticated()) {
+    const result = await getForumPosts(req.user.id, "DESC");
+
+    res.render("forumpost.ejs", {
+      currentUser: req.user.display_name,
+      listAllContent: result.rows,
+    });
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.post("/add", async (req, res) => {
@@ -226,6 +363,28 @@ app.post("/add", async (req, res) => {
     await db.query(
       "INSERT INTO posts (post, user_id, created_at) VALUES ($1, $2, $3)",
       [post, req.user.id, date],
+    );
+    res.redirect("/forumpost");
+  } catch (err) {
+    console.log(err);
+  }
+});
+app.post("/add-reply", async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.redirect("/login");
+  }
+
+  const comment_post = req.body.reply;
+  const post_id = req.body.post_id;
+
+  console.log(req.body);
+
+  try {
+    let date = new Date();
+
+    await db.query(
+      "INSERT INTO replies (comment_post, user_id, post_id, created_at) VALUES ($1, $2, $3, $4)",
+      [comment_post, req.user.id, post_id, date],
     );
     res.redirect("/forumpost");
   } catch (err) {
@@ -263,7 +422,7 @@ passport.use(
     }
   }),
 );
-
+//test
 passport.serializeUser((user, cb) => {
   cb(null, user);
 });

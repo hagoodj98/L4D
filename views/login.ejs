@@ -1,49 +1,56 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Login</title>
-
 <%- include("partials/header.ejs") %>
 
-<% if (locals.currentUser) { %>
-    <li class="nav-item ">
-      <a class="nav-link roboto-condensed "  href="/logout" >
-        Welcome <span style="color: #D83232;"><%- currentUser %></span>, Logout?
-      </a>
-     </li>
-  <% } else {%>
+<div
+  class="d-flex flex-column justify-content-center align-items-center"
+  style="background-color: black; height: 100vh"
+>
+  <div class="formwidth">
+    <form class="login" action="/login" method="POST">
+      <h3 class="bungee-regular formtitle text-center" style="color: white">
+        Login
+      </h3>
+      <div class="mb-3">
+        <label class="roboto-condensed" style="color: white" for="username"
+          >Username</label
+        >
+        <input
+          type="text"
+          class="form-control"
+          name="username"
+          placeholder="Username"
+          required
+          id="username"
+        />
+      </div>
+      <br />
+      <div class="mb-3">
+        <label class="roboto-condensed" style="color: white" for="password"
+          >Password</label
+        >
+        <input
+          type="password"
+          name="password"
+          id="password"
+          required
+          class="form-control"
+          placeholder=" Enter Password"
+        />
+        <span style="color: red"><%= locals.error %></span>
+      </div>
+      <p class="mt-4">
+        <a
+          class="linkbelowlogins roboto-condensed"
+          style="text-decoration: none"
+          href="/register"
+          role="button"
+          >SIGN UP</a
+        >
+      </p>
+      <button type="submit" class="mt-2 btn btn-dark roboto-condensed">
+        Login
+      </button>
+    </form>
+  </div>
+</div>
 
-      <li class="nav-item dropdown">
-          <a class="nav-link roboto-condensed "  href="/login" >
-            Login
-          </a>
-          </li>
-  <% } %>
-   
-</ul>
-</div>
-</div>
-</div>
-</nav>
-
-<div class=" d-flex flex-column justify-content-center  align-items-center" style="background-color: black;  height: 100vh;">
-    <div class="formwidth">
-        <form class="login" action="/login" method="POST" >
-            <h3  class=" bungee-regular formtitle text-center" style="color: white;">Login </h3>
-            <div class="mb-3">
-                <label  class="roboto-condensed" style="color: white;" for="username">Username</label>
-                <input type="text" class="form-control" name="username"  placeholder="Username" required id="username">
-            </div>
-            <br>
-            <div class="mb-3">
-                <label class="roboto-condensed" style="color: white;" for="password">Password</label>
-                <input type="password" name="password" id="password" required class="form-control" placeholder=" Enter Password">
-                <span style="color:  red;"><%= locals.error %></span>
-            </div>
-            <p class="mt-4"> <a class="linkbelowlogins roboto-condensed"  style=" text-decoration: none;" href="/register" role="button">SIGN UP</a></p>
-            <button type="submit" class="mt-2 btn btn-dark roboto-condensed">Login</button>
-        </form>
-    </div>
-</div>
-       
 <%- include("partials/footer.ejs") %>
