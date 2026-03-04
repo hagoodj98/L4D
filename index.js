@@ -422,7 +422,10 @@ passport.use(
     }
   }),
 );
-//test
+/*
+test
+testing updated rules
+*/
 passport.serializeUser((user, cb) => {
   cb(null, user);
 });
