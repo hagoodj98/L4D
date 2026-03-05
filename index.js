@@ -7,6 +7,34 @@ import { Strategy } from "passport-local";
 //import GoogleStrategy from "passport-google-oauth2";
 import session from "express-session";
 import env from "dotenv";
+import { z } from "zod";
+import ErrorHandler from "./utils/error.js";
+
+const registrationSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters long"),
+  email: z.email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters long"),
+});
+const loginSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters long"),
+  password: z.string().min(6, "Password must be at least 6 characters long"),
+});
+const reactionSchema = z.object({
+  post_id: z.string().optional(),
+  comment_post_id: z.string().optional(),
+  reaction: z.enum(["like", "dislike"]).optional(),
+  reaction_comment: z.enum(["like", "dislike"]).optional(),
+});
+const postSchema = z.object({
+  newPost: z.string().min(1, "Post content cannot be empty"),
+});
+const replySchema = z.object({
+  reply: z.string().min(1, "Reply content cannot be empty"),
+  post_id: z.string().min(1, "Post ID is required for a reply"),
+});
+const sortSchema = z.object({
+  sortDirection: z.enum(["ASC", "DESC"]),
+});
 
 const app = express();
 
@@ -22,9 +50,6 @@ app.use(
     saveUninitialized: true,
   }),
 );
-
-let error;
-let existError;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
@@ -158,19 +183,22 @@ app.get("/community", (req, res) => {
 
 app.get("/login", (req, res) => {
   if (req.isAuthenticated()) {
-    console.log("logged in");
-
     res.redirect("/forum");
   } else {
+    const formErrors = req.session.formErrors || null;
+    req.session.formErrors = null;
     res.render("login.ejs", {
-      error: error,
+      error: formErrors,
     });
   }
 });
 
 app.get("/register", (req, res) => {
+  const formErrors = req.session.formErrors || null;
+
+  req.session.formErrors = null;
   res.render("register.ejs", {
-    error: existError,
+    error: formErrors,
   });
 });
 
@@ -214,57 +242,137 @@ app.get("/forumpost", async (req, res) => {
   }
 });
 
-app.post(
-  "/login",
-  passport.authenticate("local", {
-    successRedirect: "/forum",
-    failureRedirect: "/login-error",
-  }),
-);
+app.post("/login", async (req, res, next) => {
+  passport.authenticate("local", function (err, user, info) {
+    const validation = loginSchema.safeParse({
+      username: req.body.username,
+      password: req.body.password,
+    });
 
-app.get("/login-error", (req, res) => {
-  error = "You tried a password, and it was invalid. Try again";
-  res.redirect("/login");
+    if (!validation.success) {
+      return next(
+        new ErrorHandler(400, "Validation failed", {
+          username: validation.error.issues.find(
+            (err) => err.path[0] === "username",
+          )
+            ? validation.error.issues.find((err) => err.path[0] === "username")
+                .message
+            : null,
+          password: validation.error.issues.find(
+            (err) => err.path[0] === "password",
+          )
+            ? validation.error.issues.find((err) => err.path[0] === "password")
+                .message
+            : null,
+        }),
+      );
+    }
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      if (info && info.message === "User not found") {
+        return next(new ErrorHandler(401, "User not found", info));
+      }
+
+      return next(new ErrorHandler(401, "Invalid credentials", info));
+      // return res.redirect("/login-error");
+    }
+    req.logIn(user, function (err) {
+      if (err) {
+        return next(err);
+      }
+      return res.redirect("/forum");
+    });
+  })(req, res, next);
 });
 
-app.post("/register", async (req, res) => {
+app.post("/register", async (req, res, next) => {
   if (req.isAuthenticated()) {
-    res.redirect("/forum");
+    return res.redirect("/forum");
   }
 
   const username = req.body.username;
   const email = req.body.email;
   const password = req.body.password;
+  const validation = registrationSchema.safeParse({
+    username,
+    email,
+    password,
+  });
+
+  if (!validation.success) {
+    return next(
+      new ErrorHandler(400, "Validation failed", {
+        username: validation.error.issues.find(
+          (err) => err.path[0] === "username",
+        )
+          ? validation.error.issues.find((err) => err.path[0] === "username")
+              .message
+          : null,
+        email: validation.error.issues.find((err) => err.path[0] === "email")
+          ? validation.error.issues.find((err) => err.path[0] === "email")
+              .message
+          : null,
+        password: validation.error.issues.find(
+          (err) => err.path[0] === "password",
+        )
+          ? validation.error.issues.find((err) => err.path[0] === "password")
+              .message
+          : null,
+      }),
+    );
+  }
+
   try {
-    const checkEmail = await db.query("SELECT * FROM users WHERE email = $1", [
-      email,
-    ]);
-    if (checkEmail.rows.length > 0) {
-      existError = "You typed an email that already exists, try a new one!";
-      res.redirect("/register");
+    const checkingIfExisting = await db.query(
+      "SELECT EXISTS (SELECT 1 FROM users WHERE email = $1 OR display_name = $2) AS user_exists",
+      [email, username],
+    );
+
+    if (checkingIfExisting.rows[0].user_exists) {
+      return next(
+        new ErrorHandler(400, "User already exists", {
+          duplicateInfo:
+            "You typed an email or username that already exists, try a new one!",
+        }),
+      );
     } else {
       bcrypt.hash(password, saltRounds, async (err, hash) => {
         if (err) {
-          console.error("Error hashing password:", err);
+          return next(new ErrorHandler(500, "Error hashing password"));
         } else {
           const result = await db.query(
             "INSERT INTO users (display_name, email, password) VALUES ($1, $2, $3) RETURNING *",
             [username, email, hash],
           );
           const user = result.rows[0];
-          req.login(user, (_err) => {
-            res.redirect("/forum");
+          req.login(user, (loginError) => {
+            if (loginError) {
+              return next(loginError);
+            }
+            return res.redirect("/forum");
           });
         }
       });
     }
   } catch (err) {
-    console.log(err);
+    return next(err);
   }
 });
 
-app.post("/ascend", async (req, res) => {
+app.post("/ascend", async (req, res, next) => {
   if (req.isAuthenticated()) {
+    const validation = sortSchema.safeParse({ sortDirection: "ASC" });
+    if (!validation.success) {
+      return next(
+        new ErrorHandler(
+          400,
+          "Invalid sort direction",
+          validation.error.issues,
+        ),
+      );
+    }
     const result = await getForumPosts(req.user.id, "ASC");
 
     res.render("forumpost.ejs", {
@@ -281,6 +389,17 @@ app.post("/post-reaction", async (req, res) => {
   const postId = req.body.post_id;
   const commentId = req.body.comment_post_id;
   const reaction = req.body.reaction || req.body.reaction_comment; // "like" | "dislike"
+
+  const validation = reactionSchema.safeParse({
+    post_id: postId,
+    comment_post_id: commentId,
+    reaction,
+    reaction_comment: reaction,
+  });
+
+  if (!validation.success) {
+    return res.status(400).send("Invalid reaction data");
+  }
 
   if (commentId) {
     // REPLY path: only touch reactions_comments
@@ -338,8 +457,19 @@ app.post("/post-reaction", async (req, res) => {
   return res.status(400).send("Missing reaction target");
 });
 
-app.post("/descend", async (req, res) => {
+app.post("/descend", async (req, res, next) => {
   if (req.isAuthenticated()) {
+    const validation = sortSchema.safeParse({ sortDirection: "DESC" });
+    if (!validation.success) {
+      return next(
+        new ErrorHandler(
+          400,
+          "Invalid sort direction",
+          validation.error.issues,
+        ),
+      );
+    }
+
     const result = await getForumPosts(req.user.id, "DESC");
 
     res.render("forumpost.ejs", {
@@ -351,12 +481,19 @@ app.post("/descend", async (req, res) => {
   }
 });
 
-app.post("/add", async (req, res) => {
+app.post("/add", async (req, res, next) => {
   if (!req.isAuthenticated()) {
     return res.redirect("/login");
   }
-
   const post = req.body.newPost;
+
+  const validation = postSchema.safeParse({ newPost: post });
+  if (!validation.success) {
+    return next(
+      new ErrorHandler(400, "Invalid post data", validation.error.issues),
+    );
+  }
+
   try {
     let date = new Date();
 
@@ -369,13 +506,20 @@ app.post("/add", async (req, res) => {
     console.log(err);
   }
 });
-app.post("/add-reply", async (req, res) => {
+app.post("/add-reply", async (req, res, next) => {
   if (!req.isAuthenticated()) {
     return res.redirect("/login");
   }
 
   const comment_post = req.body.reply;
   const post_id = req.body.post_id;
+
+  const validation = replySchema.safeParse({ comment_post, post_id });
+  if (!validation.success) {
+    return next(
+      new ErrorHandler(400, "Invalid reply data", validation.error.issues),
+    );
+  }
 
   console.log(req.body);
 
@@ -389,6 +533,7 @@ app.post("/add-reply", async (req, res) => {
     res.redirect("/forumpost");
   } catch (err) {
     console.log(err);
+    return next(new ErrorHandler(500, "Internal Server Error", err));
   }
 });
 passport.use(
@@ -410,28 +555,48 @@ passport.use(
             if (valid) {
               return cb(null, user);
             } else {
-              return cb(null, false);
+              return cb(null, false, { message: "Invalid password" });
             }
           }
         });
       } else {
-        return cb("User not found. Please go back.");
+        return cb(null, false, { message: "User not found" });
       }
     } catch (err) {
       console.log(err);
+      return cb(err);
     }
   }),
 );
-/*
-test
-testing updated rules
-*/
+
 passport.serializeUser((user, cb) => {
   cb(null, user);
 });
 
 passport.deserializeUser((user, cb) => {
   cb(null, user);
+});
+
+app.use((err, req, res, next) => {
+  console.log(err);
+
+  if (err instanceof ErrorHandler) {
+    if (err.message === "Validation failed") {
+      req.session.formErrors = err.details;
+      return res.redirect("/login");
+    }
+    if (err.details.message === "Invalid password") {
+      req.session.formErrors = err.details.message;
+      return res.redirect("/login");
+    }
+    if (err.details.message === "User not found") {
+      req.session.formErrors = err.details.message;
+      return res.redirect("/login");
+    }
+    req.session.formErrors = err.details;
+    return res.redirect("/register");
+  }
+  return next(new ErrorHandler(500, "Internal Server Error", err));
 });
 
 if (process.env.NODE_ENV !== "test") {

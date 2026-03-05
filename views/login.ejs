@@ -21,6 +21,12 @@
           required
           id="username"
         />
+        <span style="color: red"
+          ><%= locals.error && locals.error.username ? locals.error.username : "" %></span
+        >
+        <span style="color: red"
+          ><% if (locals.error) { %><%= locals.error === "User not found" ? "User not found" : "" %><% } %></span
+        >
       </div>
       <br />
       <div class="mb-3">
@@ -35,7 +41,13 @@
           class="form-control"
           placeholder=" Enter Password"
         />
-        <span style="color: red"><%= locals.error %></span>
+        <span style="color: red"
+          ><%= locals.error && locals.error.password ? locals.error.password : "" %></span
+        >
+
+        <span style="color: red"
+          ><% if (locals.error) { %><%= locals.error === "Invalid password" ? "Incorrect password" : "" %><% } %></span
+        >
       </div>
       <p class="mt-4">
         <a

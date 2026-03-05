@@ -8,6 +8,10 @@
       <h3 class="bungee-regular formtitle text-center" style="color: white">
         Get Registered!
       </h3>
+      <span style="color: red"
+        ><%- locals.error ? locals.error.duplicateInfo : "" %></span
+      >
+
       <div class="mb-3">
         <label class="roboto-condensed" style="color: white" for="email"
           >Email</label
@@ -19,7 +23,9 @@
           name="email"
           required
         />
-        <span style="color: red"><%- locals.error %></span>
+        <span style="color: red"
+          ><%- locals.error ? locals.error.email : "" %></span
+        >
       </div>
       <div class="mb-3">
         <label class="roboto-condensed" style="color: white" for="username"
@@ -33,6 +39,9 @@
           required
           class="form-control"
         />
+        <span style="color: red"
+          ><%- locals.error ? locals.error.username : "" %></span
+        >
       </div>
       <div class="mb-3">
         <label class="roboto-condensed" style="color: white" for="password"
@@ -46,6 +55,9 @@
           required
           class="form-control"
         />
+        <span style="color: red"
+          ><%- locals.error ? locals.error.password : "" %></span
+        >
       </div>
       <p class="">
         <a
