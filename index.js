@@ -47,6 +47,33 @@ const port = 3000;
 const saltRounds = 10;
 env.config();
 
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "test-google-client-id";
+const GOOGLE_CLIENT_SECRET =
+  process.env.GOOGLE_CLIENT_SECRET || "test-google-client-secret";
+const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || "test-twitch-client-id";
+const TWITCH_CLIENT_SECRET =
+  process.env.TWITCH_CLIENT_SECRET || "test-twitch-client-secret";
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || "test-discord-client-id";
+const DISCORD_CLIENT_SECRET =
+  process.env.DISCORD_CLIENT_SECRET || "test-discord-client-secret";
+
+if (process.env.NODE_ENV !== "test") {
+  const missingOAuthEnvVars = [
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "TWITCH_CLIENT_ID",
+    "TWITCH_CLIENT_SECRET",
+    "DISCORD_CLIENT_ID",
+    "DISCORD_CLIENT_SECRET",
+  ].filter((key) => !process.env[key]);
+
+  if (missingOAuthEnvVars.length > 0) {
+    console.warn(
+      `Warning: Missing OAuth environment variables: ${missingOAuthEnvVars.join(", ")}. Social login may not work until these are set.`,
+    );
+  }
+}
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "test-session-secret",
@@ -559,8 +586,8 @@ passport.use(
   "google",
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientID: GOOGLE_CLIENT_ID,
+      clientSecret: GOOGLE_CLIENT_SECRET,
       callbackURL: "http://localhost:3000/auth/google/forum",
       userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
     },
@@ -617,8 +644,8 @@ passport.use(
   "twitch",
   new TwitchStrategy(
     {
-      clientID: process.env.TWITCH_CLIENT_ID,
-      clientSecret: process.env.TWITCH_CLIENT_SECRET,
+      clientID: TWITCH_CLIENT_ID,
+      clientSecret: TWITCH_CLIENT_SECRET,
       callbackURL: "http://localhost:3000/auth/twitch/forum",
     },
     async function verify(accessToken, refreshToken, profile, cb) {
@@ -674,8 +701,8 @@ passport.use(
   "discord",
   new DiscordStrategy(
     {
-      clientID: process.env.DISCORD_CLIENT_ID,
-      clientSecret: process.env.DISCORD_CLIENT_SECRET,
+      clientID: DISCORD_CLIENT_ID,
+      clientSecret: DISCORD_CLIENT_SECRET,
       callbackURL: "http://localhost:3000/auth/discord/forum",
       scope: ["identify", "email"],
     },
