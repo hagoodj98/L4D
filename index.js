@@ -4,11 +4,15 @@ import pg from "pg";
 import bcrypt from "bcrypt";
 import passport from "passport";
 import { Strategy } from "passport-local";
-//import GoogleStrategy from "passport-google-oauth2";
+import GoogleStrategy from "passport-google-oauth2";
+import Twitch from "passport-twitch-strategy";
+import DiscordStrategy from "passport-discord";
 import session from "express-session";
 import env from "dotenv";
 import { z } from "zod";
 import ErrorHandler from "./utils/error.js";
+
+const TwitchStrategy = Twitch.Strategy;
 
 const registrationSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters long"),
@@ -145,42 +149,62 @@ const getForumPosts = async (userId, sortDirection = "DESC") => {
 };
 
 app.get("/", (req, res) => {
-  if (req.isAuthenticated()) {
-    res.render("index.ejs", {
-      currentUser: req.user.display_name,
-    });
-  } else {
-    res.render("index.ejs");
-  }
+  if (!req.isAuthenticated()) return res.render("index.ejs");
+  res.render("index.ejs", {
+    currentUser: req.user.display_name,
+  });
 });
 app.get("/survivors", (req, res) => {
-  if (req.isAuthenticated()) {
-    res.render("survivors.ejs", {
-      currentUser: req.user.display_name,
-    });
-  } else {
-    res.render("survivors.ejs");
-  }
+  if (!req.isAuthenticated()) return res.render("survivors.ejs");
+  res.render("survivors.ejs", {
+    currentUser: req.user.display_name,
+  });
 });
 app.get("/specialinfected", (req, res) => {
-  if (req.isAuthenticated()) {
-    res.render("specialinfected.ejs", {
-      currentUser: req.user.display_name,
-    });
-  } else {
-    res.render("specialinfected.ejs");
-  }
+  if (!req.isAuthenticated()) return res.render("specialinfected.ejs");
+  res.render("specialinfected.ejs", {
+    currentUser: req.user.display_name,
+  });
 });
 app.get("/community", (req, res) => {
-  if (req.isAuthenticated()) {
-    res.render("community.ejs", {
-      currentUser: req.user.display_name,
-    });
-  } else {
-    res.render("community.ejs");
-  }
+  if (!req.isAuthenticated()) return res.render("community.ejs");
+  res.render("community.ejs", {
+    currentUser: req.user.display_name,
+  });
 });
-
+app.get(
+  "/auth/google",
+  passport.authenticate("google", { scope: ["profile", "email"] }),
+);
+app.get(
+  "/auth/twitch",
+  passport.authenticate("twitch", { scope: ["user:read:email"] }),
+);
+app.get(
+  "/auth/discord",
+  passport.authenticate("discord", { scope: ["identify", "email"] }),
+);
+app.get(
+  "/auth/twitch/forum",
+  passport.authenticate("twitch", {
+    successRedirect: "/forum",
+    failureRedirect: "/login",
+  }),
+);
+app.get(
+  "/auth/discord/forum",
+  passport.authenticate("discord", {
+    successRedirect: "/forum",
+    failureRedirect: "/login",
+  }),
+);
+app.get(
+  "/auth/google/forum",
+  passport.authenticate("google", {
+    successRedirect: "/forum",
+    failureRedirect: "/login",
+  }),
+);
 app.get("/login", (req, res) => {
   if (req.isAuthenticated()) {
     res.redirect("/forum");
@@ -202,24 +226,6 @@ app.get("/register", (req, res) => {
   });
 });
 
-app.get("/forum", async (req, res) => {
-  if (req.isAuthenticated()) {
-    const result = await db.query(
-      "SELECT * FROM users JOIN posts ON users.id = posts.user_id WHERE user_id = $1",
-      [req.user.id],
-    );
-
-    let users = [];
-
-    res.render("forum.ejs", {
-      currentUser: req.user.display_name,
-      listUser: users,
-    });
-  } else {
-    res.redirect("/login");
-  }
-});
-
 app.get("/logout", (req, res, next) => {
   req.logout(function (err) {
     if (err) {
@@ -229,17 +235,13 @@ app.get("/logout", (req, res, next) => {
   });
 });
 
-app.get("/forumpost", async (req, res) => {
-  if (req.isAuthenticated()) {
-    const result = await getForumPosts(req.user.id, "DESC");
-
-    res.render("forumpost.ejs", {
-      currentUser: req.user.display_name,
-      listAllContent: result.rows,
-    });
-  } else {
-    res.redirect("/login");
-  }
+app.get("/forum", async (req, res) => {
+  if (!req.isAuthenticated()) return res.redirect("/login");
+  const result = await getForumPosts(req.user.id, "DESC");
+  res.render("forum.ejs", {
+    currentUser: req.user.display_name,
+    listAllContent: result.rows,
+  });
 });
 
 app.post("/login", async (req, res, next) => {
@@ -303,7 +305,7 @@ app.post("/register", async (req, res, next) => {
 
   if (!validation.success) {
     return next(
-      new ErrorHandler(400, "Validation failed", {
+      new ErrorHandler(400, "Registration failed", {
         username: validation.error.issues.find(
           (err) => err.path[0] === "username",
         )
@@ -362,26 +364,20 @@ app.post("/register", async (req, res, next) => {
 });
 
 app.post("/ascend", async (req, res, next) => {
-  if (req.isAuthenticated()) {
-    const validation = sortSchema.safeParse({ sortDirection: "ASC" });
-    if (!validation.success) {
-      return next(
-        new ErrorHandler(
-          400,
-          "Invalid sort direction",
-          validation.error.issues,
-        ),
-      );
-    }
-    const result = await getForumPosts(req.user.id, "ASC");
+  if (!req.isAuthenticated()) return res.redirect("/login");
 
-    res.render("forumpost.ejs", {
-      currentUser: req.user.display_name,
-      listAllContent: result.rows,
-    });
-  } else {
-    res.redirect("/login");
+  const validation = sortSchema.safeParse({ sortDirection: "ASC" });
+  if (!validation.success) {
+    return next(
+      new ErrorHandler(400, "Invalid sort direction", validation.error.issues),
+    );
   }
+  const result = await getForumPosts(req.user.id, "ASC");
+
+  res.render("forum.ejs", {
+    currentUser: req.user.display_name,
+    listAllContent: result.rows,
+  });
 });
 app.post("/post-reaction", async (req, res) => {
   if (!req.isAuthenticated()) return res.redirect("/login");
@@ -426,7 +422,7 @@ app.post("/post-reaction", async (req, res) => {
       );
     }
 
-    return res.redirect("/forumpost");
+    return res.redirect("/forum");
   }
 
   if (postId) {
@@ -451,37 +447,30 @@ app.post("/post-reaction", async (req, res) => {
       );
     }
 
-    return res.redirect("/forumpost");
+    return res.redirect("/forum");
   }
 
   return res.status(400).send("Missing reaction target");
 });
 
 app.post("/descend", async (req, res, next) => {
-  if (req.isAuthenticated()) {
-    const validation = sortSchema.safeParse({ sortDirection: "DESC" });
-    if (!validation.success) {
-      return next(
-        new ErrorHandler(
-          400,
-          "Invalid sort direction",
-          validation.error.issues,
-        ),
-      );
-    }
-
-    const result = await getForumPosts(req.user.id, "DESC");
-
-    res.render("forumpost.ejs", {
-      currentUser: req.user.display_name,
-      listAllContent: result.rows,
-    });
-  } else {
-    res.redirect("/login");
+  if (!req.isAuthenticated()) return res.redirect("/login");
+  const validation = sortSchema.safeParse({ sortDirection: "DESC" });
+  if (!validation.success) {
+    return next(
+      new ErrorHandler(400, "Invalid sort direction", validation.error.issues),
+    );
   }
+
+  const result = await getForumPosts(req.user.id, "DESC");
+
+  res.render("forum.ejs", {
+    currentUser: req.user.display_name,
+    listAllContent: result.rows,
+  });
 });
 
-app.post("/add", async (req, res, next) => {
+app.post("/add-post", async (req, res, next) => {
   if (!req.isAuthenticated()) {
     return res.redirect("/login");
   }
@@ -501,20 +490,18 @@ app.post("/add", async (req, res, next) => {
       "INSERT INTO posts (post, user_id, created_at) VALUES ($1, $2, $3)",
       [post, req.user.id, date],
     );
-    res.redirect("/forumpost");
+    res.redirect("/forum");
   } catch (err) {
     console.log(err);
   }
 });
 app.post("/add-reply", async (req, res, next) => {
-  if (!req.isAuthenticated()) {
-    return res.redirect("/login");
-  }
+  if (!req.isAuthenticated()) return res.redirect("/login");
 
   const comment_post = req.body.reply;
   const post_id = req.body.post_id;
 
-  const validation = replySchema.safeParse({ comment_post, post_id });
+  const validation = replySchema.safeParse({ reply: comment_post, post_id });
   if (!validation.success) {
     return next(
       new ErrorHandler(400, "Invalid reply data", validation.error.issues),
@@ -530,7 +517,7 @@ app.post("/add-reply", async (req, res, next) => {
       "INSERT INTO replies (comment_post, user_id, post_id, created_at) VALUES ($1, $2, $3, $4)",
       [comment_post, req.user.id, post_id, date],
     );
-    res.redirect("/forumpost");
+    res.redirect("/forum");
   } catch (err) {
     console.log(err);
     return next(new ErrorHandler(500, "Internal Server Error", err));
@@ -541,7 +528,7 @@ passport.use(
   new Strategy(async function verify(username, password, cb) {
     try {
       const result = await db.query(
-        "SELECT * FROM users WHERE display_name = $1 ",
+        "SELECT * FROM users WHERE display_name = $1 AND provider = 'local'",
         [username],
       );
       if (result.rows.length > 0) {
@@ -568,6 +555,179 @@ passport.use(
     }
   }),
 );
+passport.use(
+  "google",
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: "http://localhost:3000/auth/google/forum",
+      userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
+    },
+    async function verify(accessToken, refreshToken, profile, cb) {
+      try {
+        const existingGoogleUser = await db.query(
+          "SELECT * FROM users WHERE google_id = $1",
+          [profile.id],
+        );
+
+        if (existingGoogleUser.rows.length > 0) {
+          return cb(null, existingGoogleUser.rows[0]);
+        }
+
+        const googleEmail = profile.emails?.[0]?.value;
+        if (!googleEmail) {
+          return cb(
+            new Error("Google account did not return an email address"),
+          );
+        }
+
+        const existingEmailUser = await db.query(
+          "SELECT * FROM users WHERE email = $1",
+          [googleEmail],
+        );
+
+        if (existingEmailUser.rows.length > 0) {
+          const linkedUser = await db.query(
+            `UPDATE users
+             SET google_id = $1, provider = 'google'
+             WHERE id = $2
+             RETURNING *`,
+            [profile.id, existingEmailUser.rows[0].id],
+          );
+          return cb(null, linkedUser.rows[0]);
+        }
+
+        const newUserResult = await db.query(
+          `INSERT INTO users (display_name, email, google_id, provider)
+           VALUES ($1, $2, $3, 'google')
+           RETURNING *`,
+          [profile.displayName, googleEmail, profile.id],
+        );
+
+        return cb(null, newUserResult.rows[0]);
+      } catch (err) {
+        console.log(err);
+        return cb(err);
+      }
+    },
+  ),
+);
+passport.use(
+  "twitch",
+  new TwitchStrategy(
+    {
+      clientID: process.env.TWITCH_CLIENT_ID,
+      clientSecret: process.env.TWITCH_CLIENT_SECRET,
+      callbackURL: "http://localhost:3000/auth/twitch/forum",
+    },
+    async function verify(accessToken, refreshToken, profile, cb) {
+      try {
+        const existingTwitchUser = await db.query(
+          "SELECT * FROM users WHERE twitch_id = $1",
+          [profile.id],
+        );
+
+        if (existingTwitchUser.rows.length > 0) {
+          return cb(null, existingTwitchUser.rows[0]);
+        }
+
+        const twitchEmail = profile?.email;
+        if (!twitchEmail) {
+          return cb(
+            new Error("Twitch account did not return an email address"),
+          );
+        }
+
+        const existingEmailUser = await db.query(
+          "SELECT * FROM users WHERE email = $1",
+          [twitchEmail],
+        );
+
+        if (existingEmailUser.rows.length > 0) {
+          const linkedUser = await db.query(
+            `UPDATE users
+             SET twitch_id = $1, provider = 'twitch'
+             WHERE id = $2
+             RETURNING *`,
+            [profile.id, existingEmailUser.rows[0].id],
+          );
+          return cb(null, linkedUser.rows[0]);
+        }
+
+        const newUserResult = await db.query(
+          `INSERT INTO users (display_name, email, twitch_id, provider)
+           VALUES ($1, $2, $3, 'twitch')
+           RETURNING *`,
+          [profile.displayName, twitchEmail, profile.id],
+        );
+
+        return cb(null, newUserResult.rows[0]);
+      } catch (err) {
+        console.log(err);
+        return cb(err);
+      }
+    },
+  ),
+);
+passport.use(
+  "discord",
+  new DiscordStrategy(
+    {
+      clientID: process.env.DISCORD_CLIENT_ID,
+      clientSecret: process.env.DISCORD_CLIENT_SECRET,
+      callbackURL: "http://localhost:3000/auth/discord/forum",
+      scope: ["identify", "email"],
+    },
+    async function verify(accessToken, refreshToken, profile, cb) {
+      try {
+        const existingDiscordUser = await db.query(
+          "SELECT * FROM users WHERE discord_id = $1",
+          [profile.id],
+        );
+
+        if (existingDiscordUser.rows.length > 0) {
+          return cb(null, existingDiscordUser.rows[0]);
+        }
+
+        const discordEmail = profile?.email;
+        if (!discordEmail) {
+          return cb(
+            new Error("Discord account did not return an email address"),
+          );
+        }
+
+        const existingEmailUser = await db.query(
+          "SELECT * FROM users WHERE email = $1",
+          [discordEmail],
+        );
+
+        if (existingEmailUser.rows.length > 0) {
+          const linkedUser = await db.query(
+            `UPDATE users
+             SET discord_id = $1, provider = 'discord'
+             WHERE id = $2
+             RETURNING *`,
+            [profile.id, existingEmailUser.rows[0].id],
+          );
+          return cb(null, linkedUser.rows[0]);
+        }
+
+        const newUserResult = await db.query(
+          `INSERT INTO users (display_name, email, discord_id, provider)
+           VALUES ($1, $2, $3, 'discord')
+           RETURNING *`,
+          [profile.username, discordEmail, profile.id],
+        );
+
+        return cb(null, newUserResult.rows[0]);
+      } catch (err) {
+        console.log(err);
+        return cb(err);
+      }
+    },
+  ),
+);
 
 passport.serializeUser((user, cb) => {
   cb(null, user);
@@ -585,18 +745,31 @@ app.use((err, req, res, next) => {
       req.session.formErrors = err.details;
       return res.redirect("/login");
     }
-    if (err.details.message === "Invalid password") {
+    if (err.details?.message === "Invalid password") {
       req.session.formErrors = err.details.message;
       return res.redirect("/login");
     }
-    if (err.details.message === "User not found") {
+    if (err.details?.message === "User not found") {
       req.session.formErrors = err.details.message;
       return res.redirect("/login");
     }
-    req.session.formErrors = err.details;
-    return res.redirect("/register");
+    if (err.message === "Registration failed") {
+      req.session.formErrors = err.details;
+      return res.redirect("/register");
+    }
+    if (err.message === "User already exists") {
+      req.session.formErrors = err.details;
+      return res.redirect("/register");
+    }
+    if (
+      err.message === "Invalid post data" ||
+      err.message === "Invalid reply data"
+    ) {
+      req.session.formErrors = err.details;
+      return res.redirect("/forumpost");
+    }
   }
-  return next(new ErrorHandler(500, "Internal Server Error", err));
+  return res.status(500).send("Internal Server Error");
 });
 
 if (process.env.NODE_ENV !== "test") {

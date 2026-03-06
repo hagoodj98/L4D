@@ -34,9 +34,9 @@ describe("Reaction flows", () => {
       });
 
     expect(reactResponse.status).toBe(302);
-    expect(reactResponse.headers.location).toBe("/forumpost");
+    expect(reactResponse.headers.location).toBe("/forum");
 
-    const forumResponse = await agent.get("/forumpost");
+    const forumResponse = await agent.get("/forum");
     expect(forumResponse.status).toBe(200);
     expect(forumResponse.text).toContain(
       `id="likeButton${post.id}"\n                  class="postButton reaction-color"`,
@@ -61,9 +61,9 @@ describe("Reaction flows", () => {
       });
 
     expect(reactResponse.status).toBe(302);
-    expect(reactResponse.headers.location).toBe("/forumpost");
+    expect(reactResponse.headers.location).toBe("/forum");
 
-    const forumResponse = await agent.get("/forumpost");
+    const forumResponse = await agent.get("/forum");
     expect(forumResponse.status).toBe(200);
     expect(forumResponse.text).toContain('class="postButton reaction-color"');
   });
@@ -84,7 +84,7 @@ describe("Reaction flows", () => {
         reaction: "like",
       });
 
-    let forumResponse = await agent.get("/forumpost");
+    let forumResponse = await agent.get("/forum");
     expect(forumResponse.status).toBe(200);
     expect(forumResponse.text).toMatch(
       new RegExp(
@@ -102,7 +102,7 @@ describe("Reaction flows", () => {
 
     expect(dbState.postReactions).toHaveLength(0);
 
-    forumResponse = await agent.get("/forumpost");
+    forumResponse = await agent.get("/forum");
     expect(forumResponse.status).toBe(200);
     expect(forumResponse.text).toMatch(
       new RegExp(`id="likeButton${post.id}"\\s+class="postButton\\s*"`),
@@ -131,7 +131,7 @@ describe("Reaction flows", () => {
         reaction_comment: "dislike",
       });
 
-    let forumResponse = await agent.get("/forumpost");
+    let forumResponse = await agent.get("/forum");
     expect(forumResponse.status).toBe(200);
     expect(forumResponse.text).toContain('class="postButton reaction-color"');
 
@@ -145,7 +145,7 @@ describe("Reaction flows", () => {
 
     expect(dbState.commentReactions).toHaveLength(0);
 
-    forumResponse = await agent.get("/forumpost");
+    forumResponse = await agent.get("/forum");
     expect(forumResponse.status).toBe(200);
     expect(forumResponse.text).not.toContain(
       'class="postButton reaction-color"',

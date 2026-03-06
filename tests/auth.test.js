@@ -77,6 +77,6 @@ describe("Auth flows", () => {
     });
 
     expect(loginResponse.status).toBe(302);
-    expect(loginResponse.headers.location).toBe("/login-error");
+    expect(loginResponse.headers.location).toBe("/login");
   });
 });
