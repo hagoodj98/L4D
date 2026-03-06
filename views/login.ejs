@@ -21,6 +21,12 @@
           required
           id="username"
         />
+        <span style="color: red"
+          ><%= locals.error && locals.error.username ? locals.error.username : "" %></span
+        >
+        <span style="color: red"
+          ><% if (locals.error) { %><%= locals.error === "User not found" ? "User not found" : "" %><% } %></span
+        >
       </div>
       <br />
       <div class="mb-3">
@@ -35,7 +41,13 @@
           class="form-control"
           placeholder=" Enter Password"
         />
-        <span style="color: red"><%= locals.error %></span>
+        <span style="color: red"
+          ><%= locals.error && locals.error.password ? locals.error.password : "" %></span
+        >
+
+        <span style="color: red"
+          ><% if (locals.error) { %><%= locals.error === "Invalid password" ? "Incorrect password" : "" %><% } %></span
+        >
       </div>
       <p class="mt-4">
         <a
@@ -46,6 +58,18 @@
           >SIGN UP</a
         >
       </p>
+      <div class="d-flex justify-content-around mt-3 text-white">
+        <div>
+          <a href="/auth/google" class="btn btn-light">Google</a>
+        </div>
+        <div>
+          <a href="/auth/twitch" class="btn btn-light">Twitch</a>
+        </div>
+        <div>
+          <a href="/auth/discord" class="btn btn-light">Discord</a>
+        </div>
+      </div>
+
       <button type="submit" class="mt-2 btn btn-dark roboto-condensed">
         Login
       </button>

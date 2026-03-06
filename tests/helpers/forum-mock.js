@@ -123,6 +123,20 @@ export function setupPgMock() {
 
         if (
           sql.includes(
+            "SELECT EXISTS (SELECT 1 FROM users WHERE email = $1 OR display_name = $2) AS user_exists",
+          )
+        ) {
+          const foundUser = dbState.users.some(
+            (user) =>
+              user.email === params[0] || user.display_name === params[1],
+          );
+          return {
+            rows: [{ user_exists: foundUser }],
+          };
+        }
+
+        if (
+          sql.includes(
             "INSERT INTO users (display_name, email, password) VALUES ($1, $2, $3) RETURNING *",
           )
         ) {

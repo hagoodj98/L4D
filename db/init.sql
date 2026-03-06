@@ -2,9 +2,36 @@ CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   display_name VARCHAR(100) NOT NULL,
   email VARCHAR(255) NOT NULL UNIQUE,
-  password VARCHAR(255) NOT NULL
+  password VARCHAR(255),
+  google_id VARCHAR(255) UNIQUE,
+  twitch_id VARCHAR(255) UNIQUE,
+  discord_id VARCHAR(255) UNIQUE,
+  provider VARCHAR(20) NOT NULL DEFAULT 'local'
 );
 
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS google_id VARCHAR(255);
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS twitch_id VARCHAR(255);
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS discord_id VARCHAR(255);
+
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS provider VARCHAR(20) NOT NULL DEFAULT 'local';
+
+ALTER TABLE users
+  ALTER COLUMN password DROP NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id_unique
+  ON users(google_id)
+  WHERE google_id IS NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_twitch_id_unique
+  ON users(twitch_id)
+  WHERE twitch_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_discord_id_unique
+  ON users(discord_id)
+  WHERE discord_id IS NOT NULL;
 CREATE TABLE IF NOT EXISTS posts (
   id SERIAL PRIMARY KEY,
   post TEXT NOT NULL,

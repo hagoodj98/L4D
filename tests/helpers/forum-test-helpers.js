@@ -19,12 +19,12 @@ export async function registerAndLogin(
 }
 
 export async function addPost(agent, content, dbState) {
-  const response = await agent.post("/add").type("form").send({
+  const response = await agent.post("/add-post").type("form").send({
     newPost: content,
   });
 
   expect(response.status).toBe(302);
-  expect(response.headers.location).toBe("/forumpost");
+  expect(response.headers.location).toBe("/forum");
 
   return dbState.posts[dbState.posts.length - 1];
 }
@@ -39,7 +39,7 @@ export async function addReply(agent, postId, content, dbState) {
     });
 
   expect(response.status).toBe(302);
-  expect(response.headers.location).toBe("/forumpost");
+  expect(response.headers.location).toBe("/forum");
 
   return dbState.replies[dbState.replies.length - 1];
 }

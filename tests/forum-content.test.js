@@ -17,7 +17,7 @@ describe("Forum content flows", () => {
     resetDbState();
   });
 
-  it("creates a post for authenticated user and redirects to /forumpost", async () => {
+  it("creates a post for authenticated user and redirects to /forum", async () => {
     const agent = await registerAndLogin(app, {
       username: "poster",
       email: "poster@example.com",
@@ -30,7 +30,7 @@ describe("Forum content flows", () => {
   });
 
   it("does not create post when user is unauthenticated", async () => {
-    const response = await request(app).post("/add").type("form").send({
+    const response = await request(app).post("/add-post").type("form").send({
       newPost: "should not be created",
     });
 
@@ -50,7 +50,7 @@ describe("Forum content flows", () => {
 
     expect(dbState.replies).toHaveLength(1);
 
-    const forumResponse = await agent.get("/forumpost");
+    const forumResponse = await agent.get("/forum");
     expect(forumResponse.status).toBe(200);
     expect(forumResponse.text).toContain("this is a test reply");
   });
@@ -62,7 +62,7 @@ describe("Forum content flows", () => {
     });
 
     const post = await addPost(agent, "toggle test post", dbState);
-    const forumResponse = await agent.get("/forumpost");
+    const forumResponse = await agent.get("/forum");
 
     expect(forumResponse.status).toBe(200);
     expect(forumResponse.text).toContain(`id="commentButton${post.id}"`);
