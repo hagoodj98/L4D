@@ -25,6 +25,12 @@ jobs:
       PG_PASSWORD: postgres
       PG_PORT: 5432
       SESSION_SECRET: ci-session-secret
+      GOOGLE_CLIENT_ID: ci-google-client-id
+      GOOGLE_CLIENT_SECRET: ci-google-client-secret
+      TWITCH_CLIENT_ID: ci-twitch-client-id
+      TWITCH_CLIENT_SECRET: ci-twitch-client-secret
+      DISCORD_CLIENT_ID: ci-discord-client-id
+      DISCORD_CLIENT_SECRET: ci-discord-client-secret
 
     services:
       postgres:
