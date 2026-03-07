@@ -13,6 +13,15 @@
   color: #6e9731;
   text-decoration: none;
 }
+.forum-page {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+    url("/images/billionsofzombies.jpg");
+
+  background-size: cover;
+  background-position: center top;
+  background-attachment: fixed;
+}
 .accordion {
   --bs-accordion-btn-bg: black;
   --bs-accordion-active-bg: #daa404;
@@ -48,8 +57,8 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-dash' viewBox='0 0 16 16'%3E%3Cpath d='M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8'/%3E%3C/svg%3E");
 }
 .learnmore {
-  border: 2px solid #d83232;
-  color: #d83232;
+  border: 2px solid #ffffff;
+  color: #ffffff;
 }
 .learnmore:hover {
   background-color: #d83232;
@@ -94,6 +103,10 @@
 
   color: white;
 }
+.dropdown-menu {
+  background-color: black !important; /* Your desired color */
+}
+
 #header {
   background-image: url("/images/what-are-some-of-the-things-would-you-like-to-see-in-a-v0-p6lgj5bqinac1 1.jpg");
   background-size: cover;
@@ -194,13 +207,11 @@
   }
   .login input {
     display: block;
-    height: 50px;
+
     width: 100%;
     background-color: white;
     border-radius: 3px;
-    padding: 0 10px;
-    margin-top: 8px;
-    font-size: 14px;
+
     font-weight: 300;
   }
   .buttonfontsize {
@@ -350,9 +361,7 @@
   .paddingtop {
     padding-top: 150px;
   }
-  .navbar-brand {
-    display: none;
-  }
+
   .subheadingcontent {
     color: white;
   }
@@ -373,7 +382,7 @@
     height: 500px;
     z-index: 1;
     /*margin-right: -200px;*/
-    background-color: black;
+    background-color: rgba(0, 0, 0, 0.5);
   }
 
   .frontheader h1 {
@@ -401,7 +410,7 @@
   }
   .headertext {
     height: 500px;
-    background-color: black;
+    background-color: rgba(0, 0, 0, 0.5);
   }
   .characterssize {
     width: 300px;
@@ -487,14 +496,14 @@
   }
 
   .headertext {
-    background-color: black;
+    background-color: rgba(0, 0, 0, 0.5);
   }
   .frontheader {
     position: absolute;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    background-color: black;
+    background-color: rgba(0, 0, 0, 0.5);
 
     padding: 30px;
     margin-left: 60px;
@@ -541,7 +550,7 @@
   }
 
   .headertext {
-    background-color: black;
+    background-color: rgba(0, 0, 0, 0.5);
   }
   .navbar-brand {
     display: block;
@@ -672,7 +681,7 @@
   .frontheader {
     position: absolute;
     z-index: 9999;
-    background-color: black;
+    background-color: rgba(0, 0, 0, 0.5);
 
     padding: 30px;
     margin-left: 100px;
@@ -681,7 +690,7 @@
   }
   .frontheaderforspecialinfected {
     position: absolute;
-    background-color: black;
+    background-color: rgba(0, 0, 0, 0.5);
     padding: 30px;
 
     height: 350px;
@@ -840,7 +849,7 @@
     z-index: 1;
     padding-left: 30px;
     /* margin-left: -200px;*/
-    background-color: black;
+    background-color: rgba(0, 0, 0, 0.5);
   }
   .headers {
     height: 900px;
@@ -852,7 +861,7 @@
     height: 900px;
     z-index: 1;
     /*margin-right: -200px;*/
-    background-color: black;
+    background-color: rgba(0, 0, 0, 0.5);
   }
   .halfsized {
     width: 100%;
@@ -980,4 +989,373 @@ button[type="submit"] {
 }
 button[type="submit"]:hover {
   background-color: #f23030aa;
+}
+
+.site-nav-list .nav-link:hover,
+.site-nav-list .nav-link:focus {
+  color: #6e9731;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.site-dropdown-menu {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.site-dropdown-menu .dropdown-item {
+  color: white;
+  border-radius: 6px;
+}
+
+.site-dropdown-menu .dropdown-item:hover,
+.site-dropdown-menu .dropdown-item:focus {
+  color: #6e9731;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.site-offcanvas {
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.site-footer {
+  gap: 18px;
+  padding-top: 28px;
+  padding-bottom: 28px;
+  clear: both;
+  width: 100%;
+}
+
+.forum-content-wrap {
+  width: 100%;
+}
+
+.footer-legal {
+  margin-bottom: 6px;
+  line-height: 1.7;
+  letter-spacing: 0.2px;
+}
+
+.partner-logo {
+  opacity: 0.86;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.partner-logo:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.forum-page {
+  padding-bottom: 18px;
+}
+
+.forum-intro-wrap {
+  max-width: 980px;
+}
+
+.forum-intro {
+  font-size: 1.1rem;
+  line-height: 1.9;
+  margin-bottom: 16px;
+}
+
+.forum-guest-cta {
+  border-radius: 10px;
+  background: rgba(216, 50, 50, 0.08);
+}
+
+.forum-compose-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 980px;
+}
+
+.forum-compose-input {
+  min-height: 130px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  background-color: #0d0d0d;
+  color: white;
+}
+
+.forum-submit-post {
+  width: fit-content !important;
+  padding: 10px 18px !important;
+  border: 1px solid #d83232;
+  border-radius: 8px !important;
+  color: #d83232;
+}
+
+.forum-submit-post:hover {
+  color: white;
+  background-color: #d83232;
+}
+
+.forum-sort-controls {
+  gap: 12px;
+  margin: 16px 0 12px;
+}
+
+.forum-sort-btn {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 1.1rem;
+}
+
+.forum-post-list {
+  max-width: 980px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.forum-post-card {
+  border: 1px solid rgba(255, 255, 255, 0.13) !important;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  margin-top: 12px;
+}
+
+.forum-post-content {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  margin-bottom: 8px;
+}
+
+.forum-post-meta,
+.forum-post-date {
+  margin-bottom: 4px;
+  opacity: 0.95;
+}
+
+.forum-post-actions {
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.forum-reply-editor-wrap {
+  margin-top: 10px;
+}
+
+.forum-reply-editor {
+  gap: 8px;
+}
+
+.forum-reply-input {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+
+.forum-reply-card {
+  border: 1px solid rgba(216, 50, 50, 0.35) !important;
+  border-radius: 10px;
+  background: rgba(216, 50, 50, 0.06);
+  margin-top: 10px;
+}
+
+.forum-reply-actions {
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+.auth-scene {
+  min-height: 100vh;
+  padding-top: 120px;
+  padding-bottom: 48px;
+  background:
+    radial-gradient(
+      circle at 30% 45%,
+      rgba(143, 31, 31, 0.24),
+      rgba(0, 0, 0, 0) 38%
+    ),
+    #04060d;
+}
+
+.auth-brand-panel {
+  color: #c8d0df;
+  max-width: 520px;
+  padding: 24px;
+}
+
+.auth-brand-name {
+  color: #b42a2a;
+  margin-bottom: 10px;
+}
+
+.auth-brand-tagline {
+  color: #eef2ff;
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.auth-brand-copy {
+  color: #93a0ba;
+  margin-bottom: 16px;
+}
+
+.auth-brand-chip {
+  display: inline-block;
+  border: 1px solid rgba(218, 164, 4, 0.45);
+  border-radius: 999px;
+  padding: 6px 14px;
+  color: #e7c45f;
+  background: rgba(218, 164, 4, 0.08);
+  width: fit-content;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 430px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(12px);
+  padding: 24px;
+  color: #dce3ef;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+}
+
+.auth-card-title {
+  color: #eef2ff;
+  margin-bottom: 4px;
+}
+
+.auth-card-subtitle {
+  color: #9ca9c2;
+  margin-bottom: 12px;
+}
+
+.auth-social-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.auth-social-btn {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(218, 164, 4, 0.2);
+  background: rgba(10, 12, 20, 0.9);
+  color: #e8ecf8;
+}
+
+.auth-social-btn:hover {
+  background: rgba(59, 19, 19, 0.94);
+  border-color: rgba(218, 164, 4, 0.5);
+  color: white;
+}
+
+.auth-divider {
+  text-align: center;
+  color: #bca266;
+  font-size: 0.92rem;
+  position: relative;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 32%;
+  height: 1px;
+  background: rgba(218, 164, 4, 0.28);
+}
+
+.auth-divider::before {
+  left: 0;
+}
+
+.auth-divider::after {
+  right: 0;
+}
+
+.auth-label {
+  color: #dbe3f2;
+  margin-bottom: 6px;
+}
+
+.auth-input {
+  background: #080c17;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #eef2ff;
+  border-radius: 10px;
+  min-height: 44px;
+}
+
+.auth-input::placeholder {
+  color: #7f8ca6;
+}
+
+.auth-input:focus {
+  background: #080c17;
+  color: #eef2ff;
+  border-color: rgba(218, 164, 4, 0.72);
+  box-shadow: 0 0 0 0.2rem rgba(218, 164, 4, 0.2);
+}
+
+.auth-error {
+  color: #ff7373;
+  display: block;
+  margin-top: 4px;
+}
+
+.auth-remember {
+  color: #9ca9c2;
+  font-size: 0.95rem;
+}
+
+.auth-forgot {
+  color: #c04747;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.auth-forgot:hover {
+  color: #e97777;
+}
+
+.auth-primary-btn {
+  background: linear-gradient(90deg, #8f1f1f, #b22a2a) !important;
+  border: 1px solid rgba(218, 164, 4, 0.55) !important;
+  border-radius: 10px !important;
+  color: white !important;
+  min-height: 46px;
+  font-size: 1rem;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35) inset;
+}
+
+.auth-primary-btn:hover {
+  filter: brightness(1.08);
+}
+
+.auth-bottom-link {
+  color: #8f9eb9;
+}
+
+.auth-bottom-link a {
+  color: #d9ab3f;
+  text-decoration: none;
+}
+
+.auth-bottom-link a:hover {
+  color: #f4cb6f;
+}
+
+@media (max-width: 991px) {
+  .auth-scene {
+    padding-top: 110px;
+    padding-bottom: 28px;
+  }
+
+  .auth-card {
+    margin: 0 auto;
+    max-width: 560px;
+  }
 }

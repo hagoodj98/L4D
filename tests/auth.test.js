@@ -13,10 +13,9 @@ describe("Auth flows", () => {
     resetDbState();
   });
 
-  it("redirects anonymous user from /forum to /login", async () => {
+  it("allows anonymous user to view /forum", async () => {
     const response = await request(app).get("/forum");
-    expect(response.status).toBe(302);
-    expect(response.headers.location).toBe("/login");
+    expect(response.status).toBe(200);
   });
 
   it("registers a user and redirects to /forum", async () => {

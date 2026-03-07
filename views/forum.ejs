@@ -1,10 +1,11 @@
 <%- include("partials/header.ejs") %>
 
-<div style="background-color: rgba(0, 0, 0, 0.655); height: auto">
+<div style="height: auto">
   <div class="container d-flex flex-column">
     <div class="paddingtop">
-      <div>
-        <p style="color: white">
+      <div class="forum-intro-wrap">
+        <% if (isAuthenticated) { %>
+        <p style="color: white" class="forum-intro">
           Welcome to the forum,
           <span style="color: #d83232"><%= currentUser %></span>! Feel free to
           share your thoughts and opinions about the game, ask questions, or
@@ -12,24 +13,46 @@
           follow our community guidelines while participating in the
           discussions. Happy gaming!
         </p>
+        <% } %>
 
-        <form action="/add-post" method="post">
+        <% if (!isAuthenticated) { %>
+        <div
+          class="forum-guest-cta"
+          style="
+            border: 1px solid #d83232;
+            padding: 12px;
+            margin-bottom: 12px;
+            color: white;
+          "
+        >
+          Browse all posts as a guest. To create posts, react, or reply,
+          <a href="/login" style="color: #d83232">log in</a>
+          or
+          <a href="/register" style="color: #d83232">create an account</a>.
+        </div>
+        <% } %>
+
+        <% if (isAuthenticated) { %>
+        <form action="/add-post" method="post" class="forum-compose-form">
           <textarea
-            name="post"
-            class="textareapost autoresizing"
+            name="newPost"
+            class="textareapost autoresizing forum-compose-input"
             placeholder="Write your post here..."
             required
           ></textarea>
-          <button type="submit" class="postButton">Submit Post</button>
+          <button type="submit" class="postButton forum-submit-post">
+            Submit Post
+          </button>
         </form>
+        <% } %>
       </div>
-      <div class="d-flex" style="margin-right: auto">
+      <div class="d-flex forum-sort-controls" style="margin-right: auto">
         <form action="/ascend" method="post">
           <button
             type="submit"
             name="recentPostByTime"
             style="background-color: transparent"
-            class="navforummavbutton roboto-condensed"
+            class="navforummavbutton roboto-condensed forum-sort-btn"
           >
             Latest Post
           </button>
@@ -40,26 +63,41 @@
             type="submit"
             name="oldestPostByTime"
             style="background-color: transparent"
-            class="navforummavbutton roboto-condensed"
+            class="navforummavbutton roboto-condensed forum-sort-btn"
           >
             Oldest Post
           </button>
         </form>
       </div>
-      <div class="d-flex flex-column flex-md-row justify-content-around">
-        <div class="posts">
+      <div class="d-flex flex-column forum-content-wrap">
+        <div class="posts forum-post-list">
           <% for(let post of listAllContent) { %>
-          <div class="p-2" style="border-bottom: 1px solid white">
+          <div class="forum-post-card" style="border-bottom: 1px solid white">
             <!--
                   <textarea  class="textareapost autoresizing" style="  width: 100%;"  readonly  id="title/textarea>-->
-            <p style="color: white"><%- post.post %></p>
-            <!--id="title<%#=post.id%>"-->
-            <p style="color: white">
-              Posted By:
-              <span style="color: #d83232"> <%- post.display_name %></span>
+            <p style="color: white" class="forum-post-content">
+              <%- post.post %>
             </p>
-            <p style="color: white"><%= post.created_at %></p>
-            <div style="display: flex; align-items: center">
+            <!--id="title<%#=post.id%>"-->
+            <p style="color: white" class="forum-post-meta">
+              Posted By:
+              <span style="color: #6e9731"> <%- post.display_name %></span>
+            </p>
+            <% 
+              const created = new Date(post.created_at);
+              const day    = created.getDate().toString().padStart(2, '0');
+              const month  = created.toLocaleString('default', { month: 'short' }); // e.g. 'Mar'
+              const year   = created.getFullYear();
+              const timeZone   = created.toLocaleTimeString('default', { timeZoneName: 'short' }).split(' ')[2]; // e.g. 'PST'
+              const time   = created.toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' });
+            %>
+            <p style="color: white" class="forum-post-date">
+              <%= day %> <%= month %> <%= year %> at <%= time %> <%= timeZone %>
+            </p>
+            <div
+              style="display: flex; align-items: center"
+              class="forum-post-actions"
+            >
               <form action="/post-reaction" method="post">
                 <input type="hidden" name="post_id" value="<%= post.id %>" />
                 <input type="hidden" name="reaction" value="like" />
@@ -127,10 +165,17 @@
                 Reply
               </button>
             </div>
-            <div id="replyInputBox<%= post.id %>" style="display: none">
+            <div
+              id="replyInputBox<%= post.id %>"
+              style="display: none"
+              class="forum-reply-editor-wrap"
+            >
               <form action="/add-reply" method="post">
                 <input type="hidden" name="post_id" value="<%= post.id %>" />
-                <div style="display: flex; flex-direction: column">
+                <div
+                  style="display: flex; flex-direction: column"
+                  class="forum-reply-editor"
+                >
                   <textarea
                     rows="9"
                     style="
@@ -138,6 +183,7 @@
                       color: white;
                       padding: 10px;
                     "
+                    class="forum-reply-input"
                     autofocus="true"
                     name="reply"
                     placeholder="Write a reply..."
@@ -151,7 +197,7 @@
             <div id="commentInputBox<%= post.id %>" style="display: none">
               <% for(let reply of post.replies) { %>
               <div
-                class="p-2"
+                class="p-2 forum-reply-card"
                 style="border-top: 1px solid white; margin-left: 20px"
               >
                 <p style="color: white"><%- reply.comment_post %></p>
@@ -162,6 +208,7 @@
                 <p style="color: white"><%= reply.created_at %></p>
               </div>
               <div
+                class="forum-reply-actions"
                 style="display: flex; align-items: center; margin-left: 20px"
               >
                 <form action="/post-reaction" method="post">
@@ -227,5 +274,30 @@
       </div>
     </div>
   </div>
+  <nav aria-label="Page navigation example">
+    <ul class="pagination justify-content-end">
+      <li class="page-item">
+        <a class="page-link" href="#" aria-label="Previous">
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
+      <% 
+        const paginationNumber = Math.ceil(totalPosts / 4);
+        for(let i = 1; i <= paginationNumber; i++) { 
+      %>
+      <li class="page-item">
+        <a class="page-link" href="/forum?page=<%= i %>&offset=<%= (i - 1) %>"
+          ><%= i %></a
+        >
+      </li>
+      <% } %>
+
+      <li class="page-item">
+        <a class="page-link" href="#" aria-label="Next">
+          <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
 </div>
 <%- include("partials/footer.ejs") %>

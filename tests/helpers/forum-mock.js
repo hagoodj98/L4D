@@ -218,8 +218,26 @@ export function setupPgMock() {
         ) {
           const currentUserId = params[0];
           const isAscSort = sql.includes("ORDER BY p.created_at ASC");
+          const limit = Number(params[1]);
+          const offset = Number(params[2]);
+          const allRows = buildForumRows(currentUserId, isAscSort);
+
           return {
-            rows: buildForumRows(currentUserId, isAscSort),
+            rows:
+              Number.isInteger(limit) && Number.isInteger(offset)
+                ? allRows.slice(offset, offset + limit)
+                : allRows,
+          };
+        }
+
+        if (sql.includes("SELECT COUNT(*)") && sql.includes("FROM posts")) {
+          return {
+            rows: [
+              {
+                count: String(dbState.posts.length),
+                total_posts: dbState.posts.length,
+              },
+            ],
           };
         }
 

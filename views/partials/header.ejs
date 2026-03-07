@@ -2,7 +2,7 @@
 <html>
   <head>
     <title>ZombieSlayers</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -22,11 +22,14 @@
     <link rel="stylesheet" type="text/css" href="/css/reset.css" />
     <link rel="stylesheet" type="text/css" href="/css/styles.css" />
   </head>
-  <body style="background-color: black">
-    <!-- <div class="container_outer_img">
-    <span cursor:pointer; onmouseover="openNav()" class="navhover"><img src="images/navarrow.svg"></span>
-</div>-->
-    <nav class="navbar navbar-expand-lg fixed-top">
+  
+  <body
+    style="background-color: black; "
+    class="<%= currentPath === '/forum' ? 'forum-page' : '' %>"
+
+  >
+
+    <nav class="navbar navbar-expand-lg fixed-top site-navbar">
       <div class="container-fluid">
         <a class="navbar-brand" href="/"
           ><img
@@ -46,7 +49,7 @@
           <span class="navbar-toggler-icon"></span>
         </button>
         <div
-          class="offcanvas offcanvas-end"
+          class="offcanvas offcanvas-end site-offcanvas"
           style="background-color: #0d0d0d"
           tabindex="-1"
           id="offcanvasNavbar"
@@ -68,7 +71,7 @@
             ></button>
           </div>
           <div class="offcanvas-body">
-            <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+            <ul class="navbar-nav justify-content-end flex-grow-1 pe-3 site-nav-list">
               <li class="nav-item">
                 <a
                   class="nav-link roboto-condensed"
@@ -88,15 +91,32 @@
                 >
               </li>
               <li class="nav-item dropdown">
-                <a class="nav-link roboto-condensed" href="/community">
+                <a class="nav-link dropdown-toggle roboto-condensed" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                   Community
                 </a>
+                <ul class="dropdown-menu dropdown-menu-end site-dropdown-menu" >
+                  <li><a class="dropdown-item" href="/community">Get Connected</a></li>
+                  <li><a class="dropdown-item" href="/forum">Forum</a></li>
+                </ul>
               </li>
+               
               <% if (locals.user) { %>
-              <li class="nav-item">
-                <a class="nav-link roboto-condensed" href="/logout"
-                  >Hey <%- locals.user %>, Logout</a
-                >
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle roboto-condensed" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
+                    <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
+                    <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
+                  </svg>
+                 </span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end site-dropdown-menu" >
+                  <span class="text-white">Profile,</span>
+                  <p class="text-white"><%= locals.user %></p>
+                  <li class="nav-item"> <a class="nav-link roboto-condensed" href="/logout"
+                  > Logout</a
+                ></li>
+                </ul>
               </li>
               <% } else { %>
               <li class="nav-item">

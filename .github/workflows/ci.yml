@@ -18,6 +18,19 @@ jobs:
   validate:
     name: Games Forum CI Check
     runs-on: ubuntu-latest
+    env:
+      PG_USER: postgres
+      PG_HOST: localhost
+      PG_DATABASE: forum
+      PG_PASSWORD: postgres
+      PG_PORT: 5432
+      SESSION_SECRET: ci-session-secret
+      GOOGLE_CLIENT_ID: ci-google-client-id
+      GOOGLE_CLIENT_SECRET: ci-google-client-secret
+      TWITCH_CLIENT_ID: ci-twitch-client-id
+      TWITCH_CLIENT_SECRET: ci-twitch-client-secret
+      DISCORD_CLIENT_ID: ci-discord-client-id
+      DISCORD_CLIENT_SECRET: ci-discord-client-secret
 
     services:
       postgres:
@@ -55,3 +68,14 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      - name: Initialize database schema
+        run: npm run db:init
+        env:
+          PGPASSWORD: postgres
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run end-to-end tests
+        run: npm run test:e2e
