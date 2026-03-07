@@ -47,13 +47,16 @@ const port = 3000;
 const saltRounds = 10;
 env.config();
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "test-google-client-id";
+const GOOGLE_CLIENT_ID =
+  process.env.GOOGLE_CLIENT_ID || "test-google-client-id";
 const GOOGLE_CLIENT_SECRET =
   process.env.GOOGLE_CLIENT_SECRET || "test-google-client-secret";
-const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || "test-twitch-client-id";
+const TWITCH_CLIENT_ID =
+  process.env.TWITCH_CLIENT_ID || "test-twitch-client-id";
 const TWITCH_CLIENT_SECRET =
   process.env.TWITCH_CLIENT_SECRET || "test-twitch-client-secret";
-const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || "test-discord-client-id";
+const DISCORD_CLIENT_ID =
+  process.env.DISCORD_CLIENT_ID || "test-discord-client-id";
 const DISCORD_CLIENT_SECRET =
   process.env.DISCORD_CLIENT_SECRET || "test-discord-client-secret";
 
@@ -89,6 +92,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use((req, res, next) => {
   res.locals.user = req.user ? req.user.display_name : null;
+  res.locals.currentPath = req.path;
   next();
 });
 
@@ -103,7 +107,12 @@ if (process.env.NODE_ENV !== "test") {
   db.connect();
 }
 
-const getForumPosts = async (userId, sortDirection = "DESC") => {
+const getForumPosts = async (
+  userId = null,
+  sortDirection = "DESC",
+  limit = 4,
+  offset = 0,
+) => {
   const safeSortDirection = sortDirection === "ASC" ? "ASC" : "DESC";
 
   const forumPostQuery = `
@@ -169,10 +178,11 @@ const getForumPosts = async (userId, sortDirection = "DESC") => {
         WHERE r.post_id = p.id
         GROUP BY r.post_id
       ) rp ON true
-      ORDER BY p.created_at ${safeSortDirection};
+      ORDER BY p.created_at ${safeSortDirection}
+      LIMIT $2 OFFSET $3 
     `;
 
-  return db.query(forumPostQuery, [userId]);
+  return db.query(forumPostQuery, [userId, limit, offset]);
 };
 
 app.get("/", (req, res) => {
@@ -218,6 +228,7 @@ app.get(
     failureRedirect: "/login",
   }),
 );
+
 app.get(
   "/auth/discord/forum",
   passport.authenticate("discord", {
@@ -263,11 +274,26 @@ app.get("/logout", (req, res, next) => {
 });
 
 app.get("/forum", async (req, res) => {
-  if (!req.isAuthenticated()) return res.redirect("/login");
-  const result = await getForumPosts(req.user.id, "DESC");
+  const validation = sortSchema.safeParse({ sortDirection: "DESC" });
+  if (!validation.success) {
+    return res.status(400).send("Invalid sort direction");
+  }
+  const limit = req.query.limit ? parseInt(req.query.limit) : 4;
+  const offset = req.query.page ? (parseInt(req.query.page) - 1) * limit : 0;
+  const result = await getForumPosts(
+    req.user ? req.user.id : null,
+    "DESC",
+    limit,
+    offset,
+  );
+  const totalPostsResult = await db.query("SELECT COUNT(*) FROM posts");
+
+  const totalPosts = totalPostsResult.rows[0].count;
   res.render("forum.ejs", {
-    currentUser: req.user.display_name,
+    currentUser: req.user ? req.user.display_name : "Guest",
+    isAuthenticated: req.isAuthenticated(),
     listAllContent: result.rows,
+    totalPosts,
   });
 });
 
@@ -403,6 +429,7 @@ app.post("/ascend", async (req, res, next) => {
 
   res.render("forum.ejs", {
     currentUser: req.user.display_name,
+    isAuthenticated: true,
     listAllContent: result.rows,
   });
 });
@@ -493,6 +520,7 @@ app.post("/descend", async (req, res, next) => {
 
   res.render("forum.ejs", {
     currentUser: req.user.display_name,
+    isAuthenticated: true,
     listAllContent: result.rows,
   });
 });

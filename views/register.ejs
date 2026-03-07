@@ -1,88 +1,108 @@
 <%- include("partials/header.ejs") %>
-<div
-  class="d-flex flex-column justify-content-center align-items-center"
-  style="background-color: black; height: 100vh"
->
-  <div class="formwidth">
-    <form class="login" action="/register" method="POST">
-      <h3 class="bungee-regular formtitle text-center" style="color: white">
-        Get Registered!
-      </h3>
-      <span style="color: red"
-        ><%- locals.error ? locals.error.duplicateInfo : "" %></span
-      >
-
-      <div class="mb-3">
-        <label class="roboto-condensed" style="color: white" for="email"
-          >Email</label
-        >
-        <input
-          type="email"
-          class="form-control"
-          placeholder="Email"
-          name="email"
-          required
-        />
-        <span style="color: red"
-          ><%- locals.error ? locals.error.email : "" %></span
-        >
-      </div>
-      <div class="mb-3">
-        <label class="roboto-condensed" style="color: white" for="username"
-          >Username</label
-        >
-        <input
-          type="text"
-          placeholder="Username"
-          name="username"
-          id="username"
-          required
-          class="form-control"
-        />
-        <span style="color: red"
-          ><%- locals.error ? locals.error.username : "" %></span
-        >
-      </div>
-      <div class="mb-3">
-        <label class="roboto-condensed" style="color: white" for="password"
-          >Password</label
-        >
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          id="password"
-          required
-          class="form-control"
-        />
-        <span style="color: red"
-          ><%- locals.error ? locals.error.password : "" %></span
-        >
-      </div>
-      <p class="">
-        <a
-          class="linkbelowlogins roboto-condensed"
-          style="text-decoration: none"
-          href="/login"
-          role="button"
-          >Remember? Then Login!</a
-        >
+<div class="auth-scene">
+  <div
+    class="container auth-shell d-flex flex-column flex-lg-row gap-4 align-items-stretch justify-content-center"
+  >
+    <section
+      class="auth-brand-panel d-none d-lg-flex flex-column justify-content-center"
+    >
+      <h2 class="bungee-regular auth-brand-name">ZombieSlayers</h2>
+      <h3 class="roboto-condensed auth-brand-tagline">Join the survivors</h3>
+      <p class="roboto-condensed auth-brand-copy">
+        Create your account to post, react, and connect with other players.
       </p>
-      <div class="d-flex justify-content-around mt-3 text-white">
-        <div>
-          <a href="/auth/google" class="btn btn-light">Google</a>
-        </div>
-        <div>
-          <a href="/auth/twitch" class="btn btn-light">Twitch</a>
-        </div>
-        <div>
-          <a href="/auth/discord" class="btn btn-light">Discord</a>
-        </div>
+      <span class="auth-brand-chip roboto-condensed"
+        >Fast sign-up • Social login</span
+      >
+    </section>
+
+    <section class="auth-card">
+      <h3 class="roboto-condensed auth-card-title">Create account</h3>
+      <p class="auth-card-subtitle roboto-condensed">
+        Sign up to ZombieSlayers
+      </p>
+
+      <div class="auth-social-stack mb-3">
+        <a href="/auth/google" class="btn btn-light auth-social-btn"
+          >Continue with Google</a
+        >
+        <a href="/auth/twitch" class="btn btn-light auth-social-btn"
+          >Continue with Twitch</a
+        >
+        <a href="/auth/discord" class="btn btn-light auth-social-btn"
+          >Continue with Discord</a
+        >
       </div>
-      <button type="submit" class="btn btn-dark roboto-condensed">
-        Register
-      </button>
-    </form>
+
+      <div class="auth-divider roboto-condensed mb-3">or create with email</div>
+
+      <form class="auth-form" action="/register" method="POST">
+        <span class="auth-error"
+          ><%- locals.error ? locals.error.duplicateInfo : "" %></span
+        >
+
+        <div class="mb-3">
+          <label class="roboto-condensed auth-label" for="email">Email</label>
+          <input
+            type="email"
+            class="form-control auth-input"
+            placeholder="Email"
+            name="email"
+            required
+            id="email"
+          />
+          <span class="auth-error"
+            ><%- locals.error ? locals.error.email : "" %></span
+          >
+        </div>
+
+        <div class="mb-3">
+          <label class="roboto-condensed auth-label" for="username"
+            >Username</label
+          >
+          <input
+            type="text"
+            placeholder="Username"
+            name="username"
+            id="username"
+            required
+            class="form-control auth-input"
+          />
+          <span class="auth-error"
+            ><%- locals.error ? locals.error.username : "" %></span
+          >
+        </div>
+
+        <div class="mb-3">
+          <label class="roboto-condensed auth-label" for="password"
+            >Password</label
+          >
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            id="password"
+            required
+            class="form-control auth-input"
+          />
+          <span class="auth-error"
+            ><%- locals.error ? locals.error.password : "" %></span
+          >
+        </div>
+
+        <button
+          type="submit"
+          class="btn auth-primary-btn roboto-condensed w-100"
+        >
+          Create account
+        </button>
+
+        <p class="auth-bottom-link roboto-condensed text-center mt-3">
+          Already have an account?
+          <a href="/login">Login</a>
+        </p>
+      </form>
+    </section>
   </div>
 </div>
 

@@ -8,8 +8,10 @@
     "dev": "nodemon index.js",
     "lint": "eslint . && npm run lint:ejs",
     "lint:ejs": "ejslint views/**/*.ejs",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "vitest run tests",
+    "test:watch": "vitest tests",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "keywords": [],
   "author": "",
@@ -18,6 +20,7 @@
   "dependencies": {
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
+    "bootstrap-icons": "^1.13.1",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
     "ejs-lint": "^2.0.1",
@@ -33,6 +36,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.58.2",
     "eslint": "^10.0.2",
     "globals": "^17.3.0",
     "prettier": "^3.8.1",

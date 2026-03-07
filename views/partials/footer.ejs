@@ -1,7 +1,7 @@
-<footer class="container divspacing d-flex flex-column">
+<footer class="container d-flex flex-column site-footer">
   <div>
     <div id="footerpar">
-      <p class="text-center" style="color: rgba(255, 255, 255, 0.411)">
+      <p class="text-center footer-legal" style="color: rgba(255, 255, 255, 0.411)">
         2009 Valve, the Valve logo, Left 4 dead, the left 4 dead logo, steam,
         the steam logo, source, the source logo, and valve source are trademarks
         and/or registered tradmarks of valve corporation in the united states
@@ -14,16 +14,16 @@
 
   <div class="d-flex justify-content-around flex-wrap">
     <div class="xbox">
-      <img src="/images/XBOX 1.png" class="img-fluid p-3" alt="" />
+      <img src="/images/XBOX 1.png" class="img-fluid p-3 partner-logo" alt="Xbox" />
     </div>
     <div class="source">
-      <img src="/images/Source 1.png" class="img-fluid p-3" alt="" />
+      <img src="/images/Source 1.png" class="img-fluid p-3 partner-logo" alt="Source" />
     </div>
     <div class="valve">
-      <img src="/images/valve 1.png" class="img-fluid p-3" alt="" />
+      <img src="/images/valve 1.png" class="img-fluid p-3 partner-logo" alt="Valve" />
     </div>
     <div class="steam3">
-      <img src="/images/Vector (1).png" class="img-fluid p-3" alt="" />
+      <img src="/images/Vector (1).png" class="img-fluid p-3 partner-logo" alt="Steam" />
     </div>
   </div>
 </footer>
@@ -104,11 +104,11 @@
    
 
   $(".reply").on("click", function () {
-    var postId = $(this).closest(".p-2").find("input[name='post_id']").val();
+    var postId = $(this).closest(".forum-post-card").find("input[name='post_id']").val();
     $("#replyInputBox" + postId).toggle();
   });
   $(".comment").on("click", function () {
-    var commentId = $(this).closest(".p-2").find("input[name='post_id']").val();
+    var commentId = $(this).closest(".forum-post-card").find("input[name='post_id']").val();
     $("#commentInputBox" + commentId).toggle();
   });
 </script>

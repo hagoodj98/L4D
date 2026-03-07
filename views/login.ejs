@@ -1,79 +1,100 @@
 <%- include("partials/header.ejs") %>
 
-<div
-  class="d-flex flex-column justify-content-center align-items-center"
-  style="background-color: black; height: 100vh"
->
-  <div class="formwidth">
-    <form class="login" action="/login" method="POST">
-      <h3 class="bungee-regular formtitle text-center" style="color: white">
-        Login
-      </h3>
-      <div class="mb-3">
-        <label class="roboto-condensed" style="color: white" for="username"
-          >Username</label
-        >
-        <input
-          type="text"
-          class="form-control"
-          name="username"
-          placeholder="Username"
-          required
-          id="username"
-        />
-        <span style="color: red"
-          ><%= locals.error && locals.error.username ? locals.error.username : "" %></span
-        >
-        <span style="color: red"
-          ><% if (locals.error) { %><%= locals.error === "User not found" ? "User not found" : "" %><% } %></span
-        >
-      </div>
-      <br />
-      <div class="mb-3">
-        <label class="roboto-condensed" style="color: white" for="password"
-          >Password</label
-        >
-        <input
-          type="password"
-          name="password"
-          id="password"
-          required
-          class="form-control"
-          placeholder=" Enter Password"
-        />
-        <span style="color: red"
-          ><%= locals.error && locals.error.password ? locals.error.password : "" %></span
-        >
+<div class="auth-scene">
+  <div
+    class="container auth-shell d-flex flex-column flex-lg-row gap-4 align-items-stretch justify-content-center"
+  >
+    <section
+      class="auth-brand-panel d-none d-lg-flex flex-column justify-content-center"
+    >
+      <h2 class="bungee-regular auth-brand-name">ZombieSlayers</h2>
 
-        <span style="color: red"
-          ><% if (locals.error) { %><%= locals.error === "Invalid password" ? "Incorrect password" : "" %><% } %></span
-        >
-      </div>
-      <p class="mt-4">
-        <a
-          class="linkbelowlogins roboto-condensed"
-          style="text-decoration: none"
-          href="/register"
-          role="button"
-          >SIGN UP</a
-        >
+      <p class="roboto-condensed auth-brand-copy">
+        Squad up with the community, track your progress, and stay ready for
+        every campaign.
       </p>
-      <div class="d-flex justify-content-around mt-3 text-white">
-        <div>
-          <a href="/auth/google" class="btn btn-light">Google</a>
-        </div>
-        <div>
-          <a href="/auth/twitch" class="btn btn-light">Twitch</a>
-        </div>
-        <div>
-          <a href="/auth/discord" class="btn btn-light">Discord</a>
-        </div>
+    </section>
+
+    <section class="auth-card">
+      <h3 class="roboto-condensed auth-card-title">Welcome back</h3>
+      <p class="auth-card-subtitle roboto-condensed">
+        Sign in to ZombieSlayers
+      </p>
+
+      <div class="auth-social-stack mb-3">
+        <a href="/auth/google" class="btn btn-light auth-social-btn"
+          >Continue with Google</a
+        >
+        <a href="/auth/twitch" class="btn btn-light auth-social-btn"
+          >Continue with Twitch</a
+        >
+        <a href="/auth/discord" class="btn btn-light auth-social-btn"
+          >Continue with Discord</a
+        >
       </div>
 
-      <button type="submit" class="mt-2 btn btn-dark roboto-condensed">
-        Login
-      </button>
-    </form>
+      <div class="auth-divider roboto-condensed mb-3">
+        or continue with account
+      </div>
+
+      <form class="auth-form" action="/login" method="POST">
+        <div class="mb-3">
+          <label class="roboto-condensed auth-label" for="username"
+            >Username</label
+          >
+          <input
+            type="text"
+            class="form-control auth-input"
+            name="username"
+            placeholder="Username"
+            required
+            id="username"
+          />
+          <span class="auth-error"
+            ><%= locals.error && locals.error.username ? locals.error.username :
+            "" %></span
+          >
+          <span class="auth-error"
+            ><% if (locals.error) { %><%= locals.error === "User not found" ?
+            "User not found" : "" %><% } %></span
+          >
+        </div>
+
+        <div class="mb-3">
+          <label class="roboto-condensed auth-label" for="password"
+            >Password</label
+          >
+          <input
+            type="password"
+            name="password"
+            id="password"
+            required
+            class="form-control auth-input"
+            placeholder="Enter Password"
+          />
+          <span class="auth-error"
+            ><%= locals.error && locals.error.password ? locals.error.password :
+            "" %></span
+          >
+          <span class="auth-error"
+            ><% if (locals.error) { %><%= locals.error === "Invalid password" ?
+            "Incorrect password" : "" %><% } %></span
+          >
+        </div>
+
+        <button
+          type="submit"
+          class="btn auth-primary-btn roboto-condensed w-100"
+        >
+          Sign in
+        </button>
+
+        <p class="auth-bottom-link roboto-condensed text-center mt-3">
+          New here?
+          <a href="/register">Create an account</a>
+        </p>
+      </form>
+    </section>
   </div>
 </div>
 
