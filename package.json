@@ -8,6 +8,7 @@
     "dev": "nodemon index.js",
     "lint": "eslint . && npm run lint:ejs",
     "lint:ejs": "ejslint views/**/*.ejs",
+    "db:init": "psql -h $PG_HOST -U $PG_USER -d $PG_DATABASE -f db/init.sql",
     "test": "vitest run tests",
     "test:watch": "vitest tests",
     "test:e2e": "playwright test",
