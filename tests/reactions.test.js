@@ -1,4 +1,3 @@
-import request from "supertest";
 import { beforeEach, describe, expect, it } from "vitest";
 import { dbState, resetDbState, setupPgMock } from "./helpers/forum-mock.js";
 import {
