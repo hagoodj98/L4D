@@ -63,6 +63,7 @@ passport.use(
     },
     async function verify(accessToken, refreshToken, profile, cb) {
       try {
+        // Fast path: provider account already linked to a local user.
         const existingGoogleUser =
           await findExistingUserViaPassportStrategyThroughProvider(
             profile,
@@ -84,6 +85,7 @@ passport.use(
           await receivedExistingUserViaPassportStrategyProvider(profile);
 
         if (existingEmailUser) {
+          // Link OAuth provider to an existing account matched by email.
           const linkedUser = await db.query(
             `UPDATE users
              SET google_id = $1, provider = 'google'
@@ -116,6 +118,7 @@ passport.use(
     },
     async function verify(accessToken, refreshToken, profile, cb) {
       try {
+        // Fast path: provider account already linked to a local user.
         const existingTwitchUser =
           await findExistingUserViaPassportStrategyThroughProvider(
             profile,
@@ -137,6 +140,7 @@ passport.use(
           await receivedExistingUserViaPassportStrategyProvider(profile);
 
         if (existingEmailUser) {
+          // Link OAuth provider to an existing account matched by email.
           const linkedUser = await db.query(
             `UPDATE users
              SET twitch_id = $1, provider = 'twitch'
@@ -170,6 +174,7 @@ passport.use(
     },
     async function verify(accessToken, refreshToken, profile, cb) {
       try {
+        // Fast path: provider account already linked to a local user.
         const existingDiscordUser =
           await findExistingUserViaPassportStrategyThroughProvider(
             profile,
@@ -191,6 +196,7 @@ passport.use(
           await receivedExistingUserViaPassportStrategyProvider(profile);
 
         if (existingEmailUser) {
+          // Link OAuth provider to an existing account matched by email.
           const linkedUser = await db.query(
             `UPDATE users
              SET discord_id = $1, provider = 'discord'

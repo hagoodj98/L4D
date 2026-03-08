@@ -53,6 +53,7 @@ app.use(
     secret: process.env.SESSION_SECRET || "test-session-secret",
     resave: false,
     saveUninitialized: false,
+    // Refresh cookie expiry on each request while a user is active.
     rolling: true,
   }),
 );
@@ -61,6 +62,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use(passport.initialize());
 app.use(passport.session());
+// Shared view locals for navbar/account UI across all pages.
 app.use((req, res, next) => {
   res.locals.user = req.user ? req.user.display_name : null;
   res.locals.currentPath = req.path;
@@ -149,31 +151,38 @@ app.get("/logout", (req, res, next) => {
   });
 });
 
-app.get("/forum", async (req, res) => {
+app.get("/forum", async (req, res, next) => {
   const validation = sortSchema.safeParse({ sortDirection: "DESC" });
   if (!validation.success) {
     return res.status(400).send("Invalid sort direction");
   }
+  // Basic pagination defaults to page 1 with 4 posts per page.
   const limit = req.query.limit ? parseInt(req.query.limit) : 4;
   const offset = req.query.page ? (parseInt(req.query.page) - 1) * limit : 0;
-  const result = await getForumPosts(
-    req.user ? req.user.id : null,
-    "DESC",
-    limit,
-    offset,
-  );
+  try {
+    const result = await getForumPosts(
+      req.user ? req.user.id : null,
+      "DESC",
+      limit,
+      offset,
+    );
 
-  const getTotalPosts = await totalPostsResult();
-  const totalPosts = getTotalPosts.rows[0].count;
-  res.render("forum.ejs", {
-    currentUser: req.user ? req.user.display_name : "Guest",
-    isAuthenticated: req.isAuthenticated(),
-    listAllContent: result.rows,
-    totalPosts,
-  });
+    const getTotalPosts = await totalPostsResult();
+    const totalPosts = getTotalPosts.rows[0].count;
+    res.render("forum.ejs", {
+      currentUser: req.user ? req.user.display_name : "Guest",
+      isAuthenticated: req.isAuthenticated(),
+      listAllContent: result.rows,
+      totalPosts,
+    });
+  } catch (err) {
+    return next(new ErrorHandler(500, "Internal Server Error", err));
+  }
 });
 
 app.post("/login", async (req, res, next) => {
+  // Keep local auth result handling in this route so form-specific errors
+  // can be normalized into the central error middleware.
   passport.authenticate("local", function (err, user, info) {
     const validation = loginSchema.safeParse({
       username: req.body.username,
@@ -265,6 +274,7 @@ app.post("/register", async (req, res, next) => {
         }),
       );
     } else {
+      // Hash password before persistence, then create a logged-in session.
       bcrypt.hash(password, saltRounds, async (err, hash) => {
         if (err) {
           return next(new ErrorHandler(500, "Error hashing password"));
@@ -320,22 +330,19 @@ app.post("/post-reaction", async (req, res) => {
   }
 
   if (commentId) {
-    // REPLY path: only touch reactions_comments
+    // Reply reactions toggle: same reaction removes, different reaction upserts.
     const existing = await existingCommentReaction(commentId, req.user.id);
 
     if (existing && existing.reaction_type === reaction) {
       await removeCommentReaction(commentId, req.user.id);
     } else {
-      //if insert hits a duplicate on this unique key… ON CONFLICT
-      //…update existing row instead of throwing error DO UPDATE
-      //the row you tried to insert (the “new incoming values”) are referenced as EXCLUDED in the DO UPDATE clause
       await addCommentReaction(commentId, req.user.id, reaction);
     }
     return res.redirect("/forum");
   }
 
   if (postId) {
-    // POST path: only touch posts_reactions
+    // Post reactions follow the same toggle behavior as reply reactions.
     const existing = await existingPostReaction(postId, req.user.id);
 
     if (existing && existing.reaction_type === reaction) {
@@ -408,6 +415,7 @@ app.post("/add-reply", async (req, res, next) => {
 });
 
 app.use((err, req, res, _next) => {
+  // Convert structured domain errors into user-facing redirects/messages.
   if (err instanceof ErrorHandler) {
     if (err.message === "Validation failed") {
       req.session.formErrors = err.details;
@@ -442,6 +450,7 @@ app.use((err, req, res, _next) => {
 
 if (process.env.NODE_ENV !== "test") {
   app.listen(port);
+  console.log(`app listening on port, ${port}`);
 }
 
 export default app;
