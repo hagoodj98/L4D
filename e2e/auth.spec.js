@@ -7,6 +7,33 @@ function uniqueSuffix() {
 }
 
 test.describe("Authentication flows", () => {
+  test("sets a session cookie after successful login", async ({
+    page,
+    context,
+  }) => {
+    const suffix = uniqueSuffix();
+    const username = `e2e-cookie-${suffix}`;
+    const email = `e2e-cookie-${suffix}@example.com`;
+    const password = "secret123";
+
+    await page.goto("/register");
+    await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Username").fill(username);
+    await page.getByLabel("Password").fill(password);
+    await page.getByRole("button", { name: "Create account" }).click();
+    await expect(page).toHaveURL(/\/forum$/);
+
+    const cookies = await context.cookies();
+    const sessionCookie = cookies.find(
+      (cookie) => cookie.name === "zombieslayers.sid",
+    );
+
+    expect(sessionCookie).toBeDefined();
+    expect(sessionCookie?.value).toBeTruthy();
+    expect(sessionCookie?.httpOnly).toBe(true);
+    expect(sessionCookie?.sameSite).toBe("Lax");
+  });
+
   test("auth page links route correctly", async ({ page }) => {
     await page.goto("/login");
 
