@@ -12,7 +12,7 @@ import {
   TWITCH_CLIENT_SECRET,
   DISCORD_CLIENT_ID,
   DISCORD_CLIENT_SECRET,
-} from "../providerCredentials.js";
+} from "../providercredentials.js";
 import {
   findCredentialsFromLocalPassportStrategy,
   findExistingUserViaPassportStrategyThroughProvider,
