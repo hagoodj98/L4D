@@ -17,6 +17,7 @@ At first, it was a fully static website with no backend, and the forum content w
 - npm
 - PostgreSQL 16+ (or a compatible version)
 - `psql` CLI available in your PATH
+- Docker Desktop (optional, recommended for consistent setup)
 
 ## 1. Install Dependencies
 
@@ -76,6 +77,46 @@ npm start
 The app runs on:
 
 - `http://localhost:3000`
+
+## Run Postgres With Docker (Recommended)
+
+This repo uses `docker-compose.yml` to run only PostgreSQL in Docker.
+The Node.js app still runs locally with `npm run dev` or `npm start`.
+
+### 1. Keep your `.env` in project root
+
+Use the same `.env` keys shown above.
+Keep `PG_HOST=localhost` so your local Node app can connect to the DB container.
+
+### 2. Start PostgreSQL container
+
+```bash
+docker compose up -d db
+```
+
+### 3. Start the app locally
+
+```bash
+npm run dev
+```
+
+Then open:
+
+- `http://localhost:3000`
+
+### 4. Stop containers
+
+```bash
+docker compose down
+```
+
+### 5. Reset database volume (optional clean slate)
+
+```bash
+docker compose down -v
+```
+
+On first boot with a fresh volume, Postgres auto-runs `db/init.sql` from the compose mount.
 
 ## Useful Commands
 
