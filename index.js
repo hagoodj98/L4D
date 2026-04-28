@@ -304,11 +304,14 @@ app.post("/ascend", async (req, res, next) => {
     );
   }
   const result = await getForumPosts(req.user.id, "ASC");
-
+ const getTotalPosts = await totalPostsResult();
+    const totalPosts = getTotalPosts.rows[0].count;
   res.render("forum.ejs", {
     currentUser: req.user.display_name,
     isAuthenticated: true,
     listAllContent: result.rows,
+    totalPosts,
+    currentPath: '/forum',
   });
 });
 app.post("/post-reaction", async (req, res) => {
@@ -366,11 +369,14 @@ app.post("/descend", async (req, res, next) => {
   }
 
   const result = await getForumPosts(req.user.id, "DESC");
-
+    const getTotalPosts = await totalPostsResult();
+    const totalPosts = getTotalPosts.rows[0].count;
   res.render("forum.ejs", {
     currentUser: req.user.display_name,
     isAuthenticated: true,
     listAllContent: result.rows,
+    totalPosts,
+    currentPath: '/forum',
   });
 });
 
@@ -445,6 +451,8 @@ app.use((err, req, res, _next) => {
       return res.redirect("/forumpost");
     }
   }
+  console.error(err);
+  
   return res.status(500).send("Internal Server Error");
 });
 
