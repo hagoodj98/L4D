@@ -345,10 +345,15 @@ app.post("/post-reaction", async (req, res, next) => {
 
     if (existing && existing.reaction_type === reaction_type) {
       await removeCommentReaction(comment_post_id, req.user.id);
+      return res.json({ reaction_type: "remove" });
     } else {
-      await addCommentReaction(comment_post_id, req.user.id, reaction_type);
+      const reaction = await addCommentReaction(
+        comment_post_id,
+        req.user.id,
+        reaction_type,
+      );
+      return res.json({ reaction_type: reaction.reaction_type });
     }
-    return res.redirect("/forum");
   }
 
   if (postId) {
@@ -358,7 +363,7 @@ app.post("/post-reaction", async (req, res, next) => {
     if (existing && existing.reaction_type === reaction_type) {
       await removeReaction(postId, req.user.id);
       // Return the new reaction state to the client for immediate UI update.
-      return res.json({ reaction_type: "remove" });
+      return res.json({ reaction_type: `${existing.reaction_type}_removed` });
     } else {
       const reaction = await addReaction(postId, req.user.id, reaction_type);
       return res.json({ reaction_type: reaction.reaction_type });
