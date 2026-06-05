@@ -33,6 +33,7 @@ import {
 } from "./database/repositories/reactions_comments.js";
 import { createReply } from "./database/repositories/replies.js";
 import ErrorHandler from "./utils/error.js";
+import z from "zod";
 
 const app = express();
 
@@ -57,7 +58,7 @@ app.use(
     rolling: true,
   }),
 );
-
+app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use(passport.initialize());
@@ -169,7 +170,7 @@ app.get("/forum", async (req, res, next) => {
 
     const getTotalPosts = await totalPostsResult();
     const totalPosts = getTotalPosts.rows[0].count;
-    res.render("forum.ejs", {
+    return res.render("forum.ejs", {
       currentUser: req.user ? req.user.display_name : "Guest",
       isAuthenticated: req.isAuthenticated(),
       listAllContent: result.rows,
@@ -294,7 +295,7 @@ app.post("/register", async (req, res, next) => {
   }
 });
 
-app.post("/ascend", async (req, res, next) => {
+app.get("/ascend", async (req, res, next) => {
   if (!req.isAuthenticated()) return res.redirect("/login");
 
   const validation = sortSchema.safeParse({ sortDirection: "ASC" });
@@ -304,42 +305,48 @@ app.post("/ascend", async (req, res, next) => {
     );
   }
   const result = await getForumPosts(req.user.id, "ASC");
- const getTotalPosts = await totalPostsResult();
-    const totalPosts = getTotalPosts.rows[0].count;
-  res.render("forum.ejs", {
+  const getTotalPosts = await totalPostsResult();
+  const totalPosts = getTotalPosts.rows[0].count;
+  return res.json({
     currentUser: req.user.display_name,
     isAuthenticated: true,
     listAllContent: result.rows,
     totalPosts,
-    currentPath: '/forum',
+    currentPath: "/forum",
   });
 });
-app.post("/post-reaction", async (req, res) => {
+app.post("/post-reaction", async (req, res, next) => {
   if (!req.isAuthenticated()) return res.redirect("/login");
 
-  const postId = req.body.post_id;
-  const commentId = req.body.comment_post_id;
-  const reaction = req.body.reaction || req.body.reaction_comment; // "like" | "dislike"
+  const rawData = await req.body;
+  console.log("Received reaction data:", rawData);
+  const { post_id, comment_post_id, reaction_type } = rawData;
+
+  const postId = post_id ? String(post_id) : null;
 
   const validation = reactionSchema.safeParse({
     post_id: postId,
-    comment_post_id: commentId,
-    reaction,
-    reaction_comment: reaction,
+    comment_post_id: comment_post_id ?? null,
+    reaction_type: reaction_type,
   });
 
   if (!validation.success) {
-    return res.status(400).send("Invalid reaction data");
+    return next(
+      new ErrorHandler(400, "Invalid reaction data", validation.error.issues),
+    );
   }
 
-  if (commentId) {
+  if (comment_post_id) {
     // Reply reactions toggle: same reaction removes, different reaction upserts.
-    const existing = await existingCommentReaction(commentId, req.user.id);
+    const existing = await existingCommentReaction(
+      comment_post_id,
+      req.user.id,
+    );
 
-    if (existing && existing.reaction_type === reaction) {
-      await removeCommentReaction(commentId, req.user.id);
+    if (existing && existing.reaction_type === reaction_type) {
+      await removeCommentReaction(comment_post_id, req.user.id);
     } else {
-      await addCommentReaction(commentId, req.user.id, reaction);
+      await addCommentReaction(comment_post_id, req.user.id, reaction_type);
     }
     return res.redirect("/forum");
   }
@@ -348,18 +355,20 @@ app.post("/post-reaction", async (req, res) => {
     // Post reactions follow the same toggle behavior as reply reactions.
     const existing = await existingPostReaction(postId, req.user.id);
 
-    if (existing && existing.reaction_type === reaction) {
+    if (existing && existing.reaction_type === reaction_type) {
       await removeReaction(postId, req.user.id);
+      // Return the new reaction state to the client for immediate UI update.
+      return res.json({ reaction_type: "remove" });
     } else {
-      await addReaction(postId, req.user.id, reaction);
+      const reaction = await addReaction(postId, req.user.id, reaction_type);
+      return res.json({ reaction_type: reaction.reaction_type });
     }
-    return res.redirect("/forum");
   }
 
   return res.status(400).send("Missing reaction target");
 });
 
-app.post("/descend", async (req, res, next) => {
+app.get("/descend", async (req, res, next) => {
   if (!req.isAuthenticated()) return res.redirect("/login");
   const validation = sortSchema.safeParse({ sortDirection: "DESC" });
   if (!validation.success) {
@@ -369,14 +378,12 @@ app.post("/descend", async (req, res, next) => {
   }
 
   const result = await getForumPosts(req.user.id, "DESC");
-    const getTotalPosts = await totalPostsResult();
-    const totalPosts = getTotalPosts.rows[0].count;
-  res.render("forum.ejs", {
-    currentUser: req.user.display_name,
-    isAuthenticated: true,
+  const getTotalPosts = await totalPostsResult();
+  const totalPosts = getTotalPosts.rows[0].count;
+
+  return res.json({
     listAllContent: result.rows,
     totalPosts,
-    currentPath: '/forum',
   });
 });
 
@@ -452,7 +459,7 @@ app.use((err, req, res, _next) => {
     }
   }
   console.error(err);
-  
+
   return res.status(500).send("Internal Server Error");
 });
 
