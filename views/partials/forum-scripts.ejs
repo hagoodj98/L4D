@@ -101,7 +101,7 @@
                   <input type="hidden" name="post_id" value=" ${c.id} " />
                   <input type="hidden" name="reaction_type" value="dislike" />
                   <button
-                    id="dislikeButton ${c.id} "
+                    id="dislikeButton ${c.id}"
                     class="postButton ${c.user_reaction === "dislike" ? "reaction-color" : ""} "
                   >
                     <svg
@@ -268,28 +268,30 @@
         const data = await response.json();
         // Update the UI based on the new reaction state
         if (data.reaction_type) {
-          const button = document.getElementById(`likeButton ${postId}`);
+          const likeButton = document.getElementById(`likeButton ${postId}`);
           const likeCount = document.getElementById(`likeCount ${postId}`);
+          const dislikeButton = document.getElementById(`dislikeButton ${postId}`);
           const dislikeCount = document.getElementById(`dislikeCount ${postId}`);
           if (data.reaction_type === "like" || data.reaction_type === 'like_removed') {
             if (data.reaction_type !== 'like') {
                 likes -= 1;
                 likeCount.textContent = likes;
-               button.classList.remove("reaction-color");
+               likeButton.classList.remove("reaction-color");
                return;
             }
             likes += 1;
             likeCount.textContent = likes;
-            button.classList.add("reaction-color");
+            likeButton.classList.add("reaction-color");
           } else if (data.reaction_type === "dislike" || data.reaction_type === 'dislike_removed') {
-            const dislikeButton = document.getElementById(`dislikeButton ${postId}`);
             if (data.reaction_type !== 'dislike') {
                 dislikes -= 1;
+               dislikeCount.textContent = dislikes;
                dislikeButton.classList.remove("reaction-color");
+               return;
             }
-            dislikeButton.classList.add("reaction-color");
             dislikes += 1;
             dislikeCount.textContent = dislikes;
+            dislikeButton.classList.add("reaction-color");
           }
         }
       } catch (err) {
