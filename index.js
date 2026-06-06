@@ -24,6 +24,7 @@ import {
 import {
   addReaction,
   removeReaction,
+  updateReaction,
   existing as existingPostReaction,
 } from "./database/repositories/posts_reactions.js";
 import {
@@ -359,11 +360,14 @@ app.post("/post-reaction", async (req, res, next) => {
   if (postId) {
     // Post reactions follow the same toggle behavior as reply reactions.
     const existing = await existingPostReaction(postId, req.user.id);
-
+    // If the same reaction exists, remove it. Otherwise, add or update to the new reaction.
     if (existing && existing.reaction_type === reaction_type) {
       await removeReaction(postId, req.user.id);
       // Return the new reaction state to the client for immediate UI update.
       return res.json({ reaction_type: `${existing.reaction_type}_removed` });
+    } else if (existing && existing.reaction_type !== reaction_type) {
+      const reaction = await updateReaction(postId, req.user.id, reaction_type);
+      return res.json({ reaction_type: `${reaction.reaction_type}_updated` });
     } else {
       const reaction = await addReaction(postId, req.user.id, reaction_type);
       return res.json({ reaction_type: reaction.reaction_type });

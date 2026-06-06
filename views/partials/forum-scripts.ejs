@@ -17,10 +17,7 @@
 </script>
 
 <script>
-      let likes = 0;
-      let dislikes = 0;
-      let commentLikes = 0;
-    let commentDislikes = 0;
+
         async function ascendForum() {
       try {
         const response = await fetch("http://localhost:3000/ascend");
@@ -42,10 +39,7 @@
     async function listPosts(listAllContents) {
       let content = "";
       for (let c of listAllContents) {
-        likes += Number(c.likes);
-        dislikes += Number(c.dislikes);
-        commentLikes += Number(c.comment_likes);
-        commentDislikes += Number(c.comment_dislikes);
+
         const created = new Date(c.created_at);
         const day = created.getDate().toString().padStart(2, "0");
         const month = created.toLocaleString("default", { month: "short" }); // e.g. 'Mar'
@@ -96,7 +90,7 @@
                     </svg>
                   </button>
                 </form>
-                <span id="likeCount ${c.id}" style="color: white"> ${likes} </span>
+                <span id="likeCount ${c.id}" style="color: white"> ${c.likes} </span>
                 <form onsubmit="handleReaction(${c.id}, null, 'dislike'); return false;">
                   <input type="hidden" name="post_id" value=" ${c.id} " />
                   <input type="hidden" name="reaction_type" value="dislike" />
@@ -117,7 +111,7 @@
                     </svg>
                   </button>
                 </form>
-                <span id="dislikeCount ${c.id}" style="color: white"> ${dislikes} </span>
+                <span id="dislikeCount ${c.id}" style="color: white"> ${c.dislikes} </span>
                 <button
                   id="commentButton ${c.id} "
                   class="comment postButton  ${c.user_reaction === "comment" ? "reaction-color" : ""} "
@@ -134,7 +128,7 @@
                     ></path>
                   </svg>
                 </button>
-                <span id="commentLikeCount ${c.id}" style="color: white"> ${commentLikes} </span>
+                <span id="commentLikeCount ${c.id}" style="color: white"> ${c.comment_likes} </span>
                 <button
                   id="replyButton ${c.id} "
                   class="reply roboto-condensed"
@@ -212,7 +206,7 @@
                         ></path>
                       </svg>
                     </button>
-                    <span style="color: white"> ${commentLikes} </span>
+                    <span style="color: white"> ${reply.comment_likes} </span>
                   </form>
 
                   <form onsubmit="handleReaction(null, ${reply.id}, 'dislike'); return false;">
@@ -241,7 +235,7 @@
                         ></path>
                       </svg>
                     </button>
-                    <span style="color: white"> ${commentDislikes} </span>
+                    <span style="color: white"> ${reply.comment_dislikes} </span>
                   </form>
                 </div>
               </div>
@@ -272,25 +266,57 @@
           const likeCount = document.getElementById(`likeCount ${postId}`);
           const dislikeButton = document.getElementById(`dislikeButton ${postId}`);
           const dislikeCount = document.getElementById(`dislikeCount ${postId}`);
-          if (data.reaction_type === "like" || data.reaction_type === 'like_removed') {
+          if (data.reaction_type === "like" || data.reaction_type === 'like_removed' || data.reaction_type === 'like_updated') {
+            if (data.reaction_type === 'like_updated') {
+               // This means the user switched from dislike to like
+              const currentDislikeCount = Number(dislikeCount.textContent);
+              const newDislikeCount = currentDislikeCount - 1;
+              dislikeCount.textContent = newDislikeCount;
+              dislikeButton.classList.remove("reaction-color");
+
+              const currentLikeCount = Number(likeCount.textContent);
+              const newLikeCount = currentLikeCount + 1;
+              likeCount.textContent = newLikeCount;
+              likeButton.classList.add("reaction-color");
+              return;
+            }
             if (data.reaction_type !== 'like') {
-                likes -= 1;
-                likeCount.textContent = likes;
+                const currentlikeCount = Number(likeCount.textContent);
+                const newCount = currentlikeCount - 1;
+                likeCount.textContent = newCount;
                likeButton.classList.remove("reaction-color");
                return;
             }
-            likes += 1;
-            likeCount.textContent = likes;
+            const currentlikeCount = Number(likeCount.textContent);
+            const newCount = currentlikeCount + 1;
+            likeCount.textContent = newCount;
             likeButton.classList.add("reaction-color");
-          } else if (data.reaction_type === "dislike" || data.reaction_type === 'dislike_removed') {
+          } else if (data.reaction_type === "dislike" || data.reaction_type === 'dislike_removed' || data.reaction_type === 'dislike_updated') {
+            if (data.reaction_type === 'dislike_updated') {
+              // This means the user switched from like to dislike
+              const currentLikeCount = Number(likeCount.textContent);
+              const newLikeCount = currentLikeCount - 1;
+              likeCount.textContent = newLikeCount;
+              likeButton.classList.remove("reaction-color");
+
+              const currentDislikeCount = Number(dislikeCount.textContent);
+              const newDislikeCount = currentDislikeCount + 1;
+              dislikeCount.textContent = newDislikeCount;
+              dislikeButton.classList.add("reaction-color");
+              return;
+            }
             if (data.reaction_type !== 'dislike') {
-                dislikes -= 1;
-               dislikeCount.textContent = dislikes;
+                // This means a dislike was removed
+                const currentDislikeCount = Number(dislikeCount.textContent);
+               const newCount = currentDislikeCount - 1;
+               dislikeCount.textContent = newCount;
                dislikeButton.classList.remove("reaction-color");
                return;
             }
-            dislikes += 1;
-            dislikeCount.textContent = dislikes;
+            // This means a dislike was added
+            const currentDislikeCount = Number(dislikeCount.textContent);
+            const newCount = currentDislikeCount + 1;
+            dislikeCount.textContent = newCount;
             dislikeButton.classList.add("reaction-color");
           }
         }
@@ -298,6 +324,7 @@
         console.error("Error handling reaction:", err);
       }
     }
+
     document.addEventListener("DOMContentLoaded", () => {
       const list = <%- JSON.stringify(listAllContent) %>;
       if (!Array.isArray(list) || list.length === 0) return;

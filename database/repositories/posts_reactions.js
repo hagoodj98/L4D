@@ -25,3 +25,13 @@ export const removeReaction = async (postId, userId) => {
     [postId, userId],
   );
 };
+export const updateReaction = async (postId, userId, reactionType) => {
+  const result = await db.query(
+    `INSERT INTO posts_reactions (post_id, user_id, reaction_type)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (user_id, post_id)
+         DO UPDATE SET reaction_type = EXCLUDED.reaction_type RETURNING reaction_type`,
+    [postId, userId, reactionType],
+  );
+  return result.rows[0];
+};
