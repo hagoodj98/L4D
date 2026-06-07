@@ -1,22 +1,9 @@
 <script>
-  $(".reply").on("click", function () {
-    var postId = $(this)
-      .closest(".forum-post-card")
-      .find("input[name='post_id']")
-      .val();
-    $("#replyInputBox" + postId).toggle();
-  });
-
-  $(".comment").on("click", function () {
-    var commentId = $(this)
-      .closest(".forum-post-card")
-      .find("input[name='post_id']")
-      .val();
-    $("#commentInputBox" + commentId).toggle();
-  });
-</script>
-
-<script>
+    function showAllReplies(id) {
+        console.log("showing all replies for post " + id);
+        const replySection = document.getElementById(`commentInputBox ${id}`);
+        replySection.style.display = replySection.style.display === "none" ? "block" : "none";
+    }
 
         async function ascendForum() {
       try {
@@ -113,7 +100,8 @@
                 </form>
                 <span id="dislikeCount ${c.id}" style="color: white"> ${c.dislikes} </span>
                 <button
-                  id="commentButton ${c.id} "
+                  onclick="showAllReplies(${c.id})"
+                  id="commentButton ${c.id}"
                   class="comment postButton  ${c.user_reaction === "comment" ? "reaction-color" : ""} "
                 >
                   <svg
@@ -128,16 +116,16 @@
                     ></path>
                   </svg>
                 </button>
-                <span id="commentLikeCount ${c.id}" style="color: white"> ${c.comment_likes} </span>
+                <span id="commentLikeCount ${c.id}" style="color: white"> ${c.reply_count} </span>
                 <button
-                  id="replyButton ${c.id} "
+                  id="replyButton ${c.id}"
                   class="reply roboto-condensed"
                 >
                   Reply
                 </button>
               </div>
               <div
-                id="replyInputBox ${c.id} "
+                id="replyInputBox ${c.id}"
                 style="display: none"
                 class="forum-reply-editor-wrap"
               >
@@ -165,7 +153,7 @@
                   </div>
                 </form>
               </div>
-              <div id="commentInputBox ${c.id} " style="display: none">
+              <div id="commentInputBox ${c.id}" style="display: none">
                   ${c.replies
                     .map((reply) => {
                       return `
@@ -206,7 +194,7 @@
                         ></path>
                       </svg>
                     </button>
-                    <span style="color: white"> ${reply.comment_likes} </span>
+                    <span style="color: white"> ${reply.likes} </span>
                   </form>
 
                   <form onsubmit="handleReaction(null, ${reply.id}, 'dislike'); return false;">
@@ -235,7 +223,7 @@
                         ></path>
                       </svg>
                     </button>
-                    <span style="color: white"> ${reply.comment_dislikes} </span>
+                    <span style="color: white"> ${reply.dislikes} </span>
                   </form>
                 </div>
               </div>
