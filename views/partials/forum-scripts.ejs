@@ -180,6 +180,7 @@
                     />
                     <input type="hidden" name="reaction_type" value="like" />
                     <button
+                      id="commentLikeButton ${reply.id}"
                       class="postButton  ${reply.user_reaction === "like" ? "reaction-color" : ""} "
                     >
                       <svg
@@ -194,7 +195,7 @@
                         ></path>
                       </svg>
                     </button>
-                    <span style="color: white"> ${reply.likes} </span>
+                    <span id="commentLikeCount ${reply.id}" style="color: white"> ${reply.likes} </span>
                   </form>
 
                   <form onsubmit="handleReaction(null, ${reply.id}, 'dislike'); return false;">
@@ -209,6 +210,7 @@
                       value="dislike"
                     />
                     <button
+                      id="commentDislikeButton ${reply.id}"
                       class="postButton  ${reply.user_reaction === "dislike" ? "reaction-color" : ""} "
                     >
                       <svg
@@ -223,7 +225,7 @@
                         ></path>
                       </svg>
                     </button>
-                    <span style="color: white"> ${reply.dislikes} </span>
+                    <span id="commentDislikeCount ${reply.id}" style="color: white"> ${reply.dislikes} </span>
                   </form>
                 </div>
               </div>
@@ -254,7 +256,41 @@
           const likeCount = document.getElementById(`likeCount ${postId}`);
           const dislikeButton = document.getElementById(`dislikeButton ${postId}`);
           const dislikeCount = document.getElementById(`dislikeCount ${postId}`);
-          if (data.reaction_type === "like" || data.reaction_type === 'like_removed' || data.reaction_type === 'like_updated') {
+          const commentLikeCount = document.getElementById(`commentLikeCount ${commentId}`);
+          const commentDislikeCount = document.getElementById(`commentDislikeCount ${commentId}`);
+          const commentLikeButton = document.getElementById(`commentLikeButton ${commentId}`);
+        const commentDislikeButton = document.getElementById(`commentDislikeButton ${commentId}`);
+          if (data.reaction_type === "like" || data.reaction_type === 'like_removed' || data.reaction_type === 'like_updated' || data.reaction_type === 'like_comment' || data.reaction_type === 'like_removed_comment' || data.reaction_type === 'like_updated_comment') {
+            if (data.reaction_type === 'like_updated_comment') {
+              // This means the user switched from dislike to like on a comment
+              const currentDislikeCount = Number(commentDislikeCount.textContent);
+              const newDislikeCount = currentDislikeCount - 1;
+              commentDislikeCount.textContent = newDislikeCount;
+              commentDislikeButton.classList.remove("reaction-color");
+
+              const currentLikeCount = Number(commentLikeCount.textContent);
+              const newLikeCount = currentLikeCount + 1;
+              commentLikeCount.textContent = newLikeCount;
+              commentLikeButton.classList.add("reaction-color");
+              return;
+            }
+            if(data.reaction_type === 'like_comment') {
+              // This means a like was added to a comment
+              const currentLikeCount = Number(commentLikeCount.textContent);
+              const newLikeCount = currentLikeCount + 1;
+              commentLikeCount.textContent = newLikeCount;
+              commentLikeButton.classList.add("reaction-color");
+              return;
+            }
+                if (data.reaction_type === 'like_removed_comment') {
+                // This means a like was removed from a comment
+                const currentLikeCount = Number(commentLikeCount.textContent);
+                const newLikeCount = currentLikeCount - 1;
+                commentLikeCount.textContent = newLikeCount;
+                commentLikeButton.classList.remove("reaction-color");
+                return;
+                }
+
             if (data.reaction_type === 'like_updated') {
                // This means the user switched from dislike to like
               const currentDislikeCount = Number(dislikeCount.textContent);
@@ -279,7 +315,37 @@
             const newCount = currentlikeCount + 1;
             likeCount.textContent = newCount;
             likeButton.classList.add("reaction-color");
-          } else if (data.reaction_type === "dislike" || data.reaction_type === 'dislike_removed' || data.reaction_type === 'dislike_updated') {
+          } else if (data.reaction_type.includes("dislike") || data.reaction_type === 'dislike_removed' || data.reaction_type === 'dislike_updated' || data.reaction_type === 'dislike_removed_comment' || data.reaction_type === 'dislike_updated_comment') {
+            if (data.reaction_type === 'dislike_updated_comment') {
+              // This means the user switched from like to dislike on a comment
+              const currentLikeCount = Number(commentLikeCount.textContent);
+              const newLikeCount = currentLikeCount - 1;
+              commentLikeCount.textContent = newLikeCount;
+              commentLikeButton.classList.remove("reaction-color");
+
+              const currentDislikeCount = Number(commentDislikeCount.textContent);
+              const newDislikeCount = currentDislikeCount + 1;
+              commentDislikeCount.textContent = newDislikeCount;
+              commentDislikeButton.classList.add("reaction-color");
+              return;
+            }
+            if (data.reaction_type === 'dislike_comment') {
+              // This means a dislike was added to a comment
+              const currentDislikeCount = Number(commentDislikeCount.textContent);
+              const newDislikeCount = currentDislikeCount + 1;
+              commentDislikeCount.textContent = newDislikeCount;
+              commentDislikeButton.classList.add("reaction-color");
+              return;
+            }
+                if(data.reaction_type === 'dislike_removed_comment') {
+                // This means a dislike was removed from a comment
+                const currentDislikeCount = Number(commentDislikeCount.textContent);
+                const newDislikeCount = currentDislikeCount - 1;
+                commentDislikeCount.textContent = newDislikeCount;
+                commentDislikeButton.classList.remove("reaction-color");
+                return;
+                }
+
             if (data.reaction_type === 'dislike_updated') {
               // This means the user switched from like to dislike
               const currentLikeCount = Number(likeCount.textContent);

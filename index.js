@@ -31,6 +31,7 @@ import {
   addReaction as addCommentReaction,
   removeReaction as removeCommentReaction,
   existing as existingCommentReaction,
+  updateReaction as updateReactionComment,
 } from "./database/repositories/reactions_comments.js";
 import { createReply } from "./database/repositories/replies.js";
 import ErrorHandler from "./utils/error.js";
@@ -324,10 +325,10 @@ app.post("/post-reaction", async (req, res, next) => {
   const { post_id, comment_post_id, reaction_type } = rawData;
 
   const postId = post_id ? String(post_id) : null;
-
+  const commentId = comment_post_id ? String(comment_post_id) : null;
   const validation = reactionSchema.safeParse({
     post_id: postId,
-    comment_post_id: comment_post_id ?? null,
+    comment_post_id: commentId,
     reaction_type: reaction_type,
   });
 
@@ -337,23 +338,31 @@ app.post("/post-reaction", async (req, res, next) => {
     );
   }
 
-  if (comment_post_id) {
+  if (commentId) {
     // Reply reactions toggle: same reaction removes, different reaction upserts.
-    const existing = await existingCommentReaction(
-      comment_post_id,
-      req.user.id,
-    );
+    const existing = await existingCommentReaction(commentId, req.user.id);
 
     if (existing && existing.reaction_type === reaction_type) {
-      await removeCommentReaction(comment_post_id, req.user.id);
-      return res.json({ reaction_type: "remove" });
-    } else {
-      const reaction = await addCommentReaction(
-        comment_post_id,
+      await removeCommentReaction(commentId, req.user.id);
+      return res.json({
+        reaction_type: `${existing.reaction_type}_removed_comment`,
+      });
+    } else if (existing && existing.reaction_type !== reaction_type) {
+      const reaction = await updateReactionComment(
+        commentId,
         req.user.id,
         reaction_type,
       );
-      return res.json({ reaction_type: reaction.reaction_type });
+      return res.json({
+        reaction_type: `${reaction.reaction_type}_updated_comment`,
+      });
+    } else {
+      const reaction = await addCommentReaction(
+        commentId,
+        req.user.id,
+        reaction_type,
+      );
+      return res.json({ reaction_type: `${reaction.reaction_type}_comment` });
     }
   }
 
