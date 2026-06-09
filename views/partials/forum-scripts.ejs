@@ -170,6 +170,11 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ post_id: postId, comment_post: replyContent }),
           });
+          const redirect = await response.redirected ? { url: response.url } : null;
+          if (redirect) {
+            window.location.href = redirect.url;
+            return;
+          }
           const data = await response.json();
           if (data.success) {
             replyInput.value = "";
@@ -264,7 +269,7 @@
             refreshedReplySection.insertAdjacentHTML('beforeend', newHTML);
            const newReplyCount = Number(updateReplyCount.textContent) + 1;
             updateReplyCount.textContent = newReplyCount;
-          }
+        }
         } catch (err) {
           console.error("Error submitting reply:", err);
         }
@@ -524,6 +529,11 @@
             reaction_type: reactionType,
           }),
         });
+        const redirect = await response.redirected ? { url: response.url } : null;
+        if (redirect) {
+          window.location.href = redirect.url;
+          return;
+        }
         const data = await response.json();
         // Update the UI based on the new reaction state
         if (data.reaction_type) {
