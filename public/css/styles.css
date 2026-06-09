@@ -21,7 +21,7 @@
 }
 
 .forum-post-card.new-post.fade-bg {
-  background-color: transparent; /* Target color */
+  background-color: rgba(110, 151, 49, 0.277); /* Target color */
 }
 .forum-reply-card.new-reply.fade-bg {
   background-color: rgba(110, 151, 49, 0.277); /* Target color */
@@ -1012,7 +1012,6 @@ button[type="submit"]:not(.unstyledPaginationButtons) {
 }
 .unstyledPaginationButtons.selected {
   background-color: #6e9731;
-
   color: white;
 }
 
