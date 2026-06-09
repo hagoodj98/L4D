@@ -1037,6 +1037,7 @@ button[type="submit"]:not(.unstyledPaginationButtons):hover {
   padding-top: 28px;
   padding-bottom: 28px;
   clear: both;
+  background-color: #0d0d0d;
   width: 100%;
 }
 
@@ -1132,6 +1133,7 @@ button[type="submit"]:not(.unstyledPaginationButtons):hover {
 .forum-post-card {
   border: 1px solid rgba(255, 255, 255, 0.13) !important;
   border-radius: 12px;
+  background: rgba(0, 0, 0, 0.496);
   margin-bottom: 12px;
   padding: 6px;
   margin-top: 12px;
@@ -1170,7 +1172,7 @@ button[type="submit"]:not(.unstyledPaginationButtons):hover {
 .forum-reply-card {
   border: 1px solid rgba(216, 50, 50, 0.35) !important;
   border-radius: 10px;
-  background: rgba(216, 50, 50, 0.06);
+  background: rgba(110, 151, 49, 0.277);
   margin-top: 10px;
 }
 

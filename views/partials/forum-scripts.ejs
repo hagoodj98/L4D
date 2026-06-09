@@ -197,7 +197,7 @@
                   <p style="color: white"> ${newReply.comment_post} </p>
                   <p style="color: white">
                     Posted By:
-                    <span style="color: #d83232">  ${username} </span>
+                    <span style="color: #6e9731">  ${username} </span>
                   </p>
                   <p style="color: white" class="forum-post-date">
                     ${day}  ${month}  ${year}  at  ${time}  ${timeZone}
@@ -211,7 +211,7 @@
                     <input
                       type="hidden"
                       name="comment_post_id"
-                      value=" ${newReply.id} "
+                      value="${newReply.id}"
                     />
                     <input type="hidden" name="reaction_type" value="like" />
                     <button
@@ -236,7 +236,7 @@
                     <input
                       type="hidden"
                       name="comment_post_id"
-                      value=" ${newReply.id} "
+                      value="${newReply.id}"
                     />
                     <input
                       type="hidden"
@@ -323,7 +323,7 @@
                 class="forum-post-actions"
               >
                 <form onsubmit="handleReaction(${c.id}, null, 'like'); return false;">
-                  <input type="hidden" name="post_id" value=" ${c.id} " />
+                  <input type="hidden" name="post_id" value="${c.id}" />
                   <input type="hidden" name="reaction_type" value="like" />
                   <button
                     id="likeButton-${c.id}"
@@ -344,7 +344,7 @@
                 </form>
                 <span id="likeCount-${c.id}" style="color: white"> ${c.likes} </span>
                 <form onsubmit="handleReaction(${c.id}, null, 'dislike'); return false;">
-                  <input type="hidden" name="post_id" value=" ${c.id} " />
+                  <input type="hidden" name="post_id" value="${c.id}" />
                   <input type="hidden" name="reaction_type" value="dislike" />
                   <button
                     id="dislikeButton-${c.id}"
@@ -384,7 +384,7 @@
                 class="forum-reply-editor-wrap"
               >
                 <form onsubmit="handleReplySubmit(${c.id}, '${c.display_name}'); return false;">
-                  <input type="hidden" name="post_id" value=" ${c.id} " />
+                  <input type="hidden" name="post_id" value="${c.id}" />
                   <div
                     style="display: flex; flex-direction: column"
                     class="forum-reply-editor"
@@ -429,7 +429,7 @@
                   <p style="color: white"> ${reply.comment_post} </p>
                   <p style="color: white">
                     Posted By:
-                    <span style="color: #d83232">  ${reply.display_name} </span>
+                    <span style="color: #6e9731">  ${reply.display_name} </span>
                   </p>
                   <p style="color: white" class="forum-post-date">
                     ${day} ${month} ${year} ${time} ${timeZone}
@@ -443,7 +443,7 @@
                     <input
                       type="hidden"
                       name="comment_post_id"
-                      value=" ${reply.id} "
+                      value="${reply.id}"
                     />
                     <input type="hidden" name="reaction_type" value="like" />
                     <button
@@ -468,7 +468,7 @@
                     <input
                       type="hidden"
                       name="comment_post_id"
-                      value=" ${reply.id} "
+                      value="${reply.id}"
                     />
                     <input
                       type="hidden"
