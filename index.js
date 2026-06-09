@@ -316,7 +316,22 @@ app.post("/register", async (req, res, next) => {
 
 app.get("/ascend", async (req, res, next) => {
   if (!req.isAuthenticated()) return res.redirect("/login");
-
+  const validation = sortSchema.safeParse({ sortDirection: "DESC" });
+  if (!validation.success) {
+    return next(
+      new ErrorHandler(400, "Invalid sort direction", validation.error.issues),
+    );
+  }
+  const result = await getForumPosts(req.user.id, "DESC");
+  const getTotalPosts = await totalPostsResult();
+  const totalPosts = getTotalPosts.rows[0].count;
+  return res.json({
+    listAllContent: result.rows,
+    totalPosts,
+  });
+});
+app.get("/descend", async (req, res, next) => {
+  if (!req.isAuthenticated()) return res.redirect("/login");
   const validation = sortSchema.safeParse({ sortDirection: "ASC" });
   if (!validation.success) {
     return next(
@@ -327,13 +342,11 @@ app.get("/ascend", async (req, res, next) => {
   const getTotalPosts = await totalPostsResult();
   const totalPosts = getTotalPosts.rows[0].count;
   return res.json({
-    currentUser: req.user.display_name,
-    isAuthenticated: true,
     listAllContent: result.rows,
     totalPosts,
-    currentPath: "/forum",
   });
 });
+
 app.post("/post-reaction", async (req, res, next) => {
   if (!req.isAuthenticated()) return res.redirect("/login");
 
@@ -401,25 +414,6 @@ app.post("/post-reaction", async (req, res, next) => {
   }
 
   return res.status(400).send("Missing reaction target");
-});
-
-app.get("/descend", async (req, res, next) => {
-  if (!req.isAuthenticated()) return res.redirect("/login");
-  const validation = sortSchema.safeParse({ sortDirection: "DESC" });
-  if (!validation.success) {
-    return next(
-      new ErrorHandler(400, "Invalid sort direction", validation.error.issues),
-    );
-  }
-
-  const result = await getForumPosts(req.user.id, "DESC");
-  const getTotalPosts = await totalPostsResult();
-  const totalPosts = getTotalPosts.rows[0].count;
-
-  return res.json({
-    listAllContent: result.rows,
-    totalPosts,
-  });
 });
 
 app.post("/add-post", async (req, res, next) => {

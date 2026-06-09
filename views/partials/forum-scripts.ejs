@@ -273,8 +273,14 @@
         async function ascendForum() {
       try {
         const response = await fetch("http://localhost:3000/ascend");
-        const data = await response.json();
-        listPosts(data.listAllContent);
+        const redirect = await response.redirected ? { url: response.url } : null;
+
+        if (redirect) {
+          window.location.href = redirect.url;
+        } else {
+            const data = await response.json();
+            listPosts(data.listAllContent);
+        }
       } catch (err) {
         console.error("Error sorting posts:", err);
       }
@@ -282,8 +288,14 @@
     async function descendForum() {
       try {
         const response = await fetch("http://localhost:3000/descend");
-        const data = await response.json();
-        listPosts(data.listAllContent);
+        const redirect = await response.redirected ? { url: response.url } : null;
+
+        if (redirect) {
+          window.location.href = redirect.url;
+        } else {
+            const data = await response.json();
+            listPosts(data.listAllContent);
+        }
       } catch (err) {
         console.error("Error sorting posts:", err);
       }
