@@ -427,10 +427,12 @@ app.post("/add-post", async (req, res, next) => {
 app.post("/add-reply", async (req, res, next) => {
   if (!req.isAuthenticated()) return res.redirect("/login");
 
-  const comment_post = req.body.reply;
-  const post_id = req.body.post_id;
-
-  const validation = replySchema.safeParse({ reply: comment_post, post_id });
+  const comment_post = req.body.comment_post;
+  const postId = String(req.body.post_id);
+  const validation = replySchema.safeParse({
+    reply: comment_post,
+    post_id: postId,
+  });
   if (!validation.success) {
     return next(
       new ErrorHandler(400, "Invalid reply data", validation.error.issues),
@@ -438,8 +440,8 @@ app.post("/add-reply", async (req, res, next) => {
   }
 
   try {
-    await createReply(comment_post, req.user.id, post_id);
-    res.redirect("/forum");
+    const result = await createReply(comment_post, req.user.id, postId);
+    return res.json({ success: true, reply: result });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
   }

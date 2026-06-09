@@ -1,10 +1,110 @@
 <script>
+    function toggleReplyBox(id) {
+        const replyBox = document.getElementById(`replyInputBox-${id}`);
+        replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
+    }
     function showAllReplies(id) {
         console.log("showing all replies for post " + id);
-        const replySection = document.getElementById(`commentInputBox ${id}`);
+      const replySection = document.getElementById(`commentInputBox-${id}`);
         replySection.style.display = replySection.style.display === "none" ? "block" : "none";
     }
+    async function handleReplySubmit(postId, username) {
+      const replyInput = document.querySelector(`#replyInputBox-${postId} textarea`);
+      const replyContent = replyInput.value.trim();
+      if (!replyContent) return;
+        try {
+          const response = await fetch("http://localhost:3000/add-reply", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ post_id: postId, comment_post: replyContent }),
+          });
+          const data = await response.json();
+          if (data.success) {
+            replyInput.value = "";
+            toggleReplyBox(postId); // Hide the reply box after submitting
+            showAllReplies(postId); // Show all replies after submitting
+            const refreshedReplySection = document.getElementById(`commentInputBox-${postId}`);
+            const updateReplyCount = document.getElementById(`replyCount-${postId}`);
 
+            console.log(refreshedReplySection);
+            const newReply = data.reply;
+            refreshedReplySection.innerHTML += `<div
+                  class="p-2 forum-reply-card"
+                  style="border-top: 1px solid white; margin-left: 20px"
+                >
+                  <p style="color: white"> ${newReply.comment_post} </p>
+                  <p style="color: white">
+                    Posted By:
+                    <span style="color: #d83232">  ${username} </span>
+                  </p>
+                  <p style="color: white"> ${newReply.created_at} </p>
+                </div>
+                <div
+                  class="forum-reply-actions"
+                  style="display: flex; align-items: center; margin-left: 20px"
+                >
+                  <form onsubmit="handleReaction(null, ${newReply.id}, 'like'); return false;">
+                    <input
+                      type="hidden"
+                      name="comment_post_id"
+                      value=" ${newReply.id} "
+                    />
+                    <input type="hidden" name="reaction_type" value="like" />
+                    <button
+                      id="commentLikeButton-${newReply.id}"
+                      class="postButton  ${newReply.user_reaction === "like" ? "reaction-color" : ""} "
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          fill="currentColor"
+                          d="M20.385 9q.627 0 1.12.494T22 10.616v1.23q0 .137-.028.298q-.028.162-.083.298l-2.731 6.474q-.206.461-.693.773q-.486.311-1.003.311H9.269q-.671 0-1.143-.472t-.472-1.144V9.672q0-.323.133-.628t.351-.522l5.156-5.112q.222-.215.494-.27t.516.059t.35.373q.108.258.04.579L13.665 9zM4.615 20q-.67 0-1.143-.472Q3 19.056 3 18.385v-7.77q0-.67.472-1.143Q3.944 9 4.616 9h.423q.67 0 1.143.472q.472.472.472 1.144v7.788q0 .671-.472 1.133Q5.71 20 5.039 20z"
+                        ></path>
+                      </svg>
+                    </button>
+                    <span id="commentLikeCount-${newReply.id}" style="color: white"> 0 </span>
+                  </form>
+                  <form onsubmit="handleReaction(null, ${newReply.id}, 'dislike'); return false;">
+                    <input
+                      type="hidden"
+                      name="comment_post_id"
+                      value=" ${newReply.id} "
+                    />
+                    <input
+                      type="hidden"
+                      name="reaction_type"
+                      value="dislike"
+                    />
+                    <button
+                      id="commentDislikeButton-${newReply.id}"
+                      class="postButton  ${newReply.user_reaction === "dislike" ? "reaction-color" : ""} "
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          fill="currentColor"
+                          d="M3.616 15q-.627 0-1.122-.494T2 13.385v-1.231q0-.137.028-.298q.028-.162.084-.298l2.73-6.473q.206-.462.693-.773Q6.02 4 6.538 4h8.192q.671 0 1.143.472t.472 1.143v8.714q0 .323-.133.628t-.351.522l-5.156 5.112q-.221.215-.493.27t-.517-.059t-.35-.373t-.04-.579l1.03-4.85zM19.385 4q.67 0 1.143.472q.472.472.472 1.144v7.769q0 .67-.472 1.143q-.472.472-1.143.472h-.423q-.671 0-1.144-.472t-.472-1.144V5.597q0-.671.472-1.133Q18.291 4 18.962 4z"
+                        ></path>
+                      </svg>
+                    </button>
+                    <span id="commentDislikeCount-${newReply.id}" style="color: white"> 0 </span>
+                  </form>
+                </div>`;
+           const newReplyCount = Number(updateReplyCount.textContent) + 1;
+            updateReplyCount.textContent = newReplyCount;
+          }
+        } catch (err) {
+          console.error("Error submitting reply:", err);
+        }
+    }
         async function ascendForum() {
       try {
         const response = await fetch("http://localhost:3000/ascend");
@@ -61,7 +161,7 @@
                   <input type="hidden" name="post_id" value=" ${c.id} " />
                   <input type="hidden" name="reaction_type" value="like" />
                   <button
-                    id="likeButton ${c.id}"
+                    id="likeButton-${c.id}"
                     class="postButton  ${c.user_reaction === "like" ? "reaction-color" : ""} "
                   >
                     <svg
@@ -77,12 +177,12 @@
                     </svg>
                   </button>
                 </form>
-                <span id="likeCount ${c.id}" style="color: white"> ${c.likes} </span>
+                <span id="likeCount-${c.id}" style="color: white"> ${c.likes} </span>
                 <form onsubmit="handleReaction(${c.id}, null, 'dislike'); return false;">
                   <input type="hidden" name="post_id" value=" ${c.id} " />
                   <input type="hidden" name="reaction_type" value="dislike" />
                   <button
-                    id="dislikeButton ${c.id}"
+                    id="dislikeButton-${c.id}"
                     class="postButton ${c.user_reaction === "dislike" ? "reaction-color" : ""} "
                   >
                     <svg
@@ -98,38 +198,27 @@
                     </svg>
                   </button>
                 </form>
-                <span id="dislikeCount ${c.id}" style="color: white"> ${c.dislikes} </span>
+                <span id="dislikeCount-${c.id}" style="color: white"> ${c.dislikes} </span>
                 <button
-                  onclick="showAllReplies(${c.id})"
-                  id="commentButton ${c.id}"
-                  class="comment postButton  ${c.user_reaction === "comment" ? "reaction-color" : ""} "
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      fill="currentColor"
-                      d="M11.953 2.25c-2.317 0-4.118 0-5.52.15c-1.418.153-2.541.47-3.437 1.186c-.92.736-1.35 1.693-1.553 2.9c-.193 1.152-.193 2.618-.193 4.446v.183c0 1.782 0 3.015.2 3.934c.108.495.278.925.545 1.323c.264.392.6.722 1.001 1.042c.631.505 1.375.81 2.254 1V21a.75.75 0 0 0 1.123.65c.586-.335 1.105-.7 1.58-1.044l.304-.221a22 22 0 0 1 1.036-.73c.844-.548 1.65-.905 2.707-.905h.047c2.317 0 4.118 0 5.52-.15c1.418-.153 2.541-.47 3.437-1.186c.4-.32.737-.65 1-1.042c.268-.398.438-.828.546-1.323c.2-.919.2-2.152.2-3.934v-.183c0-1.828 0-3.294-.193-4.445c-.203-1.208-.633-2.165-1.553-2.901c-.896-.717-2.019-1.033-3.437-1.185c-1.402-.151-3.203-.151-5.52-.151z"
-                    ></path>
-                  </svg>
-                </button>
-                <span id="commentLikeCount ${c.id}" style="color: white"> ${c.reply_count} </span>
-                <button
-                  id="replyButton ${c.id}"
                   class="reply roboto-condensed"
+                  onclick="toggleReplyBox(${c.id})"
                 >
                   Reply
                 </button>
               </div>
+              <button
+                  onclick="showAllReplies(${c.id}, '${c.display_name}')"
+                  id="commentButton-${c.id}"
+                  class="comment postButton  ${c.user_reaction === "comment" ? "reaction-color" : ""} "
+                >
+                <span  style="color: white"> <span id="replyCount-${c.id}">${c.reply_count}</span> replies </span>
+                </button>
               <div
-                id="replyInputBox ${c.id}"
+                id="replyInputBox-${c.id}"
                 style="display: none"
                 class="forum-reply-editor-wrap"
               >
-                <form action="/add-reply" method="post">
+                <form onsubmit="handleReplySubmit(${c.id}, '${c.display_name}'); return false;">
                   <input type="hidden" name="post_id" value=" ${c.id} " />
                   <div
                     style="display: flex; flex-direction: column"
@@ -153,11 +242,11 @@
                   </div>
                 </form>
               </div>
-              <div id="commentInputBox ${c.id}" style="display: none">
+              <div id="commentInputBox-${c.id}" style="display: none">
                   ${c.replies
                     .map((reply) => {
                       return `
-                   <div
+                <div
                   class="p-2 forum-reply-card"
                   style="border-top: 1px solid white; margin-left: 20px"
                 >
@@ -180,7 +269,7 @@
                     />
                     <input type="hidden" name="reaction_type" value="like" />
                     <button
-                      id="commentLikeButton ${reply.id}"
+                      id="commentLikeButton-${reply.id}"
                       class="postButton  ${reply.user_reaction === "like" ? "reaction-color" : ""} "
                     >
                       <svg
@@ -195,9 +284,8 @@
                         ></path>
                       </svg>
                     </button>
-                    <span id="commentLikeCount ${reply.id}" style="color: white"> ${reply.likes} </span>
+                    <span id="commentLikeCount-${reply.id}" style="color: white"> ${reply.likes} </span>
                   </form>
-
                   <form onsubmit="handleReaction(null, ${reply.id}, 'dislike'); return false;">
                     <input
                       type="hidden"
@@ -210,7 +298,7 @@
                       value="dislike"
                     />
                     <button
-                      id="commentDislikeButton ${reply.id}"
+                      id="commentDislikeButton-${reply.id}"
                       class="postButton  ${reply.user_reaction === "dislike" ? "reaction-color" : ""} "
                     >
                       <svg
@@ -225,11 +313,9 @@
                         ></path>
                       </svg>
                     </button>
-                    <span id="commentDislikeCount ${reply.id}" style="color: white"> ${reply.dislikes} </span>
+                    <span id="commentDislikeCount-${reply.id}" style="color: white"> ${reply.dislikes} </span>
                   </form>
-                </div>
-              </div>
-            </div>`;
+                </div>`;
                     })
                     .join(" ")}
               </div>
@@ -252,14 +338,14 @@
         const data = await response.json();
         // Update the UI based on the new reaction state
         if (data.reaction_type) {
-          const likeButton = document.getElementById(`likeButton ${postId}`);
-          const likeCount = document.getElementById(`likeCount ${postId}`);
-          const dislikeButton = document.getElementById(`dislikeButton ${postId}`);
-          const dislikeCount = document.getElementById(`dislikeCount ${postId}`);
-          const commentLikeCount = document.getElementById(`commentLikeCount ${commentId}`);
-          const commentDislikeCount = document.getElementById(`commentDislikeCount ${commentId}`);
-          const commentLikeButton = document.getElementById(`commentLikeButton ${commentId}`);
-        const commentDislikeButton = document.getElementById(`commentDislikeButton ${commentId}`);
+          const likeButton = document.getElementById(`likeButton-${postId}`);
+          const likeCount = document.getElementById(`likeCount-${postId}`);
+          const dislikeButton = document.getElementById(`dislikeButton-${postId}`);
+          const dislikeCount = document.getElementById(`dislikeCount-${postId}`);
+          const commentLikeCount = document.getElementById(`commentLikeCount-${commentId}`);
+          const commentDislikeCount = document.getElementById(`commentDislikeCount-${commentId}`);
+          const commentLikeButton = document.getElementById(`commentLikeButton-${commentId}`);
+        const commentDislikeButton = document.getElementById(`commentDislikeButton-${commentId}`);
           if (data.reaction_type === "like" || data.reaction_type === 'like_removed' || data.reaction_type === 'like_updated' || data.reaction_type === 'like_comment' || data.reaction_type === 'like_removed_comment' || data.reaction_type === 'like_updated_comment') {
             if (data.reaction_type === 'like_updated_comment') {
               // This means the user switched from dislike to like on a comment
