@@ -9,13 +9,22 @@
   font-weight: 500;
   font-style: normal;
 }
-.new-post {
+.new-post,
+.new-reply {
   background-color: #6e9731; /* Initial color */
   transition: background-color 4s ease; /* Handles the fade effect */
 }
 
-.new-post.fade-bg {
+.forum-post-card.new-post,
+.forum-reply-card.new-reply {
+  background: #6e9731;
+}
+
+.forum-post-card.new-post.fade-bg {
   background-color: transparent; /* Target color */
+}
+.forum-reply-card.new-reply.fade-bg {
+  background-color: rgba(110, 151, 49, 0.277); /* Target color */
 }
 #skip {
   color: #6e9731;
@@ -1001,6 +1010,12 @@ button[type="submit"]:not(.unstyledPaginationButtons) {
   padding: 7px 10px;
   cursor: pointer;
 }
+.unstyledPaginationButtons.selected {
+  background-color: #6e9731;
+
+  color: white;
+}
+
 button[type="submit"]:not(.unstyledPaginationButtons):hover {
   background-color: #f23030aa;
 }
