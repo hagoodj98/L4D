@@ -26,20 +26,16 @@ describe("Reaction flows", () => {
 
     const reactResponse = await agent
       .post("/post-reaction")
-      .type("form")
+      .set("Content-Type", "application/json")
       .send({
-        post_id: String(post.id),
-        reaction: "like",
+        post_id: post.id,
+        reaction_type: "like",
       });
 
-    expect(reactResponse.status).toBe(302);
-    expect(reactResponse.headers.location).toBe("/forum");
-
-    const forumResponse = await agent.get("/forum");
-    expect(forumResponse.status).toBe(200);
-    expect(forumResponse.text).toContain(
-      `id="likeButton${post.id}"\n                  class="postButton reaction-color"`,
-    );
+    expect(reactResponse.status).toBe(200);
+    expect(reactResponse.body.reaction_type).toBe("like");
+    expect(dbState.postReactions).toHaveLength(1);
+    expect(dbState.postReactions[0].reaction_type).toBe("like");
   });
 
   it("applies reaction color class for reply dislikes", async () => {
@@ -53,18 +49,16 @@ describe("Reaction flows", () => {
 
     const reactResponse = await agent
       .post("/post-reaction")
-      .type("form")
+      .set("Content-Type", "application/json")
       .send({
-        comment_post_id: String(reply.id),
-        reaction_comment: "dislike",
+        comment_post_id: reply.id,
+        reaction_type: "dislike",
       });
 
-    expect(reactResponse.status).toBe(302);
-    expect(reactResponse.headers.location).toBe("/forum");
-
-    const forumResponse = await agent.get("/forum");
-    expect(forumResponse.status).toBe(200);
-    expect(forumResponse.text).toContain('class="postButton reaction-color"');
+    expect(reactResponse.status).toBe(200);
+    expect(reactResponse.body.reaction_type).toBe("dislike_comment");
+    expect(dbState.commentReactions).toHaveLength(1);
+    expect(dbState.commentReactions[0].reaction_type).toBe("dislike");
   });
 
   it("toggles off post like when clicked twice", async () => {
@@ -77,35 +71,25 @@ describe("Reaction flows", () => {
 
     await agent
       .post("/post-reaction")
-      .type("form")
+      .set("Content-Type", "application/json")
       .send({
-        post_id: String(post.id),
-        reaction: "like",
+        post_id: post.id,
+        reaction_type: "like",
       });
 
-    let forumResponse = await agent.get("/forum");
-    expect(forumResponse.status).toBe(200);
-    expect(forumResponse.text).toMatch(
-      new RegExp(
-        `id="likeButton${post.id}"\\s+class="postButton reaction-color"`,
-      ),
-    );
+    expect(dbState.postReactions).toHaveLength(1);
 
-    await agent
+    const secondResponse = await agent
       .post("/post-reaction")
-      .type("form")
+      .set("Content-Type", "application/json")
       .send({
-        post_id: String(post.id),
-        reaction: "like",
+        post_id: post.id,
+        reaction_type: "like",
       });
 
+    expect(secondResponse.status).toBe(200);
+    expect(secondResponse.body.reaction_type).toBe("like_removed");
     expect(dbState.postReactions).toHaveLength(0);
-
-    forumResponse = await agent.get("/forum");
-    expect(forumResponse.status).toBe(200);
-    expect(forumResponse.text).toMatch(
-      new RegExp(`id="likeButton${post.id}"\\s+class="postButton\\s*"`),
-    );
   });
 
   it("toggles off reply dislike when clicked twice", async () => {
@@ -124,30 +108,24 @@ describe("Reaction flows", () => {
 
     await agent
       .post("/post-reaction")
-      .type("form")
+      .set("Content-Type", "application/json")
       .send({
-        comment_post_id: String(reply.id),
-        reaction_comment: "dislike",
+        comment_post_id: reply.id,
+        reaction_type: "dislike",
       });
 
-    let forumResponse = await agent.get("/forum");
-    expect(forumResponse.status).toBe(200);
-    expect(forumResponse.text).toContain('class="postButton reaction-color"');
+    expect(dbState.commentReactions).toHaveLength(1);
 
-    await agent
+    const secondResponse = await agent
       .post("/post-reaction")
-      .type("form")
+      .set("Content-Type", "application/json")
       .send({
-        comment_post_id: String(reply.id),
-        reaction_comment: "dislike",
+        comment_post_id: reply.id,
+        reaction_type: "dislike",
       });
 
+    expect(secondResponse.status).toBe(200);
+    expect(secondResponse.body.reaction_type).toBe("dislike_removed_comment");
     expect(dbState.commentReactions).toHaveLength(0);
-
-    forumResponse = await agent.get("/forum");
-    expect(forumResponse.status).toBe(200);
-    expect(forumResponse.text).not.toContain(
-      'class="postButton reaction-color"',
-    );
   });
 });

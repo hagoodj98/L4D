@@ -29,16 +29,18 @@ describe("Forum pagination", () => {
 
     await seedPosts(agent, 6);
 
-    const response = await agent.get("/forum?page=1");
+    const response = await agent.get("/forumpagination?page=1");
 
     expect(response.status).toBe(200);
-    expect(response.text).toContain("pagination-post-6");
-    expect(response.text).toContain("pagination-post-5");
-    expect(response.text).toContain("pagination-post-4");
-    expect(response.text).toContain("pagination-post-3");
+    const rows = response.body.listAllContent;
+    expect(rows).toHaveLength(4);
+    expect(rows[0].post).toBe("pagination-post-6");
+    expect(rows[1].post).toBe("pagination-post-5");
+    expect(rows[2].post).toBe("pagination-post-4");
+    expect(rows[3].post).toBe("pagination-post-3");
 
-    expect(response.text).not.toContain("pagination-post-2");
-    expect(response.text).not.toContain("pagination-post-1");
+    expect(rows.map((row) => row.post)).not.toContain("pagination-post-2");
+    expect(rows.map((row) => row.post)).not.toContain("pagination-post-1");
   });
 
   it("returns the remaining posts on page 2 and renders page links", async () => {
@@ -49,14 +51,17 @@ describe("Forum pagination", () => {
 
     await seedPosts(agent, 6);
 
-    const response = await agent.get("/forum?page=2");
+    const response = await agent.get("/forumpagination?page=2");
 
     expect(response.status).toBe(200);
-    expect(response.text).toContain("pagination-post-2");
-    expect(response.text).toContain("pagination-post-1");
-    expect(response.text).not.toContain("pagination-post-6");
+    const rows = response.body.listAllContent;
+    expect(rows).toHaveLength(2);
+    expect(rows[0].post).toBe("pagination-post-2");
+    expect(rows[1].post).toBe("pagination-post-1");
 
-    expect(response.text).toContain('href="/forum?page=1&offset=0"');
-    expect(response.text).toContain('href="/forum?page=2&offset=1"');
+    const forumResponse = await agent.get("/forum?page=2");
+    expect(forumResponse.status).toBe(200);
+    expect(forumResponse.text).toContain("handlePagination('1')");
+    expect(forumResponse.text).toContain("handlePagination('2')");
   });
 });

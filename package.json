@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "dev:debug": "node --inspect --watch index.js",
     "lint": "eslint . && npm run lint:ejs",
     "lint:ejs": "ejslint views/**/*.ejs",
     "db:init": "node scripts/db-init.js",

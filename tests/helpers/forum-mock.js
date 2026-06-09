@@ -295,7 +295,7 @@ export function setupPgMock() {
             });
           }
 
-          return { rows: [] };
+          return { rows: [{ reaction_type: reactionType }] };
         }
 
         if (
@@ -351,7 +351,7 @@ export function setupPgMock() {
             });
           }
 
-          return { rows: [] };
+          return { rows: [{ reaction_type: reactionType }] };
         }
 
         throw new Error(`Unhandled SQL in test mock: ${sql}`);

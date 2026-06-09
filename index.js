@@ -24,15 +24,18 @@ import {
 import {
   addReaction,
   removeReaction,
+  updateReaction,
   existing as existingPostReaction,
 } from "./database/repositories/posts_reactions.js";
 import {
   addReaction as addCommentReaction,
   removeReaction as removeCommentReaction,
   existing as existingCommentReaction,
+  updateReaction as updateReactionComment,
 } from "./database/repositories/reactions_comments.js";
 import { createReply } from "./database/repositories/replies.js";
 import ErrorHandler from "./utils/error.js";
+import z from "zod";
 
 const app = express();
 
@@ -57,7 +60,7 @@ app.use(
     rolling: true,
   }),
 );
-
+app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use(passport.initialize());
@@ -156,7 +159,6 @@ app.get("/forum", async (req, res, next) => {
   if (!validation.success) {
     return res.status(400).send("Invalid sort direction");
   }
-  // Basic pagination defaults to page 1 with 4 posts per page.
   const limit = req.query.limit ? parseInt(req.query.limit) : 4;
   const offset = req.query.page ? (parseInt(req.query.page) - 1) * limit : 0;
   try {
@@ -169,7 +171,7 @@ app.get("/forum", async (req, res, next) => {
 
     const getTotalPosts = await totalPostsResult();
     const totalPosts = getTotalPosts.rows[0].count;
-    res.render("forum.ejs", {
+    return res.render("forum.ejs", {
       currentUser: req.user ? req.user.display_name : "Guest",
       isAuthenticated: req.isAuthenticated(),
       listAllContent: result.rows,
@@ -179,7 +181,25 @@ app.get("/forum", async (req, res, next) => {
     return next(new ErrorHandler(500, "Internal Server Error", err));
   }
 });
-
+app.get("/forumpagination", async (req, res, next) => {
+  const validation = sortSchema.safeParse({ sortDirection: "DESC" });
+  if (!validation.success) {
+    return res.status(400).send("Invalid sort direction");
+  }
+  const limit = req.query.limit ? parseInt(req.query.limit) : 4;
+  const offset = req.query.page ? (parseInt(req.query.page) - 1) * limit : 0;
+  try {
+    const result = await getForumPosts(
+      req.user ? req.user.id : null,
+      "DESC",
+      limit,
+      offset,
+    );
+    return res.json({ listAllContent: result.rows });
+  } catch (err) {
+    return next(new ErrorHandler(500, "Internal Server Error", err));
+  }
+});
 app.post("/login", async (req, res, next) => {
   // Keep local auth result handling in this route so form-specific errors
   // can be normalized into the central error middleware.
@@ -294,72 +314,7 @@ app.post("/register", async (req, res, next) => {
   }
 });
 
-app.post("/ascend", async (req, res, next) => {
-  if (!req.isAuthenticated()) return res.redirect("/login");
-
-  const validation = sortSchema.safeParse({ sortDirection: "ASC" });
-  if (!validation.success) {
-    return next(
-      new ErrorHandler(400, "Invalid sort direction", validation.error.issues),
-    );
-  }
-  const result = await getForumPosts(req.user.id, "ASC");
- const getTotalPosts = await totalPostsResult();
-    const totalPosts = getTotalPosts.rows[0].count;
-  res.render("forum.ejs", {
-    currentUser: req.user.display_name,
-    isAuthenticated: true,
-    listAllContent: result.rows,
-    totalPosts,
-    currentPath: '/forum',
-  });
-});
-app.post("/post-reaction", async (req, res) => {
-  if (!req.isAuthenticated()) return res.redirect("/login");
-
-  const postId = req.body.post_id;
-  const commentId = req.body.comment_post_id;
-  const reaction = req.body.reaction || req.body.reaction_comment; // "like" | "dislike"
-
-  const validation = reactionSchema.safeParse({
-    post_id: postId,
-    comment_post_id: commentId,
-    reaction,
-    reaction_comment: reaction,
-  });
-
-  if (!validation.success) {
-    return res.status(400).send("Invalid reaction data");
-  }
-
-  if (commentId) {
-    // Reply reactions toggle: same reaction removes, different reaction upserts.
-    const existing = await existingCommentReaction(commentId, req.user.id);
-
-    if (existing && existing.reaction_type === reaction) {
-      await removeCommentReaction(commentId, req.user.id);
-    } else {
-      await addCommentReaction(commentId, req.user.id, reaction);
-    }
-    return res.redirect("/forum");
-  }
-
-  if (postId) {
-    // Post reactions follow the same toggle behavior as reply reactions.
-    const existing = await existingPostReaction(postId, req.user.id);
-
-    if (existing && existing.reaction_type === reaction) {
-      await removeReaction(postId, req.user.id);
-    } else {
-      await addReaction(postId, req.user.id, reaction);
-    }
-    return res.redirect("/forum");
-  }
-
-  return res.status(400).send("Missing reaction target");
-});
-
-app.post("/descend", async (req, res, next) => {
+app.get("/ascend", async (req, res, next) => {
   if (!req.isAuthenticated()) return res.redirect("/login");
   const validation = sortSchema.safeParse({ sortDirection: "DESC" });
   if (!validation.success) {
@@ -367,17 +322,97 @@ app.post("/descend", async (req, res, next) => {
       new ErrorHandler(400, "Invalid sort direction", validation.error.issues),
     );
   }
-
   const result = await getForumPosts(req.user.id, "DESC");
-    const getTotalPosts = await totalPostsResult();
-    const totalPosts = getTotalPosts.rows[0].count;
-  res.render("forum.ejs", {
-    currentUser: req.user.display_name,
-    isAuthenticated: true,
+  const getTotalPosts = await totalPostsResult();
+  const totalPosts = getTotalPosts.rows[0].count;
+  return res.json({
     listAllContent: result.rows,
     totalPosts,
-    currentPath: '/forum',
   });
+});
+app.get("/descend", async (req, res, next) => {
+  if (!req.isAuthenticated()) return res.redirect("/login");
+  const validation = sortSchema.safeParse({ sortDirection: "ASC" });
+  if (!validation.success) {
+    return next(
+      new ErrorHandler(400, "Invalid sort direction", validation.error.issues),
+    );
+  }
+  const result = await getForumPosts(req.user.id, "ASC");
+  const getTotalPosts = await totalPostsResult();
+  const totalPosts = getTotalPosts.rows[0].count;
+  return res.json({
+    listAllContent: result.rows,
+    totalPosts,
+  });
+});
+
+app.post("/post-reaction", async (req, res, next) => {
+  if (!req.isAuthenticated()) return res.redirect("/login");
+
+  const rawData = await req.body;
+  const { post_id, comment_post_id, reaction_type } = rawData;
+
+  const postId = post_id ? String(post_id) : null;
+  const commentId = comment_post_id ? String(comment_post_id) : null;
+  const validation = reactionSchema.safeParse({
+    post_id: postId,
+    comment_post_id: commentId,
+    reaction_type: reaction_type,
+  });
+
+  if (!validation.success) {
+    return next(
+      new ErrorHandler(400, "Invalid reaction data", validation.error.issues),
+    );
+  }
+
+  if (commentId) {
+    // Reply reactions toggle: same reaction removes, different reaction upserts.
+    const existing = await existingCommentReaction(commentId, req.user.id);
+
+    if (existing && existing.reaction_type === reaction_type) {
+      await removeCommentReaction(commentId, req.user.id);
+      return res.json({
+        reaction_type: `${existing.reaction_type}_removed_comment`,
+      });
+    } else if (existing && existing.reaction_type !== reaction_type) {
+      const reaction = await updateReactionComment(
+        commentId,
+        req.user.id,
+        reaction_type,
+      );
+      return res.json({
+        reaction_type: `${reaction.reaction_type}_updated_comment`,
+      });
+    } else {
+      const reaction = await addCommentReaction(
+        commentId,
+        req.user.id,
+        reaction_type,
+      );
+      return res.json({ reaction_type: `${reaction.reaction_type}_comment` });
+    }
+  }
+
+  if (postId) {
+    // Post reactions follow the same toggle behavior as reply reactions.
+    const existing = await existingPostReaction(postId, req.user.id);
+    // If the same reaction exists, remove it. Otherwise, add or update to the new reaction.
+    if (existing && existing.reaction_type === reaction_type) {
+      await removeReaction(postId, req.user.id);
+      // Return the new reaction state to the client for immediate UI update.
+      return res.json({ reaction_type: `${existing.reaction_type}_removed` });
+    } else if (existing && existing.reaction_type !== reaction_type) {
+      const reaction = await updateReaction(postId, req.user.id, reaction_type);
+      return res.json({ reaction_type: `${reaction.reaction_type}_updated` });
+    } else {
+      const reaction = await addReaction(postId, req.user.id, reaction_type);
+      return res.json({ reaction_type: reaction.reaction_type });
+    }
+  }
+
+  return res.status(400).send("Missing reaction target");
 });
 
 app.post("/add-post", async (req, res, next) => {
@@ -393,8 +428,8 @@ app.post("/add-post", async (req, res, next) => {
   }
 
   try {
-    await createPost(post, req.user.id);
-    res.redirect("/forum");
+    const result = await createPost(post, req.user.id);
+    return res.json({ success: true, post: result });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
   }
@@ -402,10 +437,12 @@ app.post("/add-post", async (req, res, next) => {
 app.post("/add-reply", async (req, res, next) => {
   if (!req.isAuthenticated()) return res.redirect("/login");
 
-  const comment_post = req.body.reply;
-  const post_id = req.body.post_id;
-
-  const validation = replySchema.safeParse({ reply: comment_post, post_id });
+  const comment_post = req.body.comment_post;
+  const postId = String(req.body.post_id);
+  const validation = replySchema.safeParse({
+    reply: comment_post,
+    post_id: postId,
+  });
   if (!validation.success) {
     return next(
       new ErrorHandler(400, "Invalid reply data", validation.error.issues),
@@ -413,8 +450,8 @@ app.post("/add-reply", async (req, res, next) => {
   }
 
   try {
-    await createReply(comment_post, req.user.id, post_id);
-    res.redirect("/forum");
+    const result = await createReply(comment_post, req.user.id, postId);
+    return res.json({ success: true, reply: result });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
   }
@@ -452,7 +489,7 @@ app.use((err, req, res, _next) => {
     }
   }
   console.error(err);
-  
+
   return res.status(500).send("Internal Server Error");
 });
 

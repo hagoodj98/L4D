@@ -10,7 +10,7 @@ export const existing = async (commentId, userId) => {
 
 export const addReaction = async (commentId, userId, reactionType) => {
   const result = await db.query(
-    "INSERT INTO reactions_comments (comment_id, user_id, reaction_type) VALUES ($1, $2, $3) RETURNING *",
+    "INSERT INTO reactions_comments (comment_id, user_id, reaction_type) VALUES ($1, $2, $3) RETURNING reaction_type",
     [commentId, userId, reactionType],
   );
   return result.rows[0];
@@ -27,7 +27,8 @@ export const updateReaction = async (commentId, userId, reactionType) => {
     `INSERT INTO reactions_comments (comment_id, user_id, reaction_type)
          VALUES ($1, $2, $3)
          ON CONFLICT (user_id, comment_id)
-         DO UPDATE SET reaction_type = EXCLUDED.reaction_type`,
+         DO UPDATE SET reaction_type = EXCLUDED.reaction_type
+         RETURNING reaction_type`,
     [commentId, userId, reactionType],
   );
   return result.rows[0];

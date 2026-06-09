@@ -10,10 +10,9 @@ export const loginSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters long"),
 });
 export const reactionSchema = z.object({
-  post_id: z.string().optional(),
-  comment_post_id: z.string().optional(),
-  reaction: z.enum(["like", "dislike"]).optional(),
-  reaction_comment: z.enum(["like", "dislike"]).optional(),
+  post_id: z.string().nullable().optional(),
+  comment_post_id: z.string().nullable().optional(),
+  reaction_type: z.enum(["like", "dislike"]).nullable().optional(),
 });
 export const postSchema = z.object({
   newPost: z.string().min(1, "Post content cannot be empty"),

@@ -17,6 +17,6 @@
   "files.eol": "\n",
   "prettier.endOfLine": "lf",
   "files.associations": {
-    "*.ejs": "html"
+    "*.ejs": "ejs"
   }
 }
