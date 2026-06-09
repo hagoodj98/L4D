@@ -1,4 +1,15 @@
 <script>
+  async function handlePagination(page) {
+    const offset = (Number(page) - 1) * 4; // Assuming 4 posts per page
+    try {
+      const response = await fetch(`http://localhost:3000/forumpagination?page=${page}&offset=${offset}`);
+      const data = await response.json();
+      listPosts(data.listAllContent);
+    } catch (err) {
+      console.error("Error fetching paginated posts:", err);
+    }
+
+  }
     async function handlePostSubmit(username) {
       const textarea = document.querySelector(".forum-compose-input");
       const postContent = textarea.value.trim();
@@ -136,7 +147,6 @@
             });
           }
           }
-
     } catch (err) {
         console.error("Error submitting post:", err);
       }
@@ -168,10 +178,19 @@
             showAllReplies(postId); // Show all replies after submitting
             const refreshedReplySection = document.getElementById(`commentInputBox-${postId}`);
             const updateReplyCount = document.getElementById(`replyCount-${postId}`);
-
-            console.log(refreshedReplySection);
+           const created = new Date(newPost.created_at);
+          const day = created.getDate().toString().padStart(2, "0");
+          const month = created.toLocaleString("default", { month: "short" }); // e.g. 'Mar'
+          const year = created.getFullYear();
+          const timeZone = created
+            .toLocaleTimeString("default", { timeZoneName: "short" })
+            .split(" ")[2]; // e.g. 'PST'
+          const time = created.toLocaleTimeString("default", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
             const newReply = data.reply;
-            refreshedReplySection.innerHTML += `<div
+            const newHTML = `<div
                   class="p-2 forum-reply-card"
                   style="border-top: 1px solid white; margin-left: 20px"
                 >
@@ -180,7 +199,9 @@
                     Posted By:
                     <span style="color: #d83232">  ${username} </span>
                   </p>
-                  <p style="color: white"> ${newReply.created_at} </p>
+                  <p style="color: white" class="forum-post-date">
+                    ${day}  ${month}  ${year}  at  ${time}  ${timeZone}
+                  </p>
                 </div>
                 <div
                   class="forum-reply-actions"
@@ -241,6 +262,7 @@
                     <span id="commentDislikeCount-${newReply.id}" style="color: white"> 0 </span>
                   </form>
                 </div>`;
+            refreshedReplySection.insertAdjacentHTML('beforeend', newHTML);
            const newReplyCount = Number(updateReplyCount.textContent) + 1;
             updateReplyCount.textContent = newReplyCount;
           }
@@ -388,6 +410,17 @@
               <div id="commentInputBox-${c.id}" style="display: none">
                   ${c.replies
                     .map((reply) => {
+                      const created = new Date(reply.created_at);
+                      const day = created.getDate().toString().padStart(2, "0");
+                      const month = created.toLocaleString("default", { month: "short" }); // e.g. 'Mar'
+                      const year = created.getFullYear();
+                      const timeZone = created
+                        .toLocaleTimeString("default", { timeZoneName: "short" })
+                        .split(" ")[2]; // e.g. 'PST'
+                      const time = created.toLocaleTimeString("default", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      });
                       return `
                 <div
                   class="p-2 forum-reply-card"
@@ -398,7 +431,9 @@
                     Posted By:
                     <span style="color: #d83232">  ${reply.display_name} </span>
                   </p>
-                  <p style="color: white"> ${reply.created_at} </p>
+                  <p style="color: white" class="forum-post-date">
+                    ${day} ${month} ${year} ${time} ${timeZone}
+                  </p>
                 </div>
                 <div
                   class="forum-reply-actions"

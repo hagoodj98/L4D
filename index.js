@@ -159,7 +159,6 @@ app.get("/forum", async (req, res, next) => {
   if (!validation.success) {
     return res.status(400).send("Invalid sort direction");
   }
-  // Basic pagination defaults to page 1 with 4 posts per page.
   const limit = req.query.limit ? parseInt(req.query.limit) : 4;
   const offset = req.query.page ? (parseInt(req.query.page) - 1) * limit : 0;
   try {
@@ -182,7 +181,25 @@ app.get("/forum", async (req, res, next) => {
     return next(new ErrorHandler(500, "Internal Server Error", err));
   }
 });
-
+app.get("/forumpagination", async (req, res, next) => {
+  const validation = sortSchema.safeParse({ sortDirection: "DESC" });
+  if (!validation.success) {
+    return res.status(400).send("Invalid sort direction");
+  }
+  const limit = req.query.limit ? parseInt(req.query.limit) : 4;
+  const offset = req.query.page ? (parseInt(req.query.page) - 1) * limit : 0;
+  try {
+    const result = await getForumPosts(
+      req.user ? req.user.id : null,
+      "DESC",
+      limit,
+      offset,
+    );
+    return res.json({ listAllContent: result.rows });
+  } catch (err) {
+    return next(new ErrorHandler(500, "Internal Server Error", err));
+  }
+});
 app.post("/login", async (req, res, next) => {
   // Keep local auth result handling in this route so form-specific errors
   // can be normalized into the central error middleware.

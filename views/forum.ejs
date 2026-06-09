@@ -93,9 +93,18 @@
         for(let i = 1; i <= paginationNumber; i++) { 
       %>
       <li class="page-item">
-        <a class="page-link" href="/forum?page=<%= i %>&offset=<%= (i - 1) %>"
-          ><%= i %></a
+        <form
+          onsubmit="
+            handlePagination('<%= i %>');
+            return false;
+          "
         >
+          <input type="hidden" name="page" value="<%= i %>" />
+          <input type="hidden" name="offset" value="<%= (i - 1) %>" />
+          <button type="submit" class="unstyledPaginationButtons">
+            <%= i %>
+          </button>
+        </form>
       </li>
       <% } %>
 

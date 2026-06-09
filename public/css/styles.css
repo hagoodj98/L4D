@@ -984,18 +984,24 @@ select {
   border-radius: 4px;
   box-sizing: border-box;
 }
-button[type="submit"] {
+button[type="submit"]:not(.unstyledPaginationButtons) {
   width: 100%;
   background-color: #f23030;
   color: white;
   padding: 14px 20px;
-
   margin: 8px 0;
   border: none;
   border-radius: 4px;
   cursor: pointer;
 }
-button[type="submit"]:hover {
+.unstyledPaginationButtons {
+  border: none;
+  color: #6e9731;
+  padding: 0;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+button[type="submit"]:not(.unstyledPaginationButtons):hover {
   background-color: #f23030aa;
 }
 
