@@ -9,6 +9,14 @@
   font-weight: 500;
   font-style: normal;
 }
+.new-post {
+  background-color: #6e9731; /* Initial color */
+  transition: background-color 4s ease; /* Handles the fade effect */
+}
+
+.new-post.fade-bg {
+  background-color: transparent; /* Target color */
+}
 #skip {
   color: #6e9731;
   text-decoration: none;
@@ -1119,6 +1127,7 @@ button[type="submit"]:hover {
   border: 1px solid rgba(255, 255, 255, 0.13) !important;
   border-radius: 12px;
   margin-bottom: 12px;
+  padding: 6px;
   margin-top: 12px;
 }
 

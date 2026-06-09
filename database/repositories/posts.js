@@ -82,8 +82,9 @@ export const totalPostsResult = async () =>
   await db.query("SELECT COUNT(*) FROM posts");
 
 export const createPost = async (postContent, userId) => {
-  await db.query(
-    "INSERT INTO posts (post, user_id, created_at) VALUES ($1, $2, $3)",
+  const result = await db.query(
+    "INSERT INTO posts (post, user_id, created_at) VALUES ($1, $2, $3) RETURNING *",
     [postContent, userId, new Date()],
   );
+  return result.rows[0];
 };

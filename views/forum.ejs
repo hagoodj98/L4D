@@ -33,7 +33,13 @@
         <% } %>
 
         <% if (isAuthenticated) { %>
-        <form action="/add-post" method="post" class="forum-compose-form">
+        <form
+          onsubmit="
+            handlePostSubmit('<%= currentUser %>');
+            return false;
+          "
+          class="forum-compose-form"
+        >
           <textarea
             name="newPost"
             class="textareapost autoresizing forum-compose-input"

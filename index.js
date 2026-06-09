@@ -418,8 +418,8 @@ app.post("/add-post", async (req, res, next) => {
   }
 
   try {
-    await createPost(post, req.user.id);
-    res.redirect("/forum");
+    const result = await createPost(post, req.user.id);
+    return res.json({ success: true, post: result });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
   }
