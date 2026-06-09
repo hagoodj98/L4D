@@ -351,7 +351,6 @@ app.post("/post-reaction", async (req, res, next) => {
   if (!req.isAuthenticated()) return res.redirect("/login");
 
   const rawData = await req.body;
-  console.log("Received reaction data:", rawData);
   const { post_id, comment_post_id, reaction_type } = rawData;
 
   const postId = post_id ? String(post_id) : null;

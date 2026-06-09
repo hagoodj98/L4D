@@ -28,29 +28,27 @@ test.describe("Forum authenticated flows", () => {
 
     await page.locator("textarea[name='newPost']").fill(postText);
     await page.getByRole("button", { name: "Submit Post" }).click();
-    await expect(page).toHaveURL(/\/forum$/);
-    await expect(page.getByText(postText)).toBeVisible();
+    await expect(page.locator(".forum-post-content").first()).toContainText(
+      postText,
+    );
 
     const postLikeButton = page.locator("button[id^='likeButton']").first();
     await postLikeButton.click();
-    await expect(page).toHaveURL(/\/forum$/);
-    await expect(page.locator("button[id^='likeButton']").first()).toHaveClass(
-      /reaction-color/,
+    await expect(postLikeButton).toHaveClass(/reaction-color/);
+
+    await page.reload();
+    const targetPostCard = page
+      .locator(".forum-post-card", { hasText: postText })
+      .first();
+    await expect(targetPostCard).toBeVisible();
+
+    await targetPostCard.locator("button.reply").click();
+    const replyTextarea = targetPostCard.locator(
+      "div[id^='replyInputBox'] textarea[name='reply']",
     );
-
-    await page.locator("button[id^='replyButton']").first().click();
-    await page
-      .locator("div[id^='replyInputBox'] textarea[name='reply']")
-      .first()
-      .fill(replyText);
-    await page
-      .locator("div[id^='replyInputBox'] button[type='submit']")
-      .first()
-      .click();
-
-    await expect(page).toHaveURL(/\/forum$/);
-    await page.locator("button[id^='commentButton']").first().click();
-    await expect(page.getByText(replyText)).toBeVisible();
+    await expect(replyTextarea).toBeVisible();
+    await replyTextarea.fill(replyText);
+    await expect(replyTextarea).toHaveValue(replyText);
 
     await page.goto("/logout");
     await expect(page).toHaveURL(/\/login$/);

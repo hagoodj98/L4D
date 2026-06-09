@@ -17,16 +17,17 @@ describe("Forum content flows", () => {
     resetDbState();
   });
 
-  it("creates a post for authenticated user and redirects to /forum", async () => {
+  it("creates a post for authenticated user using JSON response", async () => {
     const agent = await registerAndLogin(app, {
       username: "poster",
       email: "poster@example.com",
     });
 
-    await addPost(agent, "hello test post", dbState);
+    const post = await addPost(agent, "hello test post", dbState);
 
     expect(dbState.posts).toHaveLength(1);
     expect(dbState.posts[0].post).toBe("hello test post");
+    expect(post.post).toBe("hello test post");
   });
 
   it("does not create post when user is unauthenticated", async () => {
@@ -46,16 +47,24 @@ describe("Forum content flows", () => {
     });
 
     const post = await addPost(agent, "post with replies", dbState);
-    await addReply(agent, post.id, "this is a test reply", dbState);
+    const reply = await addReply(
+      agent,
+      post.id,
+      "this is a test reply",
+      dbState,
+    );
 
     expect(dbState.replies).toHaveLength(1);
+    expect(reply.comment_post).toBe("this is a test reply");
 
-    const forumResponse = await agent.get("/forum");
-    expect(forumResponse.status).toBe(200);
-    expect(forumResponse.text).toContain("this is a test reply");
+    const paginationResponse = await agent.get("/forumpagination?page=1");
+    expect(paginationResponse.status).toBe(200);
+    expect(
+      paginationResponse.body.listAllContent[0].replies[0].comment_post,
+    ).toBe("this is a test reply");
   });
 
-  it("renders comment icon and toggle target IDs for reply reveal", async () => {
+  it("renders comment toggle handlers and target IDs in forum script", async () => {
     const agent = await registerAndLogin(app, {
       username: "toggleuser",
       email: "toggleuser@example.com",
@@ -65,11 +74,9 @@ describe("Forum content flows", () => {
     const forumResponse = await agent.get("/forum");
 
     expect(forumResponse.status).toBe(200);
-    expect(forumResponse.text).toContain(`id="commentButton${post.id}"`);
-    expect(forumResponse.text).toContain(`id="commentInputBox${post.id}"`);
-    expect(forumResponse.text).toContain('$(".comment").on("click"');
-    expect(forumResponse.text).toContain(
-      '$("#commentInputBox" + commentId).toggle()',
-    );
+    expect(forumResponse.text).toContain("showAllReplies(");
+    expect(forumResponse.text).toContain('id="commentButton-${c.id}"');
+    expect(forumResponse.text).toContain('id="commentInputBox-${c.id}"');
+    expect(post.id).toBeGreaterThan(0);
   });
 });
