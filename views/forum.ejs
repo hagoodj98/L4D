@@ -2,7 +2,7 @@
 
 <div style="height: auto">
   <div class="container d-flex flex-column">
-    <div class="paddingtop">
+    <div id="anchor25" class="paddingtop">
       <div class="forum-intro-wrap">
         <% if (isAuthenticated) { %>
         <p style="color: white" class="forum-intro">
@@ -118,4 +118,4 @@
 </div>
 
 <%- include("partials/footer.ejs") %>
-<%- include("partials/forum-scripts.ejs", { listAllContent }) %>
+<%- include("partials/forum-scripts.ejs", { listAllContent, user: currentUser }) %>
