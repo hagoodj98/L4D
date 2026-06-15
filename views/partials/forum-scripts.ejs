@@ -125,7 +125,7 @@
                 style="display: none"
                 class="forum-reply-editor-wrap"
               >
-                <form onsubmit="handleReplySubmit(${newPost.id}, '${username}'); return false;">
+                <form onsubmit="handleReplySubmit(${newPost.id}, null, '${username}'); return false;">
                   <input type="hidden" name="post_id" value=" ${newPost.id} " />
                   <div
                     style="display: flex; flex-direction: column"
@@ -180,15 +180,15 @@
       }
       replySection.style.display = replySection.style.display === "none" ? "block" : "none";
     }
-    async function handleReplySubmit(postId, username) {
-      const replyInput = document.querySelector(`#replyInputBox-${postId} textarea`);
+    async function handleReplySubmit(postId, replyId, username) {
+      const replyInput = document.querySelector(`#replyInputBox-${postId ?? replyId} textarea`);
       const replyContent = replyInput.value.trim();
       if (!replyContent) return;
         try {
           const response = await fetch("http://localhost:3000/add-reply", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ post_id: postId, comment_post: replyContent }),
+            body: JSON.stringify({ [postId ? "post_id" : "reply_id"]: postId ?? replyId, comment_post: replyContent }),
           });
           const redirect = await response.redirected ? { url: response.url } : null;
           if (redirect) {
@@ -198,11 +198,11 @@
           const data = await response.json();
           if (data.success) {
             replyInput.value = "";
-            toggleReplyBox(postId); // Hide the reply box after submitting
+            toggleReplyBox(postId ?? replyId); // Hide the reply box after submitting
             const replied = true;
-            showAllReplies(postId, replied); // Show all replies after submitting
-            const refreshedReplySection = document.getElementById(`commentInputBox-${postId}`);
-            const updateReplyCount = document.getElementById(`replyCount-${postId}`);
+            showAllReplies(postId ?? replyId, replied); // Show all replies after submitting
+            const refreshedReplySection = document.getElementById(`commentInputBox-${postId ?? replyId}`);
+            const updateReplyCount = document.getElementById(`replyCount-${postId ?? replyId}`);
            const created = new Date(data.reply.created_at);
           const day = created.getDate().toString().padStart(2, "0");
           const month = created.toLocaleString("default", { month: "short" }); // e.g. 'Mar'
@@ -427,7 +427,7 @@
                 style="display: none"
                 class="forum-reply-editor-wrap"
               >
-                <form onsubmit="handleReplySubmit(${c.id}, '${c.display_name}'); return false;">
+                <form onsubmit="handleReplySubmit(${c.id}, null, '${c.display_name}'); return false;">
                   <input type="hidden" name="post_id" value="${c.id}" />
                   <div
                     style="display: flex; flex-direction: column"
@@ -557,7 +557,7 @@
                           style="display: none"
                           class="forum-reply-editor-wrap"
                         >
-                          <form onsubmit="handleReplySubmit(${reply.id}, '${reply.display_name}'); return false;">
+                          <form onsubmit="handleReplySubmit(null, ${reply.id}, '${reply.display_name}'); return false;">
                             <input type="hidden" name="post_id" value="${reply.id}" />
                             <div
                               style="display: flex; flex-direction: column"

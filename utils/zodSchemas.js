@@ -19,7 +19,16 @@ export const postSchema = z.object({
 });
 export const replySchema = z.object({
   reply: z.string().min(1, "Reply content cannot be empty"),
-  post_id: z.string().min(1, "Post ID is required for a reply"),
+  post_id: z
+    .string()
+    .min(1, "Post ID is required for a reply")
+    .nullable()
+    .optional(),
+  reply_id: z
+    .string()
+    .min(1, "Reply ID is required for a reply")
+    .nullable()
+    .optional(),
 });
 export const sortSchema = z.object({
   sortDirection: z.enum(["ASC", "DESC"]),

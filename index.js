@@ -34,6 +34,7 @@ import {
   updateReaction as updateReactionComment,
 } from "./database/repositories/reactions_comments.js";
 import { createReply } from "./database/repositories/replies.js";
+import { createReply as createSubReply } from "./database/repositories/sub_replies.js";
 import ErrorHandler from "./utils/error.js";
 import z from "zod";
 
@@ -439,9 +440,11 @@ app.post("/add-reply", async (req, res, next) => {
 
   const comment_post = req.body.comment_post;
   const postId = String(req.body.post_id);
+  const replyId = String(req.body.reply_id);
   const validation = replySchema.safeParse({
     reply: comment_post,
     post_id: postId,
+    reply_id: replyId,
   });
   if (!validation.success) {
     return next(
@@ -450,7 +453,11 @@ app.post("/add-reply", async (req, res, next) => {
   }
 
   try {
-    const result = await createReply(comment_post, req.user.id, postId);
+    if (!replyId) {
+      const result = await createReply(comment_post, req.user.id, postId);
+      return res.json({ success: true, reply: result });
+    }
+    const result = await createSubReply(comment_post, req.user.id, replyId);
     return res.json({ success: true, reply: result });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
