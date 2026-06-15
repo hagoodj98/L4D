@@ -50,7 +50,7 @@
             hour: "2-digit",
             minute: "2-digit",
           });
-          const newHTML = `<div class='new-post forum-post-card' style="border-bottom: 1px solid white">
+          const newHTML = /*html*/`<div class='new-post forum-post-card' style="border-bottom: 1px solid white">
               <p style="color: white" class="forum-post-content">
                  ${newPost.post}
               </p>
@@ -215,7 +215,7 @@
             minute: "2-digit",
           });
             const newReply = data.reply;
-            const newHTML = `<div
+            const newHTML = /*html*/`<div
                   class="new-reply p-2 forum-reply-card"
                   style="border-top: 1px solid white; margin-left: 20px"
                 >
@@ -346,7 +346,8 @@
           hour: "2-digit",
           minute: "2-digit",
         });
-        content += `<div class="forum-post-card" style="border-bottom: 1px solid white">
+        content += /*html*/`
+            <div class="forum-post-card" style="border-bottom: 1px solid white">
               <!--
                     <textarea  class="textareapost autoresizing" style="  width: 100%;"  readonly  id="title/textarea>-->
               <p style="color: white" class="forum-post-content">
@@ -415,12 +416,12 @@
                 </button>
               </div>
               <button
-                  onclick="showAllReplies(${c.id})"
-                  id="commentButton-${c.id}"
-                  class="comment postButton  ${c.user_reaction === "comment" ? "reaction-color" : ""} "
-                >
+                onclick="showAllReplies(${c.id})"
+                id="commentButton-${c.id}"
+                class="comment postButton  ${c.user_reaction === "comment" ? "reaction-color" : ""} "
+              >
                 <span  style="color: white"> <span id="replyCount-${c.id}">${c.reply_count}</span> replies </span>
-                </button>
+              </button>
               <div
                 id="replyInputBox-${c.id}"
                 style="display: none"
@@ -464,79 +465,214 @@
                         hour: "2-digit",
                         minute: "2-digit",
                       });
-                      return `
-                <div
-                  class="p-2 forum-reply-card"
-                  style="border-top: 1px solid white; margin-left: 20px"
-                >
-                  <p style="color: white"> ${reply.comment_post} </p>
-                  <p style="color: white">
-                    Posted By:
-                    <span style="color: #6e9731">  ${reply.display_name} </span>
-                  </p>
-                  <p style="color: white" class="forum-post-date">
-                    ${day} ${month} ${year} ${time} ${timeZone}
-                  </p>
-                </div>
-                <div
-                  class="forum-reply-actions"
-                  style="display: flex; align-items: center; margin-left: 20px"
-                >
-                  <form onsubmit="handleReaction(null, ${reply.id}, 'like'); return false;">
-                    <input
-                      type="hidden"
-                      name="comment_post_id"
-                      value="${reply.id}"
-                    />
-                    <input type="hidden" name="reaction_type" value="like" />
-                    <button
-                      id="commentLikeButton-${reply.id}"
-                      class="postButton  ${reply.user_reaction === "like" ? "reaction-color" : ""} "
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
+                    return /*html*/`
+                      <div
+                        class="p-2 forum-reply-card"
+                        style="border-top: 1px solid white; margin-left: 20px"
                       >
-                        <path
-                          fill="currentColor"
-                          d="M20.385 9q.627 0 1.12.494T22 10.616v1.23q0 .137-.028.298q-.028.162-.083.298l-2.731 6.474q-.206.461-.693.773q-.486.311-1.003.311H9.269q-.671 0-1.143-.472t-.472-1.144V9.672q0-.323.133-.628t.351-.522l5.156-5.112q.222-.215.494-.27t.516.059t.35.373q.108.258.04.579L13.665 9zM4.615 20q-.67 0-1.143-.472Q3 19.056 3 18.385v-7.77q0-.67.472-1.143Q3.944 9 4.616 9h.423q.67 0 1.143.472q.472.472.472 1.144v7.788q0 .671-.472 1.133Q5.71 20 5.039 20z"
-                        ></path>
-                      </svg>
-                    </button>
-                    <span id="commentLikeCount-${reply.id}" style="color: white"> ${reply.likes} </span>
-                  </form>
-                  <form onsubmit="handleReaction(null, ${reply.id}, 'dislike'); return false;">
-                    <input
-                      type="hidden"
-                      name="comment_post_id"
-                      value="${reply.id}"
-                    />
-                    <input
-                      type="hidden"
-                      name="reaction_type"
-                      value="dislike"
-                    />
-                    <button
-                      id="commentDislikeButton-${reply.id}"
-                      class="postButton  ${reply.user_reaction === "dislike" ? "reaction-color" : ""} "
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
+                        <p style="color: white"> ${reply.comment_post} </p>
+                        <p style="color: white">
+                          Posted By:
+                          <span style="color: #6e9731">  ${reply.display_name} </span>
+                        </p>
+                        <p style="color: white" class="forum-post-date">
+                          ${day} ${month} ${year} ${time} ${timeZone}
+                        </p>
+                      </div>
+                      <div
+                        class="forum-reply-actions"
+                        style=" margin-left: 20px"
                       >
-                        <path
-                          fill="currentColor"
-                          d="M3.616 15q-.627 0-1.122-.494T2 13.385v-1.231q0-.137.028-.298q.028-.162.084-.298l2.73-6.473q.206-.462.693-.773Q6.02 4 6.538 4h8.192q.671 0 1.143.472t.472 1.143v8.714q0 .323-.133.628t-.351.522l-5.156 5.112q-.221.215-.493.27t-.517-.059t-.35-.373t-.04-.579l1.03-4.85zM19.385 4q.67 0 1.143.472q.472.472.472 1.144v7.769q0 .67-.472 1.143q-.472.472-1.143.472h-.423q-.671 0-1.144-.472t-.472-1.144V5.597q0-.671.472-1.133Q18.291 4 18.962 4z"
-                        ></path>
-                      </svg>
-                    </button>
-                    <span id="commentDislikeCount-${reply.id}" style="color: white"> ${reply.dislikes} </span>
-                  </form>
-                </div>`;
+                        <div style="display: flex; align-items: center">
+                          <form onsubmit="handleReaction(null, ${reply.id}, 'like'); return false;">
+                            <input
+                              type="hidden"
+                              name="comment_post_id"
+                              value="${reply.id}"
+                            />
+                            <input type="hidden" name="reaction_type" value="like" />
+                            <button
+                              id="commentLikeButton-${reply.id}"
+                              class="postButton  ${reply.user_reaction === "like" ? "reaction-color" : ""} "
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  fill="currentColor"
+                                  d="M20.385 9q.627 0 1.12.494T22 10.616v1.23q0 .137-.028.298q-.028.162-.083.298l-2.731 6.474q-.206.461-.693.773q-.486.311-1.003.311H9.269q-.671 0-1.143-.472t-.472-1.144V9.672q0-.323.133-.628t.351-.522l5.156-5.112q.222-.215.494-.27t.516.059t.35.373q.108.258.04.579L13.665 9zM4.615 20q-.67 0-1.143-.472Q3 19.056 3 18.385v-7.77q0-.67.472-1.143Q3.944 9 4.616 9h.423q.67 0 1.143.472q.472.472.472 1.144v7.788q0 .671-.472 1.133Q5.71 20 5.039 20z"
+                                ></path>
+                              </svg>
+                            </button>
+                            <span id="commentLikeCount-${reply.id}" style="color: white"> ${reply.likes} </span>
+                          </form>
+                          <form onsubmit="handleReaction(null, ${reply.id}, 'dislike'); return false;">
+                            <input
+                              type="hidden"
+                              name="comment_post_id"
+                              value="${reply.id}"
+                            />
+                            <input
+                              type="hidden"
+                              name="reaction_type"
+                              value="dislike"
+                            />
+                            <button
+                              id="commentDislikeButton-${reply.id}"
+                              class="postButton  ${reply.user_reaction === "dislike" ? "reaction-color" : ""} "
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  fill="currentColor"
+                                  d="M3.616 15q-.627 0-1.122-.494T2 13.385v-1.231q0-.137.028-.298q.028-.162.084-.298l2.73-6.473q.206-.462.693-.773Q6.02 4 6.538 4h8.192q.671 0 1.143.472t.472 1.143v8.714q0 .323-.133.628t-.351.522l-5.156 5.112q-.221.215-.493.27t-.517-.059t-.35-.373t-.04-.579l1.03-4.85zM19.385 4q.67 0 1.143.472q.472.472.472 1.144v7.769q0 .67-.472 1.143q-.472.472-1.143.472h-.423q-.671 0-1.144-.472t-.472-1.144V5.597q0-.671.472-1.133Q18.291 4 18.962 4z"
+                                ></path>
+                              </svg>
+                            </button>
+                            <span id="commentDislikeCount-${reply.id}" style="color: white"> ${reply.dislikes} </span>
+                          </form>
+                          <button
+                            class="reply roboto-condensed"
+                            onclick="toggleReplyBox(${reply.id})"
+                          >
+                            Reply
+                          </button>
+                        </div>
+                        <button
+                          onclick="showAllReplies(${reply.id})"
+                          id="commentButton-${reply.id}"
+                          class="comment postButton  ${reply.user_reaction === "comment" ? "reaction-color" : ""} "
+                        >
+                          <span style="color: white"> <span id="replyCount-${reply.id}">${c.reply_final_tier_count}</span> replies </span>
+                        </button>
+                        <div
+                          id="replyInputBox-${reply.id}"
+                          style="display: none"
+                          class="forum-reply-editor-wrap"
+                        >
+                          <form onsubmit="handleReplySubmit(${reply.id}, '${reply.display_name}'); return false;">
+                            <input type="hidden" name="post_id" value="${reply.id}" />
+                            <div
+                              style="display: flex; flex-direction: column"
+                              class="forum-reply-editor"
+                            >
+                              <textarea
+                                style="
+                                  background-color: #0d0d0d;
+                                  color: white;
+                                  padding: 10px;
+                                "
+                                class="forum-reply-input"
+                                autofocus="true"
+                                name="reply"
+                                placeholder="reply to @${reply.display_name}..."
+                                required
+                              ></textarea>
+
+                              <button type="submit">Submit</button>
+                            </div>
+                          </form>
+                        </div>
+                        <div id="commentInputBox-${reply.id}" style="display: none">
+                          ${c.replies_final_tier.map((finalReply) => {
+                            const created = new Date(finalReply.created_at);
+                            const day = created.getDate().toString().padStart(2, "0");
+                            const month = created.toLocaleString("default", { month: "short" }); // e.g. 'Mar'
+                            const year = created.getFullYear();
+                            const timeZone = created
+                              .toLocaleTimeString("default", { timeZoneName: "short" })
+                              .split(" ")[2]; // e.g. 'PST'
+                            const time = created.toLocaleTimeString("default", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            });
+                            // This is where you would recursively render more nested replies if needed
+                            return  /*html*/`
+                              <div
+                                class="p-2 forum-reply-card"
+                                style="border-top: 1px solid white; margin-left: 20px"
+                              >
+                                <p style="color: white"> ${finalReply.comment_post} </p>
+                                <p style="color: white">
+                                  Posted By:
+                                  <span style="color: #6e9731">  ${finalReply.display_name} </span>
+                                </p>
+                                <p style="color: white" class="forum-post-date">
+                                  ${day} ${month} ${year} ${time} ${timeZone}
+                                </p>
+                              </div>
+                              <div
+                                class="forum-reply-actions"
+                                style="display: flex; align-items: center; margin-left: 20px"
+                              >
+                                <form onsubmit="handleReaction(null, ${finalReply.id}, 'like'); return false;">
+                                  <input
+                                    type="hidden"
+                                    name="comment_post_id"
+                                    value="${finalReply.id}"
+                                  />
+                                  <input type="hidden" name="reaction_type" value="like" />
+                                  <button
+                                    id="commentLikeButton-${finalReply.id}"
+                                    class="postButton  ${finalReply.user_reaction === "like" ? "reaction-color" : ""} "
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="20"
+                                      height="20"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        fill="currentColor"
+                                        d="M20.385 9q.627 0 1.12.494T22 10.616v1.23q0 .137-.028.298q-.028.162-.083.298l-2.731 6.474q-.206.461-.693.773q-.486.311-1.003.311H9.269q-.671 0-1.143-.472t-.472-1.144V9.672q0-.323.133-.628t.351-.522l5.156-5.112q.222-.215.494-.27t.516.059t.35.373q.108.258.04.579L13.665 9zM4.615 20q-.67 0-1.143-.472Q3 19.056 3 18.385v-7.77q0-.67.472-1.143Q3.944 9 4.616 9h.423q.67 0 1.143.472q.472.472.472 1.144v7.788q0 .671-.472 1.133Q5.71 20 5.039 20z"
+                                      ></path>
+                                    </svg>
+                                  </button>
+                                  <span id="commentLikeCount-${finalReply.id}" style="color: white"> ${finalReply.replies_final_tier.likes} </span>
+                                </form>
+                                <form onsubmit="handleReaction(null, ${finalReply.id}, 'dislike'); return false;">
+                                  <input
+                                    type="hidden"
+                                    name="comment_post_id"
+                                    value="${finalReply.id}"
+                                  />
+                                  <input
+                                    type="hidden"
+                                    name="reaction_type"
+                                    value="dislike"
+                                  />
+                                  <button
+                                    id="commentDislikeButton-${finalReply.id}"
+                                    class="postButton  ${finalReply.user_reaction === "dislike" ? "reaction-color" : ""} "
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="20"
+                                      height="20"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        fill="currentColor"
+                                        d="M3.616 15q-.627 0-1.122-.494T2 13.385v-1.231q0-.137.028-.298q.028-.162.084-.298l2.73-6.473q.206-.462.693-.773Q6.02 4 6.538 4h8.192q.671 0 1.143.472t.472 1.143v8.714q0 .323-.133.628t-.351.522l-5.156 5.112q-.221.215-.493.27t-.517-.059t-.35-.373t-.04-.579l1.03-4.85zM19.385 4q.67 0 1.143.472q.472.472.472 1.144v7.769q0 .67-.472 1.143q-.472.472-1.143.472h-.423q-.671 0-1.144-.472t-.472-1.144V5.597q0-.671.472-1.133Q18.291 4 18.962 4z"
+                                      ></path>
+                                    </svg>
+                                  </button>
+                                  <span id="commentDislikeCount-${finalReply.id}" style="color: white"> ${finalReply.replies_final_tier.dislikes} </span>
+                                </form>
+                              </div>
+                            `
+                            ;
+                          }).join(" ")}
+                        </div>
+                      </div>
+                    `;
                     })
                     .join(" ")}
               </div>
