@@ -6,6 +6,22 @@ function uniqueSuffix() {
   return `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 }
 
+function firstTierRepliesButton(page, id) {
+  return page
+    .locator(
+      `button#commentButton-${id}[onclick*="showAllReplies(${id}, true, false"]`,
+    )
+    .first();
+}
+
+function secondTierRepliesButton(page, id) {
+  return page
+    .locator(
+      `button#commentButton-${id}[onclick*="showAllReplies(${id}, false, false"]`,
+    )
+    .first();
+}
+
 test.describe("Forum authenticated flows", () => {
   test("authenticated user can register, post, react, reply, and logout", async ({
     page,
@@ -132,8 +148,8 @@ test.describe("Forum authenticated flows", () => {
     expect(subReplyResult.subReply).toBe(true);
 
     await page.reload();
-    await page.locator(`#commentButton-${cleanPostId}`).click();
-    await page.locator(`#commentButton-${replyId}`).click();
+    await firstTierRepliesButton(page, cleanPostId).click();
+    await secondTierRepliesButton(page, replyId).click();
     await expect(page.getByText(subReplyText)).toBeVisible();
     await expect(page.locator(`#finalReplyCount-${replyId}`)).toHaveText("1");
   });
@@ -211,8 +227,8 @@ test.describe("Forum authenticated flows", () => {
     const subReplyId = subReplyResult.reply.id;
 
     await page.reload();
-    await page.locator(`#commentButton-${postId}`).click();
-    await page.locator(`#commentButton-${replyId}`).click();
+    await firstTierRepliesButton(page, postId).click();
+    await secondTierRepliesButton(page, replyId).click();
 
     const finalReplyLikeButton = page.locator(
       `#finalReplyLikeButton-${subReplyId}`,
@@ -297,8 +313,8 @@ test.describe("Forum authenticated flows", () => {
     const subReplyId = subReplyResult.reply.id;
 
     await page.reload();
-    await page.locator(`#commentButton-${postId}`).click();
-    await page.locator(`#commentButton-${replyId}`).click();
+    await firstTierRepliesButton(page, postId).click();
+    await secondTierRepliesButton(page, replyId).click();
 
     const finalReplyLikeButton = page.locator(
       `#finalReplyLikeButton-${subReplyId}`,
@@ -385,8 +401,8 @@ test.describe("Forum authenticated flows", () => {
     const subReplyId = subReplyResult.reply.id;
 
     await page.reload();
-    await page.locator(`#commentButton-${postId}`).click();
-    await page.locator(`#commentButton-${replyId}`).click();
+    await firstTierRepliesButton(page, postId).click();
+    await secondTierRepliesButton(page, replyId).click();
 
     const finalReplyDislikeButton = page.locator(
       `#finalReplyDislikeButton-${subReplyId}`,
