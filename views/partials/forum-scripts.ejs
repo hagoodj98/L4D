@@ -21,179 +21,187 @@
         console.error("Error fetching paginated posts:", err);
       }
     }
-      async function handlePostSubmit(username) {
-        const textarea = document.querySelector(".forum-compose-input");
-        const postContent = textarea.value.trim();
-        if (!postContent) return;
+    async function handlePostSubmit(username) {
+      const textarea = document.querySelector(".forum-compose-input");
+      const postContent = textarea.value.trim();
+      if (!postContent) return;
 
-        try {
-          const response = await fetch("http://localhost:3000/add-post", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ newPost: postContent }),
+      try {
+        const response = await fetch("http://localhost:3000/add-post", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ newPost: postContent }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          textarea.value = "";
+          const newPost = data.post;
+          // Prepend the new post to the list of posts
+          const postsContainer = document.querySelector("#demo");
+          const created = new Date(newPost.created_at);
+          const day = created.getDate().toString().padStart(2, "0");
+          const month = created.toLocaleString("default", { month: "short" }); // e.g. 'Mar'
+          const year = created.getFullYear();
+          const timeZone = created
+            .toLocaleTimeString("default", { timeZoneName: "short" })
+            .split(" ")[2]; // e.g. 'PST'
+          const time = created.toLocaleTimeString("default", {
+            hour: "2-digit",
+            minute: "2-digit",
           });
-          const data = await response.json();
-          if (data.success) {
-            textarea.value = "";
-            const newPost = data.post;
-            // Prepend the new post to the list of posts
-            const postsContainer = document.querySelector("#demo");
-            const created = new Date(newPost.created_at);
-            const day = created.getDate().toString().padStart(2, "0");
-            const month = created.toLocaleString("default", { month: "short" }); // e.g. 'Mar'
-            const year = created.getFullYear();
-            const timeZone = created
-              .toLocaleTimeString("default", { timeZoneName: "short" })
-              .split(" ")[2]; // e.g. 'PST'
-            const time = created.toLocaleTimeString("default", {
-              hour: "2-digit",
-              minute: "2-digit",
-            });
-            const newHTML = /*html*/`<div class='new-post forum-post-card' style="border-bottom: 1px solid white">
-                <p style="color: white" class="forum-post-content">
-                   ${newPost.post}
-                </p>
-                <p style="color: white" class="forum-post-meta">
-                  Posted By:
-                  <span style="color: #6e9731">  ${username} </span>
-                </p>
-                <p style="color: white" class="forum-post-date">
-                   ${day}  ${month}  ${year}  at  ${time}  ${timeZone}
-                </p>
-                <div
-                  style="display: flex; align-items: center"
-                  class="forum-post-actions"
-                >
-                  <form onsubmit="handleReaction(${newPost.id}, null, 'like'); return false;">
-                    <input type="hidden" name="post_id" value=" ${newPost.id} " />
-                    <input type="hidden" name="reaction_type" value="like" />
-                    <button
-                      id="likeButton-${newPost.id}"
-                      class="postButton"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          fill="currentColor"
-                          d="M13.12 2.06L7.58 7.6c-.37.37-.58.88-.58 1.41V19c0 1.1.9 2 2 2h9c.8 0 1.52-.48 1.84-1.21l3.26-7.61C23.94 10.2 22.49 8 20.34 8h-5.65l.95-4.58c.1-.5-.05-1.01-.41-1.37c-.59-.58-1.53-.58-2.11.01M3 21c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2s-2 .9-2 2v8c0 1.1.9 2 2 2"
-                        ></path>
-                      </svg>
-                    </button>
-                  <span id="likeCount-${newPost.id}" style="color: white"> 0 </span>
-                  <form onsubmit="handleReaction(${newPost.id}, null, 'dislike'); return false;">
-                    <input type="hidden" name="post_id" value=" ${newPost.id} " />
-                    <input type="hidden" name="reaction_type" value="dislike" />
-                    <button
-                      id="dislikeButton-${newPost.id}"
-                      class="postButton"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          fill="currentColor"
-                          d="M3.616 15q-.627 0-1.122-.494T2 13.385v-1.231q0-.137.028-.298q.028-.162.084-.298l2.73-6.473q.206-.462.693-.773Q6.02 4 6.538 4h8.192q.671 0 1.143.472t.472 1.143v8.714q0 .323-.133.628t-.351.522l-5.156 5.112q-.221.215-.493.27t-.517-.059t-.35-.373t-.04-.579l1.03-4.85zM19.385 4q.67 0 1.143.472q.472.472.472 1.144v7.769q0 .67-.472 1.143q-.472.472-1.143.472h-.423q-.671 0-1.144-.472t-.472-1.144V5.597q0-.671.472-1.133Q18.291 4 18.962 4z"
-                        ></path>
-                      </svg>
-                    </button>
-                  <span id="dislikeCount-${newPost.id}" style="color: white"> 0 </span>
-                  </form>
+          const newHTML = /*html*/`<div class='new-post forum-post-card' style="border-bottom: 1px solid white">
+              <p style="color: white" class="forum-post-content">
+                  ${newPost.post}
+              </p>
+              <p style="color: white" class="forum-post-meta">
+                Posted By:
+                <span style="color: #6e9731">  ${username} </span>
+              </p>
+              <p style="color: white" class="forum-post-date">
+                  ${day}  ${month}  ${year}  at  ${time}  ${timeZone}
+              </p>
+              <div
+                style="display: flex; align-items: center"
+                class="forum-post-actions"
+              >
+                <form onsubmit="handleReaction(${newPost.id}, null, 'like'); return false;">
+                  <input type="hidden" name="post_id" value=" ${newPost.id} " />
+                  <input type="hidden" name="reaction_type" value="like" />
                   <button
-                    class="reply roboto-condensed"
-                    onclick="toggleReplyBox(${newPost.id})"
+                    id="likeButton-${newPost.id}"
+                    class="postButton"
                   >
-                    Reply
-                  </button>
-                </div>
-                <button
-                    onclick="showAllReplies(${newPost.id}, '${username}')"
-                    id="commentButton-${newPost.id}"
-                    class="comment postButton"
-                  >
-                  <span  style="color: white"> <span id="replyCount-${newPost.id}">0</span> replies </span>
-                  </button>
-                <div
-                  id="replyInputBox-${newPost.id}"
-                  style="display: none"
-                  class="forum-reply-editor-wrap"
-                >
-                  <form onsubmit="handleReplySubmit(${newPost.id}, null, '${username}'); return false;">
-                    <input type="hidden" name="post_id" value=" ${newPost.id} " />
-                    <div
-                      style="display: flex; flex-direction: column"
-                      class="forum-reply-editor"
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
                     >
-                      <textarea
-                        rows="9"
-                        style="
-                          background-color: #0d0d0d;
-                          color: white;
-                          padding: 10px;
-                        "
-                        class="forum-reply-input"
-                        autofocus="true"
-                        name="reply"
-                        placeholder="Write a reply..."
-                        required
-                      ></textarea>
+                      <path
+                        fill="currentColor"
+                        d="M13.12 2.06L7.58 7.6c-.37.37-.58.88-.58 1.41V19c0 1.1.9 2 2 2h9c.8 0 1.52-.48 1.84-1.21l3.26-7.61C23.94 10.2 22.49 8 20.34 8h-5.65l.95-4.58c.1-.5-.05-1.01-.41-1.37c-.59-.58-1.53-.58-2.11.01M3 21c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2s-2 .9-2 2v8c0 1.1.9 2 2 2"
+                      ></path>
+                    </svg>
+                  </button>
+                <span id="likeCount-${newPost.id}" style="color: white"> 0 </span>
+                <form onsubmit="handleReaction(${newPost.id}, null, 'dislike'); return false;">
+                  <input type="hidden" name="post_id" value=" ${newPost.id} " />
+                  <input type="hidden" name="reaction_type" value="dislike" />
+                  <button
+                    id="dislikeButton-${newPost.id}"
+                    class="postButton"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        fill="currentColor"
+                        d="M3.616 15q-.627 0-1.122-.494T2 13.385v-1.231q0-.137.028-.298q.028-.162.084-.298l2.73-6.473q.206-.462.693-.773Q6.02 4 6.538 4h8.192q.671 0 1.143.472t.472 1.143v8.714q0 .323-.133.628t-.351.522l-5.156 5.112q-.221.215-.493.27t-.517-.059t-.35-.373t-.04-.579l1.03-4.85zM19.385 4q.67 0 1.143.472q.472.472.472 1.144v7.769q0 .67-.472 1.143q-.472.472-1.143.472h-.423q-.671 0-1.144-.472t-.472-1.144V5.597q0-.671.472-1.133Q18.291 4 18.962 4z"
+                      ></path>
+                    </svg>
+                  </button>
+                <span id="dislikeCount-${newPost.id}" style="color: white"> 0 </span>
+                </form>
+                <button
+                  class="reply roboto-condensed"
+                  onclick="toggleReplyBox(${newPost.id})"
+                >
+                  Reply
+                </button>
+              </div>
+              <button
+                  onclick="showAllReplies(${newPost.id}, '${username}')"
+                  id="commentButton-${newPost.id}"
+                  class="comment postButton"
+                >
+                <span  style="color: white"> <span id="replyCount-${newPost.id}">0</span> replies </span>
+                </button>
+              <div
+                id="replyInputBox-${newPost.id}"
+                style="display: none"
+                class="forum-reply-editor-wrap"
+              >
+                <form onsubmit="handleReplySubmit(${newPost.id}, null, '${username}'); return false;">
+                  <input type="hidden" name="post_id" value=" ${newPost.id} " />
+                  <div
+                    style="display: flex; flex-direction: column"
+                    class="forum-reply-editor"
+                  >
+                    <textarea
+                      rows="9"
+                      style="
+                        background-color: #0d0d0d;
+                        color: white;
+                        padding: 10px;
+                      "
+                      class="forum-reply-input"
+                      autofocus="true"
+                      name="reply"
+                      placeholder="Write a reply..."
+                      required
+                    ></textarea>
 
-                      <button type="submit">Submit</button>
-                    </div>
-                  </form>
-                </div>
-                <div id="commentInputBox-${newPost.id}" style="display: none"></div>
-              </div>`;
-            postsContainer.insertAdjacentHTML('afterbegin', newHTML);
-            const insertedPost = postsContainer.querySelector(".new-post");
-            if (insertedPost) {
-              requestAnimationFrame(() => {
-                insertedPost.classList.add("fade-bg");
-              });
-            }
-            }
-      } catch (err) {
-          console.error("Error submitting post:", err);
-        }
-      }
-
-      function toggleReplyBox(id, replying = false) {
-          const replyBox = document.getElementById(`replyInputBox-${id}`);
-          if (replying) {
-            const finalReplyBox = document.getElementById(`finalReplyInputBox-${id}`);
-            if (finalReplyBox.style.display === "block") {
-              finalReplyBox.style.display = "none";
-              return;
-            } else {
-              finalReplyBox.style.display = "block";
-              return;
-            }
+                    <button type="submit">Submit</button>
+                  </div>
+                </form>
+              </div>
+              <div id="commentInputBox-${newPost.id}" style="display: none"></div>
+            </div>`;
+          postsContainer.insertAdjacentHTML('afterbegin', newHTML);
+          const insertedPost = postsContainer.querySelector(".new-post");
+          if (insertedPost) {
+            requestAnimationFrame(() => {
+              insertedPost.classList.add("fade-bg");
+            });
           }
-          replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
+          }
+    } catch (err) {
+        console.error("Error submitting post:", err);
       }
-      function showAllReplies(id, replied = false) {
-        const replySection = document.getElementById(`commentInputBox-${id}`);
-        if (replied) {
-          const finalReplySection = document.getElementById(`finalReplyCommentInputBox-${id}`);
-          if (finalReplySection.style.display === "block") {
-            finalReplySection.style.display = "none";
+    }
+    function toggleReplyBox(id, replying = false) {
+
+        if (replying) {
+          const finalReplyBox = document.getElementById(`finalReplyInputBox-${id}`);
+          if (finalReplyBox.style.display === "block") {
+            finalReplyBox.style.display = "none";
             return;
           } else {
-            finalReplySection.style.display = "block";
+            finalReplyBox.style.display = "block";
             return;
           }
         }
-        replySection.style.display = replySection.style.display === "none" ? "block" : "none";
+        const replyBox = document.getElementById(`replyInputBox-${id}`);
+        replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
+    }
+    function showAllReplies(id, replied = false) {
+
+      if (replied) {
+        const finalReplySection = document.getElementById(`finalReplyCommentInputBox-${id}`);
+        if (finalReplySection.style.display === "block") {
+          finalReplySection.style.display = "none";
+          return;
+        } else {
+          finalReplySection.style.display = "block";
+          return;
+        }
       }
+      const replySection = document.getElementById(`commentInputBox-${id}`);
+      replySection.style.display = replySection.style.display === "none" ? "block" : "none";
+    }
       async function handleReplySubmit(postId, replyId, username) {
-        const replyInput = document.querySelector(`#replyInputBox-${postId ?? replyId} textarea`);
-        const replyContent = replyInput.value.trim();
+
+        let replyRoute;
+
+        if (replyId && !postId) {
+          replyRoute = document.querySelector(`#finalReplyInputBox-${replyId} textarea`);
+        } else if (postId && !replyId) {
+          replyRoute = document.querySelector(`#replyInputBox-${postId} textarea`);
+        }
+        const replyContent = replyRoute.value.trim();
         if (!replyContent) return;
           try {
             const response = await fetch("http://localhost:3000/add-reply", {
@@ -208,12 +216,21 @@
             }
             const data = await response.json();
             if (data.success) {
-              replyInput.value = "";
-              toggleReplyBox(postId ?? replyId); // Hide the reply box after submitting
               const replied = true;
-              showAllReplies(postId ?? replyId, replied); // Show all replies after submitting
-              const refreshedReplySection = document.getElementById(`commentInputBox-${postId ?? replyId}`);
-              const updateReplyCount = document.getElementById(`replyCount-${postId ?? replyId}`);
+
+              let updateReplyCountElementId;
+              let refreshedReplySectionId;
+              if (replyId && !postId) {
+                refreshedReplySectionId = document.getElementById(`finalReplyCommentInputBox-${replyId}`);
+                updateReplyCountElementId = document.getElementById(`finalReplyCount-${replyId}`);
+              } else if (postId && !replyId) {
+                refreshedReplySectionId = document.getElementById(`commentInputBox-${postId}`);
+                updateReplyCountElementId = document.getElementById(`replyCount-${postId}`);
+              }
+              replyRoute.value = "";
+
+              toggleReplyBox(data.subReply ? replyId : postId, postId ? null : replied); // Hide the reply box after submitting
+              showAllReplies(data.subReply ? replyId : postId, postId ? null : replied); // Show all replies after submitting
               const created = new Date(data.reply.created_at);
               const day = created.getDate().toString().padStart(2, "0");
               const month = created.toLocaleString("default", { month: "short" }); // e.g. 'Mar'
@@ -302,15 +319,15 @@
                     </form>
                     </div>
                   </div>`;
-                   refreshedReplySection.insertAdjacentHTML('afterbegin', newSubReplyHTML);
-                  const insertedPost = refreshedReplySection.querySelector(".new-sub-reply");
+                   refreshedReplySectionId.insertAdjacentHTML('afterbegin', newSubReplyHTML);
+                  const insertedPost = refreshedReplySectionId.querySelector(".new-sub-reply");
                   if (insertedPost) {
                     requestAnimationFrame(() => {
                       insertedPost.classList.add("fade-bg");
                     });
                   }
-                  const newReplyCount = Number(updateReplyCount.textContent) + 1;
-                  updateReplyCount.textContent = newReplyCount;
+                  const newReplyCount = Number(updateReplyCountElementId.textContent) + 1;
+                  updateReplyCountElementId.textContent = newReplyCount;
                   return;
               }
             const newReplyData = data.reply;
@@ -431,15 +448,15 @@
                 </div>
               </div>
               `;
-              refreshedReplySection.insertAdjacentHTML('afterbegin', newHTML);
-              const insertedPost = refreshedReplySection.querySelector(".new-reply");
+              refreshedReplySectionId.insertAdjacentHTML('afterbegin', newHTML);
+              const insertedPost = refreshedReplySectionId.querySelector(".new-reply");
               if (insertedPost) {
                 requestAnimationFrame(() => {
                   insertedPost.classList.add("fade-bg");
                 });
               }
-              const newReplyCount = Number(updateReplyCount.textContent) + 1;
-              updateReplyCount.textContent = newReplyCount;
+              const newReplyCount = Number( updateReplyCountElementId.textContent) + 1;
+              updateReplyCountElementId.textContent = newReplyCount;
           }
           } catch (err) {
             console.error("Error submitting reply:", err);
@@ -693,7 +710,7 @@
                             id="commentButton-${reply.id}"
                             class="comment postButton  ${reply.current_user_reaction === "comment" ? "reaction-color" : ""} "
                           >
-                            <span style="color: white"> <span id="replyCount-${reply.id}">${reply.reply_count}</span> replies </span>
+                            <span style="color: white"> <span id="finalReplyCount-${reply.id}">${reply.reply_count}</span> replies </span>
                           </button>
                           <div
                             id="finalReplyInputBox-${reply.id}"
