@@ -46,3 +46,22 @@ export async function addReply(agent, postId, content, dbState) {
 
   return response.body.reply || dbState.replies[dbState.replies.length - 1];
 }
+
+export async function addSubReply(agent, replyId, content, dbState) {
+  const response = await agent
+    .post("/add-reply")
+    .set("Content-Type", "application/json")
+    .send({
+      reply_id: String(replyId),
+      comment_post: content,
+    });
+
+  expect(response.status).toBe(200);
+  expect(response.body.success).toBe(true);
+  expect(response.body.subReply).toBe(true);
+
+  return (
+    response.body.reply ||
+    dbState.repliesFinalTier[dbState.repliesFinalTier.length - 1]
+  );
+}
