@@ -163,14 +163,24 @@
         }
       }
 
-      function toggleReplyBox(id) {
+      function toggleReplyBox(id, replying = false) {
           const replyBox = document.getElementById(`replyInputBox-${id}`);
+          if (replying) {
+            const finalReplyBox = document.getElementById(`finalReplyInputBox-${id}`);
+            if (finalReplyBox.style.display === "block") {
+              finalReplyBox.style.display = "none";
+              return;
+            } else {
+              finalReplyBox.style.display = "block";
+              return;
+            }
+          }
           replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
       }
       function showAllReplies(id, replied = false) {
         const replySection = document.getElementById(`commentInputBox-${id}`);
         if (replied) {
-          const finalReplySection = document.getElementById(`finalReplyInputBox-${id}`);
+          const finalReplySection = document.getElementById(`finalReplyCommentInputBox-${id}`);
           if (finalReplySection.style.display === "block") {
             finalReplySection.style.display = "none";
             return;
@@ -673,7 +683,7 @@
                             </form>
                             <button
                               class="reply roboto-condensed"
-                              onclick="toggleReplyBox(${reply.id})"
+                              onclick="toggleReplyBox(${reply.id}, true)"
                             >
                               Reply
                             </button>
@@ -686,7 +696,7 @@
                             <span style="color: white"> <span id="replyCount-${reply.id}">${reply.reply_count}</span> replies </span>
                           </button>
                           <div
-                            id="replyInputBox-${reply.id}"
+                            id="finalReplyInputBox-${reply.id}"
                             style="display: none"
                             class="forum-reply-editor-wrap"
                           >
@@ -713,7 +723,7 @@
                               </div>
                             </form>
                           </div>
-                          <div id="finalReplyInputBox-${reply.id}" style="display: none">
+                          <div id="finalReplyCommentInputBox-${reply.id}" style="display: none">
                             ${reply.replies_final_tier.map((finalReply) => {
                               const created = new Date(finalReply.created_at);
                               const day = created.getDate().toString().padStart(2, "0");
