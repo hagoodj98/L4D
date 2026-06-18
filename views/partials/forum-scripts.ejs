@@ -170,10 +170,12 @@
       function showAllReplies(id, replied = false) {
         const replySection = document.getElementById(`commentInputBox-${id}`);
         if (replied) {
-          if (replySection.style.display === "block") {
+          const finalReplySection = document.getElementById(`finalReplyInputBox-${id}`);
+          if (finalReplySection.style.display === "block") {
+            finalReplySection.style.display = "none";
             return;
           } else {
-            replySection.style.display = "block";
+            finalReplySection.style.display = "block";
             return;
           }
         }
@@ -677,7 +679,7 @@
                             </button>
                           </div>
                           <button
-                            onclick="showAllReplies(${reply.id})"
+                            onclick="showAllReplies(${reply.id}, true)"
                             id="commentButton-${reply.id}"
                             class="comment postButton  ${reply.current_user_reaction === "comment" ? "reaction-color" : ""} "
                           >
@@ -711,7 +713,7 @@
                               </div>
                             </form>
                           </div>
-                          <div id="commentInputBox-${reply.id}" style="display: none">
+                          <div id="finalReplyInputBox-${reply.id}" style="display: none">
                             ${reply.replies_final_tier.map((finalReply) => {
                               const created = new Date(finalReply.created_at);
                               const day = created.getDate().toString().padStart(2, "0");
