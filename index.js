@@ -35,8 +35,13 @@ import {
 } from "./database/repositories/reactions_comments.js";
 import { createReply } from "./database/repositories/replies.js";
 import { createReply as createSubReply } from "./database/repositories/sub_replies.js";
+import {
+  existing as existingFinalReplyReaction,
+  addReaction as addFinalReplyReaction,
+  removeReaction as removeFinalReplyReaction,
+  updateReaction as updateFinalReplyReaction,
+} from "./database/repositories/reactions_to_finalreply.js";
 import ErrorHandler from "./utils/error.js";
-import z from "zod";
 
 const app = express();
 
@@ -352,13 +357,15 @@ app.post("/post-reaction", async (req, res, next) => {
   if (!req.isAuthenticated()) return res.redirect("/login");
 
   const rawData = await req.body;
-  const { post_id, comment_post_id, reaction_type } = rawData;
+  const { post_id, comment_post_id, reaction_type, final_reply_id } = rawData;
 
   const postId = post_id ? String(post_id) : null;
   const commentId = comment_post_id ? String(comment_post_id) : null;
+  const finalReplyId = final_reply_id ? String(final_reply_id) : null;
   const validation = reactionSchema.safeParse({
     post_id: postId,
     comment_post_id: commentId,
+    final_reply_id: finalReplyId,
     reaction_type: reaction_type,
   });
 
@@ -368,7 +375,38 @@ app.post("/post-reaction", async (req, res, next) => {
     );
   }
 
-  if (commentId) {
+  if (finalReplyId) {
+    // Final reply reactions toggle: same reaction removes, different reaction upserts.
+    const existing = await existingFinalReplyReaction(
+      finalReplyId,
+      req.user.id,
+    );
+
+    if (existing && existing.reaction_type === reaction_type) {
+      await removeFinalReplyReaction(finalReplyId, req.user.id);
+      return res.json({
+        reaction_type: `${existing.reaction_type}_removed_final_reply`,
+      });
+    } else if (existing && existing.reaction_type !== reaction_type) {
+      const reaction = await updateFinalReplyReaction(
+        finalReplyId,
+        req.user.id,
+        reaction_type,
+      );
+      return res.json({
+        reaction_type: `${reaction.reaction_type}_updated_final_reply`,
+      });
+    } else {
+      const reaction = await addFinalReplyReaction(
+        finalReplyId,
+        req.user.id,
+        reaction_type,
+      );
+      return res.json({
+        reaction_type: `${reaction.reaction_type}_final_reply`,
+      });
+    }
+  } else if (commentId) {
     // Reply reactions toggle: same reaction removes, different reaction upserts.
     const existing = await existingCommentReaction(commentId, req.user.id);
 
@@ -394,9 +432,7 @@ app.post("/post-reaction", async (req, res, next) => {
       );
       return res.json({ reaction_type: `${reaction.reaction_type}_comment` });
     }
-  }
-
-  if (postId) {
+  } else {
     // Post reactions follow the same toggle behavior as reply reactions.
     const existing = await existingPostReaction(postId, req.user.id);
     // If the same reaction exists, remove it. Otherwise, add or update to the new reaction.
@@ -412,8 +448,6 @@ app.post("/post-reaction", async (req, res, next) => {
       return res.json({ reaction_type: reaction.reaction_type });
     }
   }
-
-  return res.status(400).send("Missing reaction target");
 });
 
 app.post("/add-post", async (req, res, next) => {
@@ -438,9 +472,11 @@ app.post("/add-post", async (req, res, next) => {
 app.post("/add-reply", async (req, res, next) => {
   if (!req.isAuthenticated()) return res.redirect("/login");
 
-  const comment_post = req.body.comment_post;
-  const postId = String(req.body.post_id);
-  const replyId = String(req.body.reply_id);
+  const postId = req.body.post_id ? String(req.body.post_id) : null;
+  const replyId = req.body.reply_id ? String(req.body.reply_id) : null;
+  const comment_post = req.body.comment_post
+    ? String(req.body.comment_post)
+    : null;
   const validation = replySchema.safeParse({
     reply: comment_post,
     post_id: postId,
@@ -458,7 +494,7 @@ app.post("/add-reply", async (req, res, next) => {
       return res.json({ success: true, reply: result });
     }
     const result = await createSubReply(comment_post, req.user.id, replyId);
-    return res.json({ success: true, reply: result });
+    return res.json({ success: true, reply: result, subReply: true });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
   }

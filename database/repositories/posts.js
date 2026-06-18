@@ -12,109 +12,105 @@ export const getForumPosts = async (
   const sql = String.raw;
 
   const forumPostQuery = sql`
+    SELECT 
+      posts.id,
+      posts.post,
+      posts.created_at,
+      posts.user_id,
+      users.display_name,
+      posts_reactions.reaction_type AS current_user_reaction,
+      COALESCE(reactions.like_count, 0) AS likes,
+      COALESCE(reactions.dislike_count, 0) AS dislikes,
+      COALESCE(reply_count, 0) AS reply_count,
+      COALESCE(replies, '[]'::json) AS replies
+    FROM posts
+    LEFT JOIN users ON posts.user_id = users.id
+    LEFT JOIN posts_reactions 
+      ON posts_reactions.post_id = posts.id AND posts_reactions.user_id = $1
+    LEFT JOIN (
       SELECT
-        p.id,
-        p.updated_at,
-        p.post,
-        p.user_id,
-        p.created_at,
-        COALESCE(rc.likes, 0) AS likes,
-        COALESCE(rc.dislikes, 0) AS dislikes,
-        COALESCE(rep.reply_count, 0) AS reply_count,
-        COALESCE(repfinal_tier.reply_final_tier_count, 0) AS reply_final_tier_count,
-        cur_pr.reaction_type AS user_reaction,
-        u.display_name,
-        COALESCE(rp.replies, '[]'::json) AS replies,
-        COALESCE(rpft.replies_final_tier, '[]'::json) AS replies_final_tier
-      FROM posts p
-      LEFT JOIN (
-        SELECT
+        post_id,
+        COUNT(reaction_type) FILTER (WHERE reaction_type = 'like') AS like_count,
+        COUNT(reaction_type) FILTER (WHERE reaction_type = 'dislike') AS dislike_count
+      FROM posts_reactions
+      GROUP BY post_id
+    ) reactions ON posts.id = reactions.post_id
+    LEFT JOIN (
+      SELECT
           post_id,
-          COUNT(*) FILTER (WHERE reaction_type = 'like') AS likes,
-          COUNT(*) FILTER (WHERE reaction_type = 'dislike') AS dislikes
-        FROM posts_reactions
-        GROUP BY post_id
-      ) rc ON rc.post_id = p.id
+          COUNT(comment_post) AS reply_count
+      FROM replies
+      GROUP BY post_id
+    ) reply_count ON posts.id = reply_count.post_id
+    LEFT JOIN LATERAL(
+      SELECT
+        replies.post_id,
+        json_agg(
+          json_build_object(
+            'id', replies.id,
+            'comment_post', replies.comment_post,
+            'created_at', replies.created_at,
+            'user_id', replies.user_id,
+            'display_name', users.display_name,
+            'current_user_reaction', reactions_comments.reaction_type,
+            'likes', COALESCE(reactions_comments_count.like_count, 0),
+            'dislikes', COALESCE(reactions_comments_count.dislike_count, 0),
+            'reply_count', COALESCE(rft.final_replies_count, 0),
+            'replies_final_tier', COALESCE(replies_final_tier.final_replies, '[]'::json)
+          )
+          ORDER BY replies.created_at DESC
+        ) AS replies FROM replies
+      JOIN users ON replies.user_id = users.id
+    LEFT JOIN reactions_comments ON reactions_comments.comment_id = replies.id AND reactions_comments.user_id = $1
+    LEFT JOIN (
+      SELECT
+        comment_id,
+        COUNT(reaction_type) FILTER (WHERE reaction_type = 'like') AS like_count,
+        COUNT(reaction_type) FILTER (WHERE reaction_type = 'dislike') AS dislike_count
+      FROM reactions_comments
+      GROUP BY comment_id 
+    ) reactions_comments_count ON replies.id = reactions_comments_count.comment_id
+    LEFT JOIN (
+      SELECT
+        rft.reply_id,
+        COUNT(rft.comment_post) AS final_replies_count
+      FROM replies_final_tier rft
+      GROUP BY rft.reply_id
+    ) rft ON rft.reply_id = replies.id
+    LEFT JOIN LATERAL (
+      SELECT 
+        replies_final_tier.reply_id,
+        json_agg(
+          json_build_object(
+            'id', replies_final_tier.id,
+            'user_id', replies_final_tier.user_id,
+            'comment_post', replies_final_tier.comment_post,
+            'created_at', replies_final_tier.created_at,
+            'display_name', users.display_name,
+            'current_user_reaction', reactions_to_finalreply.reaction_type,
+            'likes', COALESCE(reactions_to_finalreply_count.like_count, 0),
+            'dislikes', COALESCE(reactions_to_finalreply_count.dislike_count, 0)
+          )
+          ORDER BY replies_final_tier.created_at DESC
+        ) AS final_replies FROM replies_final_tier
+      JOIN users ON replies_final_tier.user_id = users.id
+      LEFT JOIN reactions_to_finalreply ON reactions_to_finalreply.reply_id = replies_final_tier.id AND reactions_to_finalreply.user_id = $1
       LEFT JOIN (
         SELECT
-          post_id,
-          COUNT(*) AS reply_count
-        FROM replies
-        GROUP BY post_id
-      ) rep ON rep.post_id = p.id
-      LEFT JOIN (
-        SELECT
-          rft.reply_id,
-          COUNT(*) AS reply_final_tier_count
-        FROM replies_final_tier rft
-        GROUP BY rft.reply_id
-      ) repfinal_tier ON repfinal_tier.reply_id = p.id
-      LEFT JOIN posts_reactions cur_pr
-        ON cur_pr.post_id = p.id AND cur_pr.user_id = $1
-      LEFT JOIN users u ON u.id = p.user_id
-      LEFT JOIN LATERAL (
-        SELECT
-          r.post_id,
-          json_agg(
-            json_build_object(
-              'id', r.id,
-              'comment_post', r.comment_post,
-              'user_id', r.user_id,
-              'created_at', r.created_at,
-              'likes', COALESCE(rcc.likes, 0),
-              'dislikes', COALESCE(rcc.dislikes, 0),
-              'user_reaction', ccr.reaction_type,
-              'display_name', ru.display_name
-            )
-            ORDER BY r.created_at DESC
-          ) AS replies FROM replies r
-        LEFT JOIN users ru ON ru.id = r.user_id
-        LEFT JOIN (
-          SELECT
-            comment_id,
-            COUNT(*) FILTER (WHERE reaction_type = 'like') AS likes,
-            COUNT(*) FILTER (WHERE reaction_type = 'dislike') AS dislikes
-          FROM reactions_comments
-          GROUP BY comment_id
-        ) rcc ON rcc.comment_id = r.id
-        LEFT JOIN reactions_comments ccr
-          ON ccr.comment_id = r.id AND ccr.user_id = $1
-        WHERE r.post_id = p.id
-        GROUP BY r.post_id
-      ) rp ON true
-      LEFT JOIN LATERAL (
-        SELECT
-          rpft.reply_id,
-          json_agg(
-            json_build_object(
-              'id', rpft.id,
-              'comment_post', rpft.comment_post,
-              'user_id', rpft.user_id,
-              'created_at', rpft.created_at,
-              'likes', COALESCE(rcc.likes, 0),
-              'dislikes', COALESCE(rcc.dislikes, 0),
-              'user_reaction', ccr.reaction_type,
-              'display_name', ru.display_name
-            )
-            ORDER BY rpft.created_at ASC
-          ) AS replies_final_tier
-        FROM replies_final_tier rpft
-        LEFT JOIN users ru ON ru.id = rpft.user_id
-        LEFT JOIN (
-          SELECT
-            reply_id,
-            COUNT(*) FILTER (WHERE reaction_type = 'like') AS likes,
-            COUNT(*) FILTER (WHERE reaction_type = 'dislike') AS dislikes
-          FROM reactions_to_finalreply
-          GROUP BY reply_id
-        ) rcc ON rcc.reply_id = rpft.id
-        LEFT JOIN reactions_to_finalreply ccr
-          ON ccr.reply_id = rpft.id AND ccr.user_id = $1
-        WHERE rpft.reply_id = p.id
-        GROUP BY rpft.reply_id
-      ) rpft ON true
-      ORDER BY p.created_at ${safeSortDirection}
-      LIMIT $2 OFFSET $3 
+          reply_id,
+          COUNT(reaction_type) FILTER (WHERE reaction_type = 'like') AS like_count,
+          COUNT(reaction_type) FILTER (WHERE reaction_type = 'dislike') AS dislike_count
+        FROM reactions_to_finalreply
+        GROUP BY reply_id
+      ) reactions_to_finalreply_count ON replies_final_tier.id = reactions_to_finalreply_count.reply_id
+      WHERE replies_final_tier.reply_id = replies.id
+      GROUP BY replies_final_tier.reply_id
+    ) replies_final_tier ON true
+    WHERE posts.id = replies.post_id
+    GROUP BY replies.post_id
+    ) replies ON true
+    ORDER BY posts.created_at ${safeSortDirection}
+    LIMIT $2 OFFSET $3 
     `;
 
   return db.query(forumPostQuery, [userId, limit, offset]);

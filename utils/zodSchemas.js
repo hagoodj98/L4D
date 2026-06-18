@@ -12,6 +12,7 @@ export const loginSchema = z.object({
 export const reactionSchema = z.object({
   post_id: z.string().nullable().optional(),
   comment_post_id: z.string().nullable().optional(),
+  final_reply_id: z.string().nullable().optional(),
   reaction_type: z.enum(["like", "dislike"]).nullable().optional(),
 });
 export const postSchema = z.object({
