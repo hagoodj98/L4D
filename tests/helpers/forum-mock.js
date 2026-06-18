@@ -4,22 +4,28 @@ export const dbState = {
   users: [],
   posts: [],
   replies: [],
+  repliesFinalTier: [],
   postReactions: [],
   commentReactions: [],
+  finalReplyReactions: [],
   nextUserId: 1,
   nextPostId: 1,
   nextReplyId: 1,
+  nextFinalReplyId: 1,
 };
 
 export function resetDbState() {
   dbState.users = [];
   dbState.posts = [];
   dbState.replies = [];
+  dbState.repliesFinalTier = [];
   dbState.postReactions = [];
   dbState.commentReactions = [];
+  dbState.finalReplyReactions = [];
   dbState.nextUserId = 1;
   dbState.nextPostId = 1;
   dbState.nextReplyId = 1;
+  dbState.nextFinalReplyId = 1;
 }
 
 function buildJoinRows() {
@@ -79,6 +85,46 @@ function buildForumRows(currentUserId, isAscSort) {
               item.user_id === Number(currentUserId),
           )?.reaction_type || null;
 
+        const finalReplyRows = dbState.repliesFinalTier
+          .filter((finalReply) => finalReply.reply_id === reply.id)
+          .sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          )
+          .map((finalReply) => {
+            const finalReplyOwner = dbState.users.find(
+              (user) => user.id === finalReply.user_id,
+            );
+            const finalReplyLikeCount = dbState.finalReplyReactions.filter(
+              (item) =>
+                item.reply_id === finalReply.id &&
+                item.reaction_type === "like",
+            ).length;
+            const finalReplyDislikeCount = dbState.finalReplyReactions.filter(
+              (item) =>
+                item.reply_id === finalReply.id &&
+                item.reaction_type === "dislike",
+            ).length;
+            const finalReplyUserReaction =
+              dbState.finalReplyReactions.find(
+                (item) =>
+                  item.reply_id === finalReply.id &&
+                  item.user_id === Number(currentUserId),
+              )?.reaction_type || null;
+
+            return {
+              id: finalReply.id,
+              user_id: finalReply.user_id,
+              comment_post: finalReply.comment_post,
+              created_at: finalReply.created_at,
+              likes: finalReplyLikeCount,
+              dislikes: finalReplyDislikeCount,
+              current_user_reaction: finalReplyUserReaction,
+              display_name: finalReplyOwner?.display_name || null,
+            };
+          });
+
         return {
           id: reply.id,
           comment_post: reply.comment_post,
@@ -88,6 +134,8 @@ function buildForumRows(currentUserId, isAscSort) {
           dislikes: replyDislikeCount,
           user_reaction: replyUserReaction,
           display_name: replyOwner?.display_name || null,
+          reply_count: finalReplyRows.length,
+          replies_final_tier: finalReplyRows,
         };
       });
 
@@ -213,8 +261,24 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes("FROM posts p") &&
-          sql.includes("COALESCE(rp.replies, '[]'::json) AS replies")
+          sql.includes(
+            "INSERT INTO replies_final_tier (comment_post, user_id, reply_id, created_at) VALUES ($1, $2, $3, $4)",
+          )
+        ) {
+          const finalReply = {
+            id: dbState.nextFinalReplyId++,
+            comment_post: params[0],
+            user_id: params[1],
+            reply_id: Number(params[2]),
+            created_at: params[3],
+          };
+          dbState.repliesFinalTier.push(finalReply);
+          return { rows: [finalReply] };
+        }
+
+        if (
+          sql.includes("FROM posts") &&
+          sql.includes("COALESCE(replies, '[]'::json) AS replies")
         ) {
           const currentUserId = params[0];
           const isAscSort = sql.includes("ORDER BY p.created_at ASC");
@@ -327,6 +391,63 @@ export function setupPgMock() {
               ),
           );
           return { rows: [] };
+        }
+
+        if (
+          sql.includes(
+            "SELECT reaction_type FROM reactions_to_finalreply WHERE reply_id = $1 AND user_id = $2",
+          )
+        ) {
+          return {
+            rows: dbState.finalReplyReactions
+              .filter(
+                (item) =>
+                  item.reply_id === Number(params[0]) &&
+                  item.user_id === Number(params[1]),
+              )
+              .map((item) => ({ reaction_type: item.reaction_type })),
+          };
+        }
+
+        if (
+          sql.includes(
+            "DELETE FROM reactions_to_finalreply WHERE reply_id = $1 AND user_id = $2",
+          )
+        ) {
+          dbState.finalReplyReactions = dbState.finalReplyReactions.filter(
+            (item) =>
+              !(
+                item.reply_id === Number(params[0]) &&
+                item.user_id === Number(params[1])
+              ),
+          );
+          return { rows: [] };
+        }
+
+        if (
+          sql.includes(
+            "INSERT INTO reactions_to_finalreply (reply_id, user_id, reaction_type)",
+          )
+        ) {
+          const replyId = Number(params[0]);
+          const userId = Number(params[1]);
+          const reactionType = params[2];
+          const existingIndex = dbState.finalReplyReactions.findIndex(
+            (item) => item.reply_id === replyId && item.user_id === userId,
+          );
+
+          if (existingIndex >= 0) {
+            dbState.finalReplyReactions[existingIndex].reaction_type =
+              reactionType;
+          } else {
+            dbState.finalReplyReactions.push({
+              reply_id: replyId,
+              user_id: userId,
+              reaction_type: reactionType,
+            });
+          }
+
+          return { rows: [{ reaction_type: reactionType }] };
         }
 
         if (

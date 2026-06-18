@@ -12,6 +12,7 @@ export const loginSchema = z.object({
 export const reactionSchema = z.object({
   post_id: z.string().nullable().optional(),
   comment_post_id: z.string().nullable().optional(),
+  final_reply_id: z.string().nullable().optional(),
   reaction_type: z.enum(["like", "dislike"]).nullable().optional(),
 });
 export const postSchema = z.object({
@@ -19,7 +20,16 @@ export const postSchema = z.object({
 });
 export const replySchema = z.object({
   reply: z.string().min(1, "Reply content cannot be empty"),
-  post_id: z.string().min(1, "Post ID is required for a reply"),
+  post_id: z
+    .string()
+    .min(1, "Post ID is required for a reply")
+    .nullable()
+    .optional(),
+  reply_id: z
+    .string()
+    .min(1, "Reply ID is required for a reply")
+    .nullable()
+    .optional(),
 });
 export const sortSchema = z.object({
   sortDirection: z.enum(["ASC", "DESC"]),

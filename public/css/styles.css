@@ -14,17 +14,26 @@
   background-color: #6e9731; /* Initial color */
   transition: background-color 4s ease; /* Handles the fade effect */
 }
+.new-sub-reply {
+  background-color: #8f1f1f; /* Initial color */
+  transition: background-color 4s ease; /* Handles the fade effect */
+}
 
 .forum-post-card.new-post,
 .forum-reply-card.new-reply {
   background: #6e9731;
 }
-
+.forum-reply-card-finalreply.new-sub-reply {
+  background: #8f1f1f;
+}
 .forum-post-card.new-post.fade-bg {
   background-color: rgba(110, 151, 49, 0.277); /* Target color */
 }
 .forum-reply-card.new-reply.fade-bg {
   background-color: rgba(110, 151, 49, 0.277); /* Target color */
+}
+.forum-reply-card-finalreply.new-sub-reply.fade-bg {
+  background-color: rgba(143, 31, 31, 0.277); /* Target color */
 }
 #skip {
   color: #6e9731;
@@ -105,6 +114,11 @@
 }
 .postButton:hover {
   color: #6e9731;
+}
+textarea::placeholder {
+  color: #ff5722;
+  opacity: 1; /* Ensures custom color vibrancy in Firefox */
+  font-style: italic;
 }
 
 .postButton.reaction-color {
@@ -1183,13 +1197,18 @@ button[type="submit"]:not(.unstyledPaginationButtons):hover {
   border-radius: 10px;
 }
 
-.forum-reply-card {
+.forum-reply-card,
+.forum-reply-card-finalreply {
   border: 1px solid rgba(216, 50, 50, 0.35) !important;
   border-radius: 10px;
-  background: rgba(110, 151, 49, 0.277);
   margin-top: 10px;
 }
-
+.forum-reply-card-finalreply {
+  background: rgba(216, 50, 50, 0.08);
+}
+.forum-reply-card {
+  background: rgba(110, 151, 49, 0.277);
+}
 .forum-reply-actions {
   margin-top: 6px;
   margin-bottom: 12px;

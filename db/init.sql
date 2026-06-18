@@ -85,6 +85,22 @@ CREATE TABLE IF NOT EXISTS reactions_comments (
   UNIQUE (user_id, comment_id)
 );
 
+CREATE TABLE IF NOT EXISTS replies_final_tier (
+  id SERIAL PRIMARY KEY,
+  comment_post TEXT NOT NULL,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reply_id INTEGER NOT NULL REFERENCES replies(id) ON DELETE CASCADE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS reactions_to_finalreply (
+  reply_id INTEGER NOT NULL REFERENCES replies_final_tier(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reaction_type VARCHAR(10) CHECK (reaction_type IN ('like', 'dislike')) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (reply_id, user_id)
+);
+
 ALTER TABLE reactions_comments
   DROP CONSTRAINT IF EXISTS reactions_comments_comment_id_fkey;
 
@@ -118,3 +134,18 @@ CREATE INDEX IF NOT EXISTS idx_reactions_comments_comment_id
 
 CREATE INDEX IF NOT EXISTS idx_reactions_comments_user_id
   ON reactions_comments(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_replies_final_tier_reply_id
+  ON replies_final_tier(reply_id);
+
+CREATE INDEX IF NOT EXISTS idx_replies_final_tier_user_id
+  ON replies_final_tier(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_replies_final_tier_created_at
+  ON replies_final_tier(created_at);
+
+CREATE INDEX IF NOT EXISTS idx_reactions_to_finalreply_reply_id
+  ON reactions_to_finalreply(reply_id);
+
+CREATE INDEX IF NOT EXISTS idx_reactions_to_finalreply_user_id
+  ON reactions_to_finalreply(user_id);

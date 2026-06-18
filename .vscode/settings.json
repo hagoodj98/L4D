@@ -16,7 +16,11 @@
   // Always use LF line endings in VSCode
   "files.eol": "\n",
   "prettier.endOfLine": "lf",
+  "editor.matchBrackets": "always",
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.guides.highlightActiveBracketPair": true,
   "files.associations": {
-    "*.ejs": "ejs"
+    "*.ejs": "html"
   }
 }

@@ -4,6 +4,7 @@ import { dbState, resetDbState, setupPgMock } from "./helpers/forum-mock.js";
 import {
   addPost,
   addReply,
+  addSubReply,
   registerAndLogin,
 } from "./helpers/forum-test-helpers.js";
 
@@ -78,5 +79,34 @@ describe("Forum content flows", () => {
     expect(forumResponse.text).toContain('id="commentButton-${c.id}"');
     expect(forumResponse.text).toContain('id="commentInputBox-${c.id}"');
     expect(post.id).toBeGreaterThan(0);
+  });
+
+  it("creates a nested sub-reply and includes it in forum pagination data", async () => {
+    const agent = await registerAndLogin(app, {
+      username: "nesteduser",
+      email: "nesteduser@example.com",
+    });
+
+    const post = await addPost(agent, "nested reply post", dbState);
+    const reply = await addReply(agent, post.id, "parent reply", dbState);
+    const subReply = await addSubReply(
+      agent,
+      reply.id,
+      "nested child reply",
+      dbState,
+    );
+
+    expect(dbState.repliesFinalTier).toHaveLength(1);
+    expect(subReply.comment_post).toBe("nested child reply");
+
+    const paginationResponse = await agent.get("/forumpagination?page=1");
+    expect(paginationResponse.status).toBe(200);
+    expect(
+      paginationResponse.body.listAllContent[0].replies[0].replies_final_tier[0]
+        .comment_post,
+    ).toBe("nested child reply");
+    expect(
+      paginationResponse.body.listAllContent[0].replies[0].reply_count,
+    ).toBe(1);
   });
 });
