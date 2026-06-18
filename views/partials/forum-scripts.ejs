@@ -1,4 +1,5 @@
 <script>
+
   function scrollToForumContent() {
       const forumAnchor = document.getElementById("anchor25");
       if (!forumAnchor) return;
@@ -162,9 +163,14 @@
         console.error("Error submitting post:", err);
       }
     }
-    function toggleReplyBox(id, replying = false) {
+    function toggleReplyBox(id, replying = false, panelType = null) {
 
         if (replying) {
+          if(panelType === 'firstTier') {
+            const replySection = document.getElementById(`replyInputBox-${id}`);
+            replySection.style.display = replySection.style.display === "none" ? "block" : "none";
+            return;
+          }
           const finalReplyBox = document.getElementById(`finalReplyInputBox-${id}`);
           if (finalReplyBox.style.display === "block") {
             finalReplyBox.style.display = "none";
@@ -177,20 +183,36 @@
         const replyBox = document.getElementById(`replyInputBox-${id}`);
         replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
     }
-    function showAllReplies(id, replied = false) {
+    function showAllReplies(id, isFirstReplyTier, isSecondReplyTier, replied = false, panelType) {
 
       if (replied) {
-        const finalReplySection = document.getElementById(`finalReplyCommentInputBox-${id}`);
-        if (finalReplySection.style.display === "block") {
-          finalReplySection.style.display = "none";
-          return;
-        } else {
-          finalReplySection.style.display = "block";
-          return;
+        if (isSecondReplyTier) {
+          const finalReplySection = document.getElementById(`finalReplyCommentInputBox-${id}`);
+          if (finalReplySection.style.display === "block") {
+            finalReplySection.style.display = "none";
+            return;
+          } else {
+            finalReplySection.style.display = "block";
+            return;
+          }
+        } else if (isFirstReplyTier) {
+          const replySection = document.getElementById(`commentInputBox-${id}`);
+          replySection.style.display = replySection.style.display === "none" ? "block" : "none";
         }
-      }
-      const replySection = document.getElementById(`commentInputBox-${id}`);
-      replySection.style.display = replySection.style.display === "none" ? "block" : "none";
+          else {
+            const replySection = document.getElementById(`commentInputBox-${id}`);
+            replySection.style.display = replySection.style.display === "none" ? "block" : "none";
+          }
+        }
+        else {
+          if (panelType === "secondTier") {
+               const finalReplySection = document.getElementById(`finalReplyCommentInputBox-${id}`);
+              finalReplySection.style.display = finalReplySection.style.display === "none" ? "block" : "none";
+          } else if (panelType === "firstTier") {
+          const replySection = document.getElementById(`commentInputBox-${id}`);
+          replySection.style.display = replySection.style.display === "none" ? "block" : "none";
+          }
+        }
     }
       async function handleReplySubmit(postId, replyId, username) {
 
@@ -228,9 +250,17 @@
                 updateReplyCountElementId = document.getElementById(`replyCount-${postId}`);
               }
               replyRoute.value = "";
+              const isPanelOpen = refreshedReplySectionId.style.display === "block";
 
-              toggleReplyBox(data.subReply ? replyId : postId, postId ? null : replied); // Hide the reply box after submitting
-              showAllReplies(data.subReply ? replyId : postId, postId ? null : replied); // Show all replies after submitting
+              toggleReplyBox(data.subReply ? replyId : postId, replied, data.subReply ? 'secondTier' : 'firstTier'); // Hide the reply box after submitting
+
+              const isReplyingToReply = Boolean(replyId) && !postId;
+              const isReplyingToPost = Boolean(postId) && !replyId;
+
+              if (!isPanelOpen) {
+                showAllReplies(data.subReply ? replyId : postId, isReplyingToPost, isReplyingToReply, replied); // Show all replies after submitting
+              }
+
               const created = new Date(data.reply.created_at);
               const day = created.getDate().toString().padStart(2, "0");
               const month = created.toLocaleString("default", { month: "short" }); // e.g. 'Mar'
@@ -271,7 +301,7 @@
                       />
                       <input type="hidden" name="reaction_type" value="like" />
                       <button
-                        id="commentLikeButton-${newSubReply.id}"
+                        id="finalReplyLikeButton-${newSubReply.id}"
                         class="postButton  ${newSubReply.current_user_reaction === "like" ? "reaction-color" : ""} "
                       >
                         <svg
@@ -286,7 +316,7 @@
                           ></path>
                         </svg>
                       </button>
-                      <span id="commentLikeCount-${newSubReply.id}" style="color: white"> 0 </span>
+                      <span id="finalReplyLikeCount-${newSubReply.id}" style="color: white"> 0 </span>
                     </form>
                     <form onsubmit="handleReaction(null,null, ${newSubReply.id}, 'dislike'); return false;">
                       <input
@@ -300,7 +330,7 @@
                         value="dislike"
                       />
                       <button
-                        id="commentDislikeButton-${newSubReply.id}"
+                        id="finalReplyDislikeButton-${newSubReply.id}"
                         class="postButton  ${newSubReply.current_user_reaction === "dislike" ? "reaction-color" : ""} "
                       >
                         <svg
@@ -315,7 +345,7 @@
                           ></path>
                         </svg>
                       </button>
-                      <span id="commentDislikeCount-${newSubReply.id}" style="color: white"> 0 </span>
+                      <span id="finalReplyDislikeCount-${newSubReply.id}" style="color: white"> 0 </span>
                     </form>
                     </div>
                   </div>`;
@@ -412,7 +442,7 @@
                   </button>
                 </div>
                 <button
-                  onclick="showAllReplies(${newReplyData.id})"
+                  onclick="showAllReplies(${newReplyData.id}, false, false, false, event)"
                   id="commentButton-${newReplyData.id}"
                   class="comment postButton  ${newReplyData.current_user_reaction === "comment" ? "reaction-color" : ""} "
                 >
@@ -577,7 +607,7 @@
                   </button>
                 </div>
                 <button
-                  onclick="showAllReplies(${c.id})"
+                  onclick="showAllReplies(${c.id}, true, false, false, 'firstTier')"
                   id="commentButton-${c.id}"
                   class="comment postButton  ${c.current_user_reaction === "comment" ? "reaction-color" : ""} "
                 >
@@ -706,7 +736,7 @@
                             </button>
                           </div>
                           <button
-                            onclick="showAllReplies(${reply.id}, true)"
+                            onclick="showAllReplies(${reply.id}, false, false, false, 'secondTier')"
                             id="commentButton-${reply.id}"
                             class="comment postButton  ${reply.current_user_reaction === "comment" ? "reaction-color" : ""} "
                           >
