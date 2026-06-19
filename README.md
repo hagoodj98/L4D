@@ -174,3 +174,7 @@ error: relation "posts" does not exist
 ```
 
 your schema has not been initialized yet. Run `npm run db:init` first, then restart the app.
+
+
+*****NOTE******
+There is alot of duplicate code in the forumScripts file, in particular, that I will address.
