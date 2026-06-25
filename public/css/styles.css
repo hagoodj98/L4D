@@ -1007,7 +1007,7 @@ select {
   border-radius: 4px;
   box-sizing: border-box;
 }
-button[type="submit"]:not(.unstyledPaginationButtons) {
+button[type="submit"]:not(.unstyledPaginationButtons):not(.bell-button) {
   width: 100%;
   background-color: #f23030;
   color: white;
@@ -1016,6 +1016,17 @@ button[type="submit"]:not(.unstyledPaginationButtons) {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+}
+.bell-button {
+  border: none;
+  color: white;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.bell-button:hover {
+  color: #6e9731;
+  background-color: none;
 }
 .unstyledPaginationButtons {
   border: none;
@@ -1029,7 +1040,7 @@ button[type="submit"]:not(.unstyledPaginationButtons) {
   color: white;
 }
 
-button[type="submit"]:not(.unstyledPaginationButtons):hover {
+button[type="submit"]:not(.unstyledPaginationButtons):not(.bell-button):hover {
   background-color: #f23030aa;
 }
 

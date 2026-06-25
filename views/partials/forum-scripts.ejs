@@ -1082,11 +1082,40 @@
           console.error("Error handling reaction:", err);
         }
       }
+    async function checkNotifications() {
+      console.log("Checking notifications...");
+      const response = await fetch("http://localhost:3000/notifications", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      const getNotificationsSection = document.getElementById("notificationsDropdown");
+      const getNotifications = data.notifications;
+      const notificationCount = getNotifications.length;
+      for ( let n of getNotifications) {
+        const notification = n;
+        notification.users.map((user) => {
+          const notificationListItem = document.createElement("li");
+          const notificationLink = document.createElement("a");
+          const notificationMessage = document.createElement("span");
+          const notificationTime = document.createElement("span");
+          notificationMessage.textContent = `${user.user_name} ${user.reaction_type}d your post '${n.post}'`;
+          notificationTime.textContent = new Date(notification.created_at).toLocaleString();
+          notificationLink.href = `/forum/${n.id}`;
+          notificationLink.className = 'nav-link';
+          notificationListItem.className = 'nav-item';
+          notificationTime.className = 'notification-time';
+          getNotificationsSection.appendChild(notificationListItem).appendChild(notificationLink).appendChild(notificationMessage).appendChild(notificationTime);
+        })
+      }
+    }
 
   document.addEventListener("DOMContentLoaded", () => {
     const list = <%- JSON.stringify(listAllContent) %>;
-        if (!Array.isArray(list) || list.length === 0) return;
-
-        listPosts(list);
-      });
+    if (!Array.isArray(list) || list.length === 0) return;
+    listPosts(list);
+    checkNotifications();
+  });
 </script>

@@ -42,11 +42,12 @@ import {
   updateReaction as updateFinalReplyReaction,
 } from "./database/repositories/reactions_to_finalreply.js";
 import ErrorHandler from "./utils/error.js";
+import { getAllReactionsComments } from "./database/repositories/all_reactions_comments.js";
 
 const app = express();
 
 const port = 3000;
-
+let notifications = [];
 const saltRounds = 10;
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -69,11 +70,17 @@ app.use(
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
+// Initialize Passport and restore authentication state from the session on each request.
 app.use(passport.initialize());
 app.use(passport.session());
 // Shared view locals for navbar/account UI across all pages.
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   res.locals.user = req.user ? req.user.display_name : null;
+  if (req.user) {
+    notifications = await getAllReactionsComments(req.user.id);
+    console.log(`Authenticated user: ${req}`);
+  }
+  // Store the current path for active nav link highlighting.
   res.locals.currentPath = req.path;
   next();
 });
@@ -140,6 +147,14 @@ app.get("/login", (req, res) => {
       error: formErrors,
     });
   }
+});
+app.get("/notifications", (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.redirect("/login");
+  }
+  return res.json({
+    notifications: notifications || [],
+  });
 });
 
 app.get("/register", (req, res) => {
