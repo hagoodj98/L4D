@@ -8,10 +8,15 @@ export const existing = async (commentId, userId) => {
   return result.rows[0];
 };
 
-export const addReaction = async (commentId, userId, reactionType) => {
+export const addReaction = async (
+  commentId,
+  userId,
+  reactionType,
+  createdAt,
+) => {
   const result = await db.query(
-    "INSERT INTO reactions_comments (comment_id, user_id, reaction_type) VALUES ($1, $2, $3) RETURNING reaction_type",
-    [commentId, userId, reactionType],
+    "INSERT INTO reactions_comments (comment_id, user_id, reaction_type, created_at) VALUES ($1, $2, $3, $4) RETURNING reaction_type",
+    [commentId, userId, reactionType, createdAt],
   );
   return result.rows[0];
 };

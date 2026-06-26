@@ -1096,18 +1096,31 @@
       const notificationCount = getNotifications.length;
       for ( let n of getNotifications) {
         const notification = n;
-        notification.users.map((user) => {
+        const users = notification.users.reverse();
+        users.map((user) => {
+          const minutesAgo = Math.floor((new Date() - new Date(user.created_at)) / 60000);
           const notificationListItem = document.createElement("li");
           const notificationLink = document.createElement("a");
-          const notificationMessage = document.createElement("span");
-          const notificationTime = document.createElement("span");
+          const profileIcon = document.createElement("figure");
+          const profilePost = document.createElement("div");
+          const timeAgoContainer = document.createElement("div");
+          const notificationMessage = document.createElement("p");
+          const notificationTime = document.createElement("p");
           notificationMessage.textContent = `${user.user_name} ${user.reaction_type}d your post '${n.post}'`;
-          notificationTime.textContent = new Date(notification.created_at).toLocaleString();
+          notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : `${minutesAgo} minutes ago`;
           notificationLink.href = `/forum/${n.id}`;
           notificationLink.className = 'nav-link';
-          notificationListItem.className = 'nav-item';
+          notificationListItem.className = 'nav-item notification-link';
           notificationTime.className = 'notification-time';
-          getNotificationsSection.appendChild(notificationListItem).appendChild(notificationLink).appendChild(notificationMessage).appendChild(notificationTime);
+          notificationMessage.className = 'notification-message';
+          profileIcon.className = 'profile-icon';
+          profilePost.className = 'profile-post';
+          profileIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg"  fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10.5 8 10.5s4.757.726 5.468-2.13A7 7 0 0 0 8 1z"/></svg>`;
+
+          profilePost.appendChild(profileIcon)
+          profilePost.appendChild(notificationMessage)
+          getNotificationsSection.appendChild(notificationListItem).appendChild(notificationLink).appendChild(profilePost)
+          notificationLink.appendChild(timeAgoContainer).appendChild(notificationTime)
         })
       }
     }

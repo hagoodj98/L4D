@@ -412,10 +412,12 @@ app.post("/post-reaction", async (req, res, next) => {
         reaction_type: `${reaction.reaction_type}_updated_final_reply`,
       });
     } else {
+      const createdAt = new Date();
       const reaction = await addFinalReplyReaction(
         finalReplyId,
         req.user.id,
         reaction_type,
+        createdAt,
       );
       return res.json({
         reaction_type: `${reaction.reaction_type}_final_reply`,
@@ -440,10 +442,12 @@ app.post("/post-reaction", async (req, res, next) => {
         reaction_type: `${reaction.reaction_type}_updated_comment`,
       });
     } else {
+      const createdAt = new Date();
       const reaction = await addCommentReaction(
         commentId,
         req.user.id,
         reaction_type,
+        createdAt,
       );
       return res.json({ reaction_type: `${reaction.reaction_type}_comment` });
     }
@@ -459,8 +463,14 @@ app.post("/post-reaction", async (req, res, next) => {
       const reaction = await updateReaction(postId, req.user.id, reaction_type);
       return res.json({ reaction_type: `${reaction.reaction_type}_updated` });
     } else {
-      const reaction = await addReaction(postId, req.user.id, reaction_type);
-      return res.json({ reaction_type: reaction.reaction_type });
+      const createdAt = new Date();
+      const reaction = await addReaction(
+        postId,
+        req.user.id,
+        reaction_type,
+        createdAt,
+      );
+      return res.json({ reaction_type: `${reaction.reaction_type}_post` });
     }
   }
 });

@@ -14,7 +14,8 @@ export const getAllReactionsComments = async (userId) => {
             json_agg(
                 json_build_object(
                     'user_name', users.display_name,
-                    'reaction_type', reaction_type
+                    'reaction_type', reaction_type,
+                    'created_at', created_at
                 )
             ) AS other_users FROM posts_reactions
             LEFT JOIN users ON posts_reactions.user_id = users.id
