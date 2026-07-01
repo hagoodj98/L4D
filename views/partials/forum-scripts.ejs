@@ -1082,6 +1082,19 @@
           console.error("Error handling reaction:", err);
         }
       }
+    function readNotifications() {
+      const notificationCountContainer = document.getElementById("notificationCountContainer");
+      const notificationCount = notificationCountContainer?.textContent?.trim();
+      if(notificationCount === "0") {
+        const NotificationListItems = document.querySelectorAll(".notification-link");
+        //remove the unread indicator from the bell icon
+        NotificationListItems.forEach(item => item.classList.remove("unread-indicator"));
+      };
+      const notificationCountElement = document.getElementById("notificationCountText");
+      notificationCountElement.textContent = "0";
+      notificationCountContainer.className = "notification-count-container-hidden";
+
+    }
     async function checkNotifications() {
       console.log("Checking notifications...");
       const response = await fetch("http://localhost:3000/notifications", {
@@ -1092,37 +1105,55 @@
       });
       const data = await response.json();
       const getNotificationsSection = document.getElementById("notificationsDropdown");
+      const notificationCountElement = document.getElementById("notificationCountText");
+      const notificationCountContainer = document.getElementById("notificationCountContainer");
       const getNotifications = data.notifications;
-      const notificationCount = getNotifications.length;
+      notificationCountContainer.className = "notification-count-container";
+      let getAllOtherUsers = [];
       for ( let n of getNotifications) {
         const notification = n;
-        const users = notification.users.reverse();
-        users.map((user) => {
+        const reactionsToPosts = getAllOtherUsers.push(notification.reactions_to_posts);
+        const reactionsToReplies= getAllOtherUsers.push(notification.reactions_to_replies);
+        const reactionsToFinalReplies = getAllOtherUsers.push(notification.reactions_to_sub_replies);
+        const replies = getAllOtherUsers.push(notification.replies);
+        const finalReplies = getAllOtherUsers.push(notification.sub_replies);
+        //const users = notification.reactions_to_posts.reverse();
+
+        getAllOtherUsers = getAllOtherUsers.flat().filter(user => user.user_name !== '<%= user %>');
+        notificationCountElement.textContent = getAllOtherUsers.length;
+      }
+       getAllOtherUsers.map((user) => {
+          // Calculate the time difference in minutes
           const minutesAgo = Math.floor((new Date() - new Date(user.created_at)) / 60000);
+          // Create the notification elements
           const notificationListItem = document.createElement("li");
+          notificationListItem.className = 'nav-item notification-link unread-indicator';
           const notificationLink = document.createElement("a");
           const profileIcon = document.createElement("figure");
           const profilePost = document.createElement("div");
+          const unreadIndicator = document.createElement("figure");
           const timeAgoContainer = document.createElement("div");
           const notificationMessage = document.createElement("p");
           const notificationTime = document.createElement("p");
-          notificationMessage.textContent = `${user.user_name} ${user.reaction_type}d your post '${n.post}'`;
-          notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : `${minutesAgo} minutes ago`;
-          notificationLink.href = `/forum/${n.id}`;
+          // Set the content and attributes for the notification elements
+        //  notificationMessage.textContent = ${user.reaction_type ? `${user.user_name} ${user.reaction_type}d your post, ${} ${user.user_name} ${user.reaction_type ? user.reaction_type + 'd' : user.reply ? 'replied to' : 'replied to'} your post '${n.post}'`;
+
+          notificationMessage.textContent = (user.reaction_type && user.comment_id ) ? `${user.user_name} ${user.reaction_type}d your comment` : user.sub_reply ? `${user.user_name} replied to your comment` : user.reply ? `${user.user_name} replied to your post` : (user.reaction_type && !user.comment_id) ?`${user.user_name} ${user.reaction_type}d your post` : user.reply ? `${user.user_name} replied to your post` : '';
+          notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
+          //notificationLink.href = `/forum/${n.id}`;
           notificationLink.className = 'nav-link';
-          notificationListItem.className = 'nav-item notification-link';
+
           notificationTime.className = 'notification-time';
           notificationMessage.className = 'notification-message';
           profileIcon.className = 'profile-icon';
           profilePost.className = 'profile-post';
           profileIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg"  fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10.5 8 10.5s4.757.726 5.468-2.13A7 7 0 0 0 8 1z"/></svg>`;
-
+          // Append the notification elements to the DOM
           profilePost.appendChild(profileIcon)
           profilePost.appendChild(notificationMessage)
           getNotificationsSection.appendChild(notificationListItem).appendChild(notificationLink).appendChild(profilePost)
           notificationLink.appendChild(timeAgoContainer).appendChild(notificationTime)
-        })
-      }
+        });
     }
 
   document.addEventListener("DOMContentLoaded", () => {

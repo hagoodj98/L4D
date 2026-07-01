@@ -22,7 +22,25 @@
   text-decoration: none;
   color: white;
 }
-
+.unread-indicator {
+  background-color: #8f1f1f74;
+  border-radius: 15px;
+}
+.notification-count-container-hidden {
+  display: none;
+}
+#notificationCountButton {
+  border: 2px solid #6e9731;
+}
+.notification-count-container {
+  background-color: #8f1f1f;
+  position: absolute;
+  top: 1px;
+  height: 17px;
+  right: 1px;
+  font-size: 14px;
+  padding: 2px;
+}
 .forum-post-card.new-post,
 .forum-reply-card.new-reply {
   background: #6e9731;
@@ -1044,6 +1062,7 @@ button[type="submit"]:not(.unstyledPaginationButtons):not(.bell-button) {
 .bell-button {
   border: none;
   color: white;
+  position: relative;
   padding: 7px 10px;
   cursor: pointer;
 }
