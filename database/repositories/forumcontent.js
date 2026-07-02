@@ -1,6 +1,6 @@
 import db from "../databaseConnection.js";
 
-export const getForumPosts = async (
+export const getAllForumData = async (
   userId = null,
   sortDirection = "DESC",
   limit = 4,
