@@ -15,15 +15,15 @@ LEFT JOIN LATERAL (
         json_agg(
             json_build_object(
                 'user_name', users.display_name,
-                'reaction_type', reaction_type,
-                'created_at', reactions_replies.created_at,
-                'reply_id', reactions_replies.reply_id,
+                'reaction_type', replies_reactions.reaction_type,
+                'created_at', replies_reactions.created_at,
+                'reply_id', replies_reactions.reply_id,
                 'the_reply', replies.reply_post
             )
         ) AS reaction_to_replies 
-    FROM reactions_replies
-    LEFT JOIN users ON reactions_replies.user_id = users.id
-    WHERE reactions_replies.user_id != 42 AND reactions_replies.reply_id = replies.id
+    FROM replies_reactions
+    LEFT JOIN users ON replies_reactions.user_id = users.id
+    WHERE replies_reactions.user_id != 42 AND replies_reactions.reply_id = replies.id
     GROUP BY reply_id
 ) likes_to_replies ON true
 WHERE replies.user_id = 42 AND (

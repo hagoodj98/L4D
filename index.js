@@ -16,7 +16,7 @@ import {
   getForumPosts,
   totalPostsResult,
   createPost,
-} from "./database/repositories/posts.js";
+} from "./database/repositories/forumcontent.js";
 import {
   checkingIfExisting,
   createUser,
@@ -43,8 +43,8 @@ import {
 } from "./database/repositories/reactions_to_finalreply.js";
 import ErrorHandler from "./utils/error.js";
 import { getAllPostNotificationsDown } from "./database/repositories/post_notifications_down.js";
-import { getAllRepliesNotificationsDown } from "./database/repositories/reply_notification.js";
-import { getAllCommentsNotificationsDown } from "./database/repositories/comment_notification_down.js";
+import { getAllRepliesNotificationsDown } from "./database/repositories/reply_notifications_down.js";
+import { getAllCommentsNotificationsDown } from "./database/repositories/comment_notifications_down.js";
 
 const app = express();
 
@@ -80,6 +80,7 @@ app.use(async (req, res, next) => {
   res.locals.user = req.user ? req.user.display_name : null;
   if (req.user) {
     const postNotifications = await getAllPostNotificationsDown(req.user.id);
+    // Fetch notifications for replies and comments, then merge them with post notifications. Assuming the user only leaves a reply or commment. We need a way to notify user. Unlike posts, the current user did not create any post on the main thread.
     const commentsNotifications = await getAllCommentsNotificationsDown(
       req.user.id,
     );

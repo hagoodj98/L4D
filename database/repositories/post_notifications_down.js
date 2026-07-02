@@ -23,50 +23,50 @@ export const getAllPostNotificationsDown = async (userId) => {
                     'post_id', post_id,
                     'the_post', posts.post
                 )
-            ) AS reaction_to_post FROM reactions_posts
-            LEFT JOIN users ON reactions_posts.user_id = users.id
-            WHERE reactions_posts.post_id = posts.id AND reactions_posts.user_id != 42
+            ) AS reaction_to_post FROM posts_reactions
+            LEFT JOIN users ON posts_reactions.user_id = users.id
+            WHERE posts_reactions.post_id = posts.id AND posts_reactions.user_id != 42
             GROUP BY post_id
     ) likes_to_posts ON true
     LEFT JOIN LATERAL (
         SELECT 
-            reactions_comments.comment_id,
+            comments_reactions.comment_id,
             json_agg(
                 json_build_object(
                     'user_name', users.display_name,
-                    'reaction_type', reaction_type,
-                    'created_at', reactions_comments.created_at,
+                    'reaction_type', comments_reactions.reaction_type,
+                    'created_at', comments_reactions.created_at,
                     'comment_id', comments.id,
                     'the_comment', comments.comment_post
                 )
-            ) AS reaction_to_comment FROM reactions_comments
-                LEFT JOIN users ON reactions_comments.user_id = users.id
-                LEFT JOIN comments ON reactions_comments.comment_id = comments.id
-            WHERE reactions_comments.user_id != $1 AND reactions_comments.comment_id IN (
+            ) AS reaction_to_comment FROM comments_reactions
+                LEFT JOIN users ON comments_reactions.user_id = users.id
+                LEFT JOIN comments ON comments_reactions.comment_id = comments.id
+            WHERE comments_reactions.user_id != $1 AND comments_reactions.comment_id IN (
                 SELECT id FROM comments WHERE comments.user_id = $1 AND comments.post_id = posts.id
             )
             GROUP BY comment_id
     ) likes_to_comments ON true
     LEFT JOIN LATERAL (
         SELECT
-            reactions_replies.reply_id,
+            replies_reactions.reply_id,
             json_agg(
                 json_build_object(
                     'user_name', users.display_name,
-                    'reaction_type', reaction_type,
-                    'created_at', reactions_replies.created_at,
-                    'reply_id', reactions_replies.reply_id,
+                    'reaction_type', replies_reactions.reaction_type,
+                    'created_at', replies_reactions.created_at,
+                    'reply_id', replies_reactions.reply_id,
                     'the_reply', replies.reply_post
                 )
-            ) AS reaction_to_replies FROM reactions_replies
-            LEFT JOIN users ON reactions_replies.user_id = users.id
-            LEFT JOIN replies ON reactions_replies.reply_id = replies.id
-            WHERE reactions_replies.user_id != $1 AND reactions_replies.reply_id IN (
+            ) AS reaction_to_replies FROM replies_reactions
+            LEFT JOIN users ON replies_reactions.user_id = users.id
+            LEFT JOIN replies ON replies_reactions.reply_id = replies.id
+            WHERE replies_reactions.user_id != $1 AND replies_reactions.reply_id IN (
                 SELECT id FROM replies WHERE replies.comment_id IN (
                     SELECT id FROM comments WHERE comments.post_id = posts.id
                 )
             )
-            GROUP BY reactions_replies.reply_id
+            GROUP BY replies_reactions.reply_id
     ) likes_to_replies ON true
     LEFT JOIN LATERAL (
         SELECT

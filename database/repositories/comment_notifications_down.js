@@ -15,14 +15,14 @@ export const AllCommentNotificationsDown = async (userId) => {
             json_agg(
                 json_build_object(
                     'user_name', users.display_name,
-                    'reaction_type', reactions_comments.reaction_type,
-                    'created_at', reactions_comments.created_at,
+                    'reaction_type', comments_reactions.reaction_type,
+                    'created_at', comments_reactions.created_at,
                     'comment', comment_id,
                     'the_comment', comments.comment_post
                 )
-            ) AS reaction FROM reactions_comments
-            LEFT JOIN users ON reactions_comments.user_id = users.id
-            WHERE reactions_comments.user_id != 42 AND reactions_comments.comment_id = comments.id
+            ) AS reaction FROM comments_reactions
+            LEFT JOIN users ON comments_reactions.user_id = users.id
+            WHERE comments_reactions.user_id != 42 AND comments_reactions.comment_id = comments.id
             GROUP BY comment_id
     ) likes_to_comments ON true
     LEFT JOIN LATERAL (
@@ -31,15 +31,15 @@ export const AllCommentNotificationsDown = async (userId) => {
             json_agg(
                 json_build_object(
                     'user_name', users.display_name,
-                    'reaction_type', reactions_replies.reaction_type,
-                    'created_at', reactions_replies.created_at,
+                    'reaction_type', replies_reactions.reaction_type,
+                    'created_at', replies_reactions.created_at,
                     'reply', reply_id,
                     'the_reply', replies.reply_post
                 )
-            ) AS reaction_to_replies  FROM reactions_replies
-            LEFT JOIN users ON reactions_replies.user_id = users.id
-            LEFT JOIN replies ON reactions_replies.reply_id = replies.id
-            WHERE reactions_replies.user_id != 42 AND reactions_replies.reply_id IN (
+            ) AS reaction_to_replies  FROM replies_reactions
+            LEFT JOIN users ON replies_reactions.user_id = users.id
+            LEFT JOIN replies ON replies_reactions.reply_id = replies.id
+            WHERE replies_reactions.user_id != 42 AND replies_reactions.reply_id IN (
                 SELECT id FROM replies WHERE replies.comment_id = comments.id
             ) 
             GROUP BY reply_id
