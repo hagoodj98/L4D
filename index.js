@@ -42,7 +42,9 @@ import {
   updateReaction as updateFinalReplyReaction,
 } from "./database/repositories/reactions_to_finalreply.js";
 import ErrorHandler from "./utils/error.js";
-import { getAllReactionsComments } from "./database/repositories/all_reactions_comments.js";
+import { getAllPostNotificationsDown } from "./database/repositories/post_notifications_down.js";
+import { getAllRepliesNotificationsDown } from "./database/repositories/reply_notification.js";
+import { getAllCommentsNotificationsDown } from "./database/repositories/comment_notification_down.js";
 
 const app = express();
 
@@ -77,7 +79,18 @@ app.use(passport.session());
 app.use(async (req, res, next) => {
   res.locals.user = req.user ? req.user.display_name : null;
   if (req.user) {
-    notifications = await getAllReactionsComments(req.user.id);
+    const postNotifications = await getAllPostNotificationsDown(req.user.id);
+    const commentsNotifications = await getAllCommentsNotificationsDown(
+      req.user.id,
+    );
+    const repliesNotifications = await getAllRepliesNotificationsDown(
+      req.user.id,
+    );
+    notifications = [
+      ...postNotifications,
+      ...repliesNotifications,
+      ...commentsNotifications,
+    ];
     console.log(`Authenticated user: ${req}`);
   }
   // Store the current path for active nav link highlighting.

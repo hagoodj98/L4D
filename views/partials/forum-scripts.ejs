@@ -1135,10 +1135,15 @@
           const timeAgoContainer = document.createElement("div");
           const notificationMessage = document.createElement("p");
           const notificationTime = document.createElement("p");
-          // Set the content and attributes for the notification elements
-        //  notificationMessage.textContent = ${user.reaction_type ? `${user.user_name} ${user.reaction_type}d your post, ${} ${user.user_name} ${user.reaction_type ? user.reaction_type + 'd' : user.reply ? 'replied to' : 'replied to'} your post '${n.post}'`;
+          // Determine the notification message based on the type of reaction or reply
+          const likeComment = (user.reaction_type && user.comment_id ) ? `${user.user_name} ${user.reaction_type}d your comment` : '';
+          const replyComment = (user.sub_reply) ? `${user.user_name} replied to your comment` : '';
+          const replyPost = (user.reply) ? `${user.user_name} replied to your post` : '';
+          const likePost = (user.reaction_type && !user.comment_id) ? `${user.user_name} ${user.reaction_type}d your post` : '';
+          const likeReply = (user.reaction_type && user.reply_id) ? `${user.user_name} ${user.reaction_type}d your reply` : '';
+          // Set the content of the notification elements
+          notificationMessage.textContent = likeComment || replyComment || replyPost || likePost || likeReply;
 
-          notificationMessage.textContent = (user.reaction_type && user.comment_id ) ? `${user.user_name} ${user.reaction_type}d your comment` : user.sub_reply ? `${user.user_name} replied to your comment` : user.reply ? `${user.user_name} replied to your post` : (user.reaction_type && !user.comment_id) ?`${user.user_name} ${user.reaction_type}d your post` : user.reply ? `${user.user_name} replied to your post` : (user.reaction_type && user.reply_id) ? `${user.user_name} ${user.reaction_type}d your reply` : '';
           notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
           //notificationLink.href = `/forum/${n.id}`;
           notificationLink.className = 'nav-link';
