@@ -6,6 +6,7 @@ export const getAllPostNotificationsDown = async (userId) => {
     SELECT
     posts.id,
     posts.post,
+    'posts_down' AS notification_type,
     COALESCE(likes_to_posts.reaction_to_post, '[]'::json) AS reactions_to_posts,
     COALESCE(likes_to_comments.reaction_to_comment, '[]'::json) AS reactions_to_comments,
     COALESCE(likes_to_replies.reaction_to_replies, '[]'::json) AS reactions_to_replies,
@@ -21,11 +22,12 @@ export const getAllPostNotificationsDown = async (userId) => {
                     'reaction_type', reaction_type,
                     'created_at', created_at,
                     'post_id', post_id,
-                    'the_post', posts.post
+                    'the_post', posts.post,
+                    'notification_type', 'posts_down'
                 )
             ) AS reaction_to_post FROM posts_reactions
             LEFT JOIN users ON posts_reactions.user_id = users.id
-            WHERE posts_reactions.post_id = posts.id AND posts_reactions.user_id != 42
+            WHERE posts_reactions.post_id = posts.id AND posts_reactions.user_id != $1
             GROUP BY post_id
     ) likes_to_posts ON true
     LEFT JOIN LATERAL (
@@ -37,7 +39,8 @@ export const getAllPostNotificationsDown = async (userId) => {
                     'reaction_type', comments_reactions.reaction_type,
                     'created_at', comments_reactions.created_at,
                     'comment_id', comments.id,
-                    'the_comment', comments.comment_post
+                    'the_comment', comments.comment_post,
+                    'notification_type', 'posts_down'
                 )
             ) AS reaction_to_comment FROM comments_reactions
                 LEFT JOIN users ON comments_reactions.user_id = users.id
@@ -56,7 +59,9 @@ export const getAllPostNotificationsDown = async (userId) => {
                     'reaction_type', replies_reactions.reaction_type,
                     'created_at', replies_reactions.created_at,
                     'reply_id', replies_reactions.reply_id,
-                    'the_reply', replies.reply_post
+                    'the_reply', replies.reply_post,
+                    'notification_type', 'posts_down'
+                    
                 )
             ) AS reaction_to_replies FROM replies_reactions
             LEFT JOIN users ON replies_reactions.user_id = users.id
@@ -77,6 +82,7 @@ export const getAllPostNotificationsDown = async (userId) => {
                     'reply', comment_post,
                     'created_at', created_at,
                     'post_id', post_id,
+                    'notification_type', 'posts_down',
                     'the_post', posts.post
                 )
             ) AS comments FROM comments
@@ -92,7 +98,8 @@ export const getAllPostNotificationsDown = async (userId) => {
                     'user_name', users.display_name,
                     'reply', replies.reply_post,
                     'created_at', replies.created_at,
-                    'comment_id', replies.comment_id
+                    'comment_id', replies.comment_id,
+                    'notification_type', 'posts_down'
                 )
             ) AS other_replies FROM replies
             LEFT JOIN users ON replies.user_id = users.id

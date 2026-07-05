@@ -12,7 +12,7 @@ export const getAllForumData = async (
   const sql = String.raw;
 
   const forumPostQuery = sql`
-  SELECT 
+    SELECT 
       posts.id,
       posts.post,
       posts.created_at,
@@ -103,8 +103,8 @@ export const getAllForumData = async (
         FROM replies_reactions
         GROUP BY reply_id
       ) rr_count ON replies.id = rr_count.reply_id
-      WHERE replies.id = replies.id
-      GROUP BY replies.id
+      WHERE replies.comment_id = comments.id
+      GROUP BY replies.comment_id
     ) all_reply_data ON true
     WHERE posts.id = comments.post_id
     GROUP BY comments.post_id

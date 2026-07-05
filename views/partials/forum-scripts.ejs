@@ -524,9 +524,9 @@
       }
       async function listPosts(listAllContents) {
         let content = "";
-        for (let c of listAllContents) {
+        for (let p of listAllContents) {
 
-          const created = new Date(c.created_at);
+          const created = new Date(p.created_at);
           const day = created.getDate().toString().padStart(2, "0");
           const month = created.toLocaleString("default", { month: "short" }); // e.g. 'Mar'
           const year = created.getFullYear();
@@ -542,12 +542,12 @@
                 <!--
                       <textarea  class="textareapost autoresizing" style="  width: 100%;"  readonly  id="title/textarea>-->
                 <p style="color: white" class="forum-post-content">
-                   ${c.post}
+                   ${p.post}
                 </p>
 
                 <p style="color: white" class="forum-post-meta">
                   Posted By:
-                  <span style="color: #6e9731">  ${c.display_name} </span>
+                  <span style="color: #6e9731">  ${p.display_name} </span>
                 </p>
                 <p style="color: white" class="forum-post-date">
                    ${day}  ${month}  ${year}  at  ${time}  ${timeZone}
@@ -557,12 +557,12 @@
                   style="display: flex; align-items: center"
                   class="forum-post-actions"
                 >
-                  <form onsubmit="handleReaction(${c.id}, null, null, 'like'); return false;">
-                    <input type="hidden" name="post_id" value="${c.id}" />
+                  <form onsubmit="handleReaction(${p.id}, null, null, 'like'); return false;">
+                    <input type="hidden" name="post_id" value="${p.id}" />
                     <input type="hidden" name="reaction_type" value="like" />
                     <button
-                      id="likeButton-${c.id}"
-                      class="postButton  ${c.current_user_reaction === "like" ? "reaction-color" : ""} "
+                      id="likeButton-${p.id}"
+                      class="postButton  ${p.current_user_reaction === "like" ? "reaction-color" : ""} "
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -577,13 +577,13 @@
                       </svg>
                     </button>
                   </form>
-                  <span id="likeCount-${c.id}" style="color: white"> ${c.likes} </span>
-                  <form onsubmit="handleReaction(${c.id}, null, null, 'dislike'); return false;">
-                    <input type="hidden" name="post_id" value="${c.id}" />
+                  <span id="likeCount-${p.id}" style="color: white"> ${p.likes} </span>
+                  <form onsubmit="handleReaction(${p.id}, null, null, 'dislike'); return false;">
+                    <input type="hidden" name="post_id" value="${p.id}" />
                     <input type="hidden" name="reaction_type" value="dislike" />
                     <button
-                      id="dislikeButton-${c.id}"
-                      class="postButton ${c.current_user_reaction === "dislike" ? "reaction-color" : ""} "
+                      id="dislikeButton-${p.id}"
+                      class="postButton ${p.current_user_reaction === "dislike" ? "reaction-color" : ""} "
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -598,28 +598,28 @@
                       </svg>
                     </button>
                   </form>
-                  <span id="dislikeCount-${c.id}" style="color: white"> ${c.dislikes} </span>
+                  <span id="dislikeCount-${p.id}" style="color: white"> ${p.dislikes} </span>
                   <button
                     class="reply roboto-condensed"
-                    onclick="toggleReplyBox(${c.id})"
+                    onclick="toggleReplyBox(${p.id})"
                   >
                     Reply
                   </button>
                 </div>
                 <button
-                  onclick="showAllReplies(${c.id}, true, false, false, 'firstTier')"
-                  id="commentButton-${c.id}"
-                  class="comment postButton  ${c.current_user_reaction === "comment" ? "reaction-color" : ""} "
+                  onclick="showAllReplies(${p.id}, true, false, false, 'firstTier')"
+                  id="commentButton-${p.id}"
+                  class="comment postButton  ${p.current_user_reaction === "comment" ? "reaction-color" : ""} "
                 >
-                  <span  style="color: white"> <span id="replyCount-${c.id}">${c.reply_count}</span> replies </span>
+                  <span  style="color: white"> <span id="replyCount-${p.id}">${p.comment_count}</span> replies </span>
                 </button>
                 <div
-                  id="replyInputBox-${c.id}"
+                  id="replyInputBox-${p.id}"
                   style="display: none"
                   class="forum-reply-editor-wrap"
                 >
-                  <form onsubmit="handleReplySubmit(${c.id}, null, null, '${c.display_name}'); return false;">
-                    <input type="hidden" name="post_id" value="${c.id}" />
+                  <form onsubmit="handleReplySubmit(${p.id}, null, null, '${p.display_name}'); return false;">
+                    <input type="hidden" name="post_id" value="${p.id}" />
                     <div
                       style="display: flex; flex-direction: column"
                       class="forum-reply-editor"
@@ -633,7 +633,7 @@
                         class="forum-reply-input"
                         autofocus="true"
                         name="reply"
-                        placeholder="reply to @${c.display_name}..."
+                        placeholder="reply to @${p.display_name}..."
                         required
                       ></textarea>
 
@@ -641,10 +641,10 @@
                     </div>
                   </form>
                 </div>
-                <div id="commentInputBox-${c.id}" style="display: none">
-                    ${c.replies
-                      .flatMap((reply) => {
-                        const created = new Date(reply.created_at);
+                <div id="commentInputBox-${p.id}" style="display: none">
+                    ${p.comments
+                      .flatMap((comment) => {
+                        const created = new Date(comment.created_at);
                         const day = created.getDate().toString().padStart(2, "0");
                         const month = created.toLocaleString("default", { month: "short" }); // e.g. 'Mar'
                         const year = created.getFullYear();
@@ -660,10 +660,10 @@
                           class="p-2 forum-reply-card"
                           style="border-top: 1px solid white; margin-left: 20px"
                         >
-                          <p style="color: white"> ${reply.comment_post} </p>
+                          <p style="color: white"> ${comment.comment_post} </p>
                           <p style="color: white">
                             Posted By:
-                            <span style="color: #6e9731">  ${reply.display_name} </span>
+                            <span style="color: #6e9731">  ${comment.display_name} </span>
                           </p>
                           <p style="color: white" class="forum-post-date">
                             ${day} ${month} ${year} ${time} ${timeZone}
@@ -674,16 +674,16 @@
                           style=" margin-left: 20px"
                         >
                           <div style="display: flex; align-items: center">
-                            <form onsubmit="handleReaction(null, ${reply.id},null, 'like'); return false;">
+                            <form onsubmit="handleReaction(null, ${comment.id},null, 'like'); return false;">
                               <input
                                 type="hidden"
                                 name="comment_post_id"
-                                value="${reply.id}"
+                                value="${comment.id}"
                               />
                               <input type="hidden" name="reaction_type" value="like" />
                               <button
-                                id="commentLikeButton-${reply.id}"
-                                class="postButton  ${reply.current_user_reaction === "like" ? "reaction-color" : ""} "
+                                id="commentLikeButton-${comment.id}"
+                                class="postButton  ${comment.current_user_reaction === "like" ? "reaction-color" : ""} "
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
@@ -697,13 +697,13 @@
                                   ></path>
                                 </svg>
                               </button>
-                              <span id="commentLikeCount-${reply.id}" style="color: white"> ${reply.likes} </span>
+                              <span id="commentLikeCount-${comment.id}" style="color: white"> ${comment.likes} </span>
                             </form>
-                            <form onsubmit="handleReaction(null, ${reply.id},null, 'dislike'); return false;">
+                            <form onsubmit="handleReaction(null, ${comment.id},null, 'dislike'); return false;">
                               <input
                                 type="hidden"
                                 name="comment_post_id"
-                                value="${reply.id}"
+                                value="${comment.id}"
                               />
                               <input
                                 type="hidden"
@@ -711,8 +711,8 @@
                                 value="dislike"
                               />
                               <button
-                                id="commentDislikeButton-${reply.id}"
-                                class="postButton  ${reply.current_user_reaction === "dislike" ? "reaction-color" : ""} "
+                                id="commentDislikeButton-${comment.id}"
+                                class="postButton  ${comment.current_user_reaction === "dislike" ? "reaction-color" : ""} "
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
@@ -726,29 +726,29 @@
                                   ></path>
                                 </svg>
                               </button>
-                              <span id="commentDislikeCount-${reply.id}" style="color: white"> ${reply.dislikes} </span>
+                              <span id="commentDislikeCount-${comment.id}" style="color: white"> ${comment.dislikes} </span>
                             </form>
                             <button
                               class="reply roboto-condensed"
-                              onclick="toggleReplyBox(${reply.id}, true)"
+                              onclick="toggleReplyBox(${comment.id}, true)"
                             >
                               Reply
                             </button>
                           </div>
                           <button
-                            onclick="showAllReplies(${reply.id}, false, false, false, 'secondTier')"
-                            id="commentButton-${reply.id}"
-                            class="comment postButton  ${reply.current_user_reaction === "comment" ? "reaction-color" : ""} "
+                            onclick="showAllReplies(${comment.id}, false, false, false, 'secondTier')"
+                            id="commentButton-${comment.id}"
+                            class="comment postButton  ${comment.current_user_reaction === "comment" ? "reaction-color" : ""} "
                           >
-                            <span style="color: white"> <span id="finalReplyCount-${reply.id}">${reply.reply_count}</span> replies </span>
+                            <span style="color: white"> <span id="finalReplyCount-${comment.id}">${comment.reply_count}</span> replies </span>
                           </button>
                           <div
-                            id="finalReplyInputBox-${reply.id}"
+                            id="finalReplyInputBox-${comment.id}"
                             style="display: none"
                             class="forum-reply-editor-wrap"
                           >
-                            <form onsubmit="handleReplySubmit(null, ${reply.id}, '${reply.display_name}'); return false;">
-                              <input type="hidden" name="post_id" value="${reply.id}" />
+                            <form onsubmit="handleReplySubmit(null, ${comment.id}, '${comment.display_name}'); return false;">
+                              <input type="hidden" name="post_id" value="${comment.id}" />
                               <div
                                 style="display: flex; flex-direction: column"
                                 class="forum-reply-editor"
@@ -762,7 +762,7 @@
                                   class="forum-reply-input"
                                   autofocus="true"
                                   name="reply"
-                                  placeholder="reply to @${reply.display_name}..."
+                                  placeholder="reply to @${comment.display_name}..."
                                   required
                                 ></textarea>
 
@@ -770,9 +770,9 @@
                               </div>
                             </form>
                           </div>
-                          <div id="finalReplyCommentInputBox-${reply.id}" style="display: none">
-                            ${reply.replies_final_tier.map((finalReply) => {
-                              const created = new Date(finalReply.created_at);
+                          <div id="finalReplyCommentInputBox-${comment.id}" style="display: none">
+                            ${comment.replies.map((reply) => {
+                              const created = new Date(reply.created_at);
                               const day = created.getDate().toString().padStart(2, "0");
                               const month = created.toLocaleString("default", { month: "short" }); // e.g. 'Mar'
                               const year = created.getFullYear();
@@ -789,10 +789,10 @@
                                   class="p-2 forum-reply-card-finalreply"
                                   style="border-top: 1px solid white; margin-left: 20px"
                                 >
-                                  <p style="color: white"> ${finalReply.comment_post} </p>
+                                  <p style="color: white"> ${reply.reply_post} </p>
                                   <p style="color: white">
                                     Posted By:
-                                    <span style="color: #6e9731">  ${finalReply.display_name} </span>
+                                    <span style="color: #6e9731">  ${reply.display_name} </span>
                                   </p>
                                   <p style="color: white" class="forum-post-date">
                                     ${day} ${month} ${year} ${time} ${timeZone}
@@ -802,16 +802,16 @@
                                   class="forum-reply-actions"
                                   style="display: flex; align-items: center; margin-left: 20px"
                                 >
-                                  <form onsubmit="handleReaction(null, null, ${finalReply.id}, 'like'); return false;">
+                                  <form onsubmit="handleReaction(null, null, ${reply.id}, 'like'); return false;">
                                     <input
                                       type="hidden"
                                       name="comment_post_id"
-                                      value="${finalReply.id}"
+                                      value="${reply.id}"
                                     />
                                     <input type="hidden" name="reaction_type" value="like" />
                                     <button
-                                      id="finalReplyLikeButton-${finalReply.id}"
-                                      class="postButton  ${finalReply.current_user_reaction === "like" ? "reaction-color" : ""} "
+                                      id="finalReplyLikeButton-${reply.id}"
+                                      class="postButton  ${reply.current_user_reaction === "like" ? "reaction-color" : ""} "
                                     >
                                       <svg
                                         xmlns="http://www.w3.org/2000/svg"
@@ -825,13 +825,13 @@
                                         ></path>
                                       </svg>
                                     </button>
-                                    <span id="finalReplyLikeCount-${finalReply.id}" style="color: white"> ${finalReply.likes} </span>
+                                    <span id="finalReplyLikeCount-${reply.id}" style="color: white"> ${reply.likes} </span>
                                   </form>
-                                  <form onsubmit="handleReaction(null, null, ${finalReply.id}, 'dislike'); return false;">
+                                  <form onsubmit="handleReaction(null, null, ${reply.id}, 'dislike'); return false;">
                                     <input
                                       type="hidden"
                                       name="comment_post_id"
-                                      value="${finalReply.id}"
+                                      value="${reply.id}"
                                     />
                                     <input
                                       type="hidden"
@@ -839,8 +839,8 @@
                                       value="dislike"
                                     />
                                     <button
-                                      id="finalReplyDislikeButton-${finalReply.id}"
-                                      class="postButton  ${finalReply.current_user_reaction === "dislike" ? "reaction-color" : ""} "
+                                      id="finalReplyDislikeButton-${reply.id}"
+                                      class="postButton  ${reply.current_user_reaction === "dislike" ? "reaction-color" : ""} "
                                     >
                                       <svg
                                         xmlns="http://www.w3.org/2000/svg"
@@ -854,7 +854,7 @@
                                         ></path>
                                       </svg>
                                     </button>
-                                    <span id="finalReplyDislikeCount-${finalReply.id}" style="color: white"> ${finalReply.dislikes} </span>
+                                    <span id="finalReplyDislikeCount-${reply.id}" style="color: white"> ${reply.dislikes} </span>
                                   </form>
                                 </div>
                               `
@@ -1093,7 +1093,6 @@
       const notificationCountElement = document.getElementById("notificationCountText");
       notificationCountElement.textContent = "0";
       notificationCountContainer.className = "notification-count-container-hidden";
-
     }
     async function checkNotifications() {
       console.log("Checking notifications...");
@@ -1107,58 +1106,121 @@
       const getNotificationsSection = document.getElementById("notificationsDropdown");
       const notificationCountElement = document.getElementById("notificationCountText");
       const notificationCountContainer = document.getElementById("notificationCountContainer");
-      const getNotifications = data.notifications;
+      const getAllOtherUsersNotifications = data.notifications;
+      getAllOtherUsersNotifications.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
       notificationCountContainer.className = "notification-count-container";
-      let getAllOtherUsers = [];
-      for ( let n of getNotifications) {
-        const notification = n;
-        const reactionsToPosts = getAllOtherUsers.push(notification.reactions_to_posts);
-        const reactionsToReplies= getAllOtherUsers.push(notification.reactions_to_replies);
-        const reactionsToFinalReplies = getAllOtherUsers.push(notification.reactions_to_sub_replies);
-        const replies = getAllOtherUsers.push(notification.replies);
-        const finalReplies = getAllOtherUsers.push(notification.sub_replies);
-        //const users = notification.reactions_to_posts.reverse();
+      notificationCountElement.textContent = getAllOtherUsersNotifications.length;
 
-        getAllOtherUsers = getAllOtherUsers.flat().filter(user => user.user_name !== '<%= user %>');
-        notificationCountElement.textContent = getAllOtherUsers.length;
-      }
-       getAllOtherUsers.map((user) => {
-          // Calculate the time difference in minutes
-          const minutesAgo = Math.floor((new Date() - new Date(user.created_at)) / 60000);
-          // Create the notification elements
-          const notificationListItem = document.createElement("li");
-          notificationListItem.className = 'nav-item notification-link unread-indicator';
-          const notificationLink = document.createElement("a");
-          const profileIcon = document.createElement("figure");
-          const profilePost = document.createElement("div");
-          const unreadIndicator = document.createElement("figure");
-          const timeAgoContainer = document.createElement("div");
-          const notificationMessage = document.createElement("p");
-          const notificationTime = document.createElement("p");
-          // Determine the notification message based on the type of reaction or reply
-          const likeComment = (user.reaction_type && user.comment_id ) ? `${user.user_name} ${user.reaction_type}d your comment` : '';
-          const replyComment = (user.sub_reply) ? `${user.user_name} replied to your comment` : '';
-          const replyPost = (user.reply) ? `${user.user_name} replied to your post` : '';
-          const likePost = (user.reaction_type && !user.comment_id) ? `${user.user_name} ${user.reaction_type}d your post` : '';
-          const likeReply = (user.reaction_type && user.reply_id) ? `${user.user_name} ${user.reaction_type}d your reply` : '';
-          // Set the content of the notification elements
-          notificationMessage.textContent = likeComment || replyComment || replyPost || likePost || likeReply;
+       for (let otherUser of getAllOtherUsersNotifications) {
+          const notification = otherUser;
+          if(notification.notification_type === 'posts_down' ){
+              // Determine the notification message based on the type of reaction or reply
+            const likeComment = (notification.reaction_type && notification.comment_id ) ? `${notification.user_name} ${notification.reaction_type}d your comment` : '';
+            const replyComment = (notification.sub_reply) ? `${notification.user_name} replied to your comment` : '';
+            const replyPost = (notification.reply) ? `${notification.user_name} replied to your post` : '';
+            const likePost = (notification.reaction_type && !notification.comment_id) ? `${notification.user_name} ${notification.reaction_type}d your post` : '';
+            const likeReply = (notification.reaction_type && notification.reply_id) ? `${notification.user_name} ${notification.reaction_type}d your reply` : '';
+            const notificationMessage = document.createElement("p");
+            // Set the content of the notification elements
+            notificationMessage.textContent = likeComment || replyComment || replyPost || likePost || likeReply;
+            // Calculate the time difference in minutes
+            const minutesAgo = Math.floor((new Date() - new Date(notification.created_at)) / 60000);
+            // Create the notification elements
+            const notificationListItem = document.createElement("li");
+            notificationListItem.className = 'nav-item notification-link unread-indicator';
+            const notificationLink = document.createElement("a");
+            const profileIcon = document.createElement("figure");
+            const profilePost = document.createElement("div");
+            const unreadIndicator = document.createElement("figure");
+            const timeAgoContainer = document.createElement("div");
 
-          notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
-          //notificationLink.href = `/forum/${n.id}`;
-          notificationLink.className = 'nav-link';
+            const notificationTime = document.createElement("p");
+            notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
+            //notificationLink.href = `/forum/${n.id}`;
+            notificationLink.className = 'nav-link';
+            notificationTime.className = 'notification-time';
+            notificationMessage.className = 'notification-message';
+            profileIcon.className = 'profile-icon';
+            profilePost.className = 'profile-post';
+            profileIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg"  fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10.5 8 10.5s4.757.726 5.468-2.13A7 7 0 0 0 8 1z"/></svg>`;
+            // Append the notification elements to the DOM
+            profilePost.appendChild(profileIcon)
+            profilePost.appendChild(notificationMessage)
+            getNotificationsSection.appendChild(notificationListItem).appendChild(notificationLink).appendChild(profilePost)
+            notificationLink.appendChild(timeAgoContainer).appendChild(notificationTime)
+          }
+          if(notification.notification_type === 'comments_down' ){
+            const likeComment = (notification.reaction_type && notification.comment) ? `${notification.user_name} ${notification.reaction_type}d your comment` : '';
+            const replyComment = (notification.the_reply) ? `${notification.user_name} replied to your comment` : '';
+            const likeReply = (notification.reaction_type && notification.reply) ? `${notification.user_name} ${notification.reaction_type}d your reply` : '';
+            const notificationMessage = document.createElement("p");
+            // Set the content of the notification elements
+            notificationMessage.textContent = likeComment || replyComment || likeReply;
+             // Set the content of the notification elements
+            notificationMessage.textContent = likeComment || replyComment || replyPost || likePost || likeReply;
+            // Calculate the time difference in minutes
+            const minutesAgo = Math.floor((new Date() - new Date(notification.created_at)) / 60000);
+            // Create the notification elements
+            const notificationListItem = document.createElement("li");
+            notificationListItem.className = 'nav-item notification-link unread-indicator';
+            const notificationLink = document.createElement("a");
+            const profileIcon = document.createElement("figure");
+            const profilePost = document.createElement("div");
+            const unreadIndicator = document.createElement("figure");
+            const timeAgoContainer = document.createElement("div");
+            const notificationTime = document.createElement("p");
+            notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
+            //notificationLink.href = `/forum/${n.id}`;
+            notificationLink.className = 'nav-link';
+            notificationTime.className = 'notification-time';
+            notificationMessage.className = 'notification-message';
+            profileIcon.className = 'profile-icon';
+            profilePost.className = 'profile-post';
+            profileIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg"  fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10.5 8 10.5s4.757.726 5.468-2.13A7 7 0 0 0 8 1z"/></svg>`;
+            // Append the notification elements to the DOM
+            profilePost.appendChild(profileIcon)
+            profilePost.appendChild(notificationMessage)
+            getNotificationsSection.appendChild(notificationListItem).appendChild(notificationLink).appendChild(profilePost)
+            notificationLink.appendChild(timeAgoContainer).appendChild(notificationTime)
+          }
+          if(notification.notification_type === 'replies_down' ){
+            const likeReply = (notification.reaction_type && notification.reply_id) ? `${notification.user_name} ${notification.reaction_type}d your reply` : '';
+            // Set the content of the notification elements
+            notificationMessage.textContent = likeReply;
+            const notificationMessage = document.createElement("p");
 
-          notificationTime.className = 'notification-time';
-          notificationMessage.className = 'notification-message';
-          profileIcon.className = 'profile-icon';
-          profilePost.className = 'profile-post';
-          profileIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg"  fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10.5 8 10.5s4.757.726 5.468-2.13A7 7 0 0 0 8 1z"/></svg>`;
-          // Append the notification elements to the DOM
-          profilePost.appendChild(profileIcon)
-          profilePost.appendChild(notificationMessage)
-          getNotificationsSection.appendChild(notificationListItem).appendChild(notificationLink).appendChild(profilePost)
-          notificationLink.appendChild(timeAgoContainer).appendChild(notificationTime)
-        });
+             // Set the content of the notification elements
+            notificationMessage.textContent = likeComment || replyComment || replyPost || likePost || likeReply;
+            // Calculate the time difference in minutes
+            const minutesAgo = Math.floor((new Date() - new Date(notification.created_at)) / 60000);
+            // Create the notification elements
+            const notificationListItem = document.createElement("li");
+            notificationListItem.className = 'nav-item notification-link unread-indicator';
+            const notificationLink = document.createElement("a");
+            const profileIcon = document.createElement("figure");
+            const profilePost = document.createElement("div");
+            const unreadIndicator = document.createElement("figure");
+            const timeAgoContainer = document.createElement("div");
+            const notificationTime = document.createElement("p");
+            notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
+            //notificationLink.href = `/forum/${n.id}`;
+            notificationLink.className = 'nav-link';
+            notificationTime.className = 'notification-time';
+            notificationMessage.className = 'notification-message';
+            profileIcon.className = 'profile-icon';
+            profilePost.className = 'profile-post';
+            profileIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg"  fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10.5 8 10.5s4.757.726 5.468-2.13A7 7 0 0 0 8 1z"/></svg>`;
+            // Append the notification elements to the DOM
+            profilePost.appendChild(profileIcon)
+            profilePost.appendChild(notificationMessage)
+            getNotificationsSection.appendChild(notificationListItem).appendChild(notificationLink).appendChild(profilePost)
+            notificationLink.appendChild(timeAgoContainer).appendChild(notificationTime)
+          }
+       }
+
+      console.log(getNotificationsSection);
+
     }
 
   document.addEventListener("DOMContentLoaded", () => {

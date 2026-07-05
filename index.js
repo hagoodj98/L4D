@@ -13,7 +13,7 @@ import {
   sortSchema,
 } from "./utils/zodSchemas.js";
 import {
-  getForumPosts,
+  getAllForumData,
   totalPostsResult,
   createPost,
 } from "./database/repositories/forumcontent.js";
@@ -25,22 +25,22 @@ import {
   addReaction,
   removeReaction,
   updateReaction,
-  existing as existingPostReaction,
+  sameReaction as samePostReaction,
 } from "./database/repositories/posts_reactions.js";
 import {
   addReaction as addCommentReaction,
   removeReaction as removeCommentReaction,
-  existing as existingCommentReaction,
+  sameReaction as sameCommentReaction,
   updateReaction as updateReactionComment,
-} from "./database/repositories/reactions_comments.js";
+} from "./database/repositories/comments_reactions.js";
+import { createComment } from "./database/repositories/comments.js";
 import { createReply } from "./database/repositories/replies.js";
-import { createReply as createSubReply } from "./database/repositories/sub_replies.js";
 import {
-  existing as existingFinalReplyReaction,
-  addReaction as addFinalReplyReaction,
-  removeReaction as removeFinalReplyReaction,
-  updateReaction as updateFinalReplyReaction,
-} from "./database/repositories/reactions_to_finalreply.js";
+  sameReaction as sameReplyReaction,
+  addReaction as addReplyReaction,
+  removeReaction as removeReplyReaction,
+  updateReaction as updateReplyReaction,
+} from "./database/repositories/replies_reactions.js";
 import ErrorHandler from "./utils/error.js";
 import { getAllPostNotificationsDown } from "./database/repositories/post_notifications_down.js";
 import { getAllRepliesNotificationsDown } from "./database/repositories/reply_notifications_down.js";
@@ -49,7 +49,11 @@ import { getAllCommentsNotificationsDown } from "./database/repositories/comment
 const app = express();
 
 const port = 3000;
-let notifications = [];
+let notifications = {
+  postNotificationsDown: [],
+  commentNotificationsDown: [],
+  replyNotificationsDown: [],
+};
 const saltRounds = 10;
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -87,10 +91,11 @@ app.use(async (req, res, next) => {
     const repliesNotifications = await getAllRepliesNotificationsDown(
       req.user.id,
     );
+    // Merge all notifications into a single array for the authenticated user.
     notifications = [
       ...postNotifications,
-      ...repliesNotifications,
       ...commentsNotifications,
+      ...repliesNotifications,
     ];
     console.log(`Authenticated user: ${req}`);
   }
@@ -166,8 +171,62 @@ app.get("/notifications", (req, res) => {
   if (!req.isAuthenticated()) {
     return res.redirect("/login");
   }
+  let getAllOtherUsersNotifications = [];
+  const notificationCount = getAllOtherUsersNotifications.length;
+  // If there are notifications, filter them by type and send them to the client.
+  if (notifications.length > 0) {
+    const posts = notifications.filter(
+      (otherUser) => otherUser.notification_type === "posts_down",
+    );
+    const comments = notifications.filter(
+      (otherUser) => otherUser.notification_type === "comments_down",
+    );
+    const replies = notifications.filter(
+      (otherUser) => otherUser.notification_type === "replies_down",
+    );
+    if (posts.length > 0) {
+      posts.forEach((notification) => {
+        notification.reactions_to_posts.length > 0 &&
+          getAllOtherUsersNotifications.push(
+            ...notification.reactions_to_posts,
+          );
+        notification.reactions_to_comments.length > 0 &&
+          getAllOtherUsersNotifications.push(
+            ...notification.reactions_to_comments,
+          );
+        notification.reactions_to_replies.length > 0 &&
+          getAllOtherUsersNotifications.push(
+            ...notification.reactions_to_replies,
+          );
+        notification.other_comments.length > 0 &&
+          getAllOtherUsersNotifications.push(...notification.other_comments);
+        notification.other_replies.length > 0 &&
+          getAllOtherUsersNotifications.push(...notification.other_replies);
+      });
+    }
+    if (comments.length > 0) {
+      comments.forEach((notification) => {
+        getAllOtherUsersNotifications.push(
+          ...notification.reactions_to_comments,
+        );
+        getAllOtherUsersNotifications.push(
+          ...notification.reactions_to_replies,
+        );
+        getAllOtherUsersNotifications.push(...notification.replies_to_comments);
+      });
+    }
+    if (replies.length > 0) {
+      replies.forEach((notification) => {
+        notification.reactions_to_replies.length > 0 &&
+          getAllOtherUsersNotifications.push(
+            ...notification.reactions_to_replies,
+          );
+      });
+    }
+  }
+
   return res.json({
-    notifications: notifications || [],
+    notifications: getAllOtherUsersNotifications || [],
   });
 });
 
@@ -197,7 +256,7 @@ app.get("/forum", async (req, res, next) => {
   const limit = req.query.limit ? parseInt(req.query.limit) : 4;
   const offset = req.query.page ? (parseInt(req.query.page) - 1) * limit : 0;
   try {
-    const result = await getForumPosts(
+    const result = await getAllForumData(
       req.user ? req.user.id : null,
       "DESC",
       limit,
@@ -224,7 +283,7 @@ app.get("/forumpagination", async (req, res, next) => {
   const limit = req.query.limit ? parseInt(req.query.limit) : 4;
   const offset = req.query.page ? (parseInt(req.query.page) - 1) * limit : 0;
   try {
-    const result = await getForumPosts(
+    const result = await getAllForumData(
       req.user ? req.user.id : null,
       "DESC",
       limit,
@@ -357,7 +416,7 @@ app.get("/ascend", async (req, res, next) => {
       new ErrorHandler(400, "Invalid sort direction", validation.error.issues),
     );
   }
-  const result = await getForumPosts(req.user.id, "DESC");
+  const result = await getAllForumData(req.user.id, "DESC");
   const getTotalPosts = await totalPostsResult();
   const totalPosts = getTotalPosts.rows[0].count;
   return res.json({
@@ -373,7 +432,7 @@ app.get("/descend", async (req, res, next) => {
       new ErrorHandler(400, "Invalid sort direction", validation.error.issues),
     );
   }
-  const result = await getForumPosts(req.user.id, "ASC");
+  const result = await getAllForumData(req.user.id, "ASC");
   const getTotalPosts = await totalPostsResult();
   const totalPosts = getTotalPosts.rows[0].count;
   return res.json({
@@ -406,18 +465,15 @@ app.post("/post-reaction", async (req, res, next) => {
 
   if (finalReplyId) {
     // Final reply reactions toggle: same reaction removes, different reaction upserts.
-    const existing = await existingFinalReplyReaction(
-      finalReplyId,
-      req.user.id,
-    );
+    const existing = await sameReplyReaction(finalReplyId, req.user.id);
 
     if (existing && existing.reaction_type === reaction_type) {
-      await removeFinalReplyReaction(finalReplyId, req.user.id);
+      await removeReplyReaction(finalReplyId, req.user.id);
       return res.json({
         reaction_type: `${existing.reaction_type}_removed_final_reply`,
       });
     } else if (existing && existing.reaction_type !== reaction_type) {
-      const reaction = await updateFinalReplyReaction(
+      const reaction = await updateReplyReaction(
         finalReplyId,
         req.user.id,
         reaction_type,
@@ -427,7 +483,7 @@ app.post("/post-reaction", async (req, res, next) => {
       });
     } else {
       const createdAt = new Date();
-      const reaction = await addFinalReplyReaction(
+      const reaction = await addReplyReaction(
         finalReplyId,
         req.user.id,
         reaction_type,
@@ -438,8 +494,8 @@ app.post("/post-reaction", async (req, res, next) => {
       });
     }
   } else if (commentId) {
-    // Reply reactions toggle: same reaction removes, different reaction upserts.
-    const existing = await existingCommentReaction(commentId, req.user.id);
+    // Comment reactions toggle: same reaction removes, different reaction upserts.
+    const existing = await sameCommentReaction(commentId, req.user.id);
 
     if (existing && existing.reaction_type === reaction_type) {
       await removeCommentReaction(commentId, req.user.id);
@@ -467,7 +523,7 @@ app.post("/post-reaction", async (req, res, next) => {
     }
   } else {
     // Post reactions follow the same toggle behavior as reply reactions.
-    const existing = await existingPostReaction(postId, req.user.id);
+    const existing = await samePostReaction(postId, req.user.id);
     // If the same reaction exists, remove it. Otherwise, add or update to the new reaction.
     if (existing && existing.reaction_type === reaction_type) {
       await removeReaction(postId, req.user.id);
@@ -529,10 +585,10 @@ app.post("/add-reply", async (req, res, next) => {
 
   try {
     if (!replyId) {
-      const result = await createReply(comment_post, req.user.id, postId);
+      const result = await createComment(comment_post, req.user.id, postId);
       return res.json({ success: true, reply: result });
     }
-    const result = await createSubReply(comment_post, req.user.id, replyId);
+    const result = await createReply(comment_post, req.user.id, replyId);
     return res.json({ success: true, reply: result, subReply: true });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));

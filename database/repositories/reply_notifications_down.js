@@ -6,8 +6,9 @@ export const getAllRepliesNotificationsDown = async (userId) => {
   SELECT
     replies.id,
     reply_post,
+    'replies_down' AS notification_type,
     user_id,
-    COALESCE(likes_to_replies.reaction_to_replies, '[]'::json) AS reaction_to_replies
+    COALESCE(likes_to_replies.reactions_to_replies, '[]'::json) AS reactions_to_replies
 FROM replies
 LEFT JOIN LATERAL (
     SELECT
@@ -18,16 +19,17 @@ LEFT JOIN LATERAL (
                 'reaction_type', replies_reactions.reaction_type,
                 'created_at', replies_reactions.created_at,
                 'reply_id', replies_reactions.reply_id,
-                'the_reply', replies.reply_post
+                'the_reply', replies.reply_post,
+                'notification_type', 'replies_down'
             )
-        ) AS reaction_to_replies 
+        ) AS reactions_to_replies 
     FROM replies_reactions
     LEFT JOIN users ON replies_reactions.user_id = users.id
-    WHERE replies_reactions.user_id != 42 AND replies_reactions.reply_id = replies.id
+    WHERE replies_reactions.user_id != $1 AND replies_reactions.reply_id = replies.id
     GROUP BY reply_id
 ) likes_to_replies ON true
-WHERE replies.user_id = 42 AND (
-    likes_to_replies.reaction_to_replies IS NOT NULL
+WHERE replies.user_id = $1 AND (
+    likes_to_replies.reactions_to_replies IS NOT NULL
 );`;
 
   const result = await db.query(allRepliesNotificationsDownQuery, [userId]);
