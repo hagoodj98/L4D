@@ -1082,14 +1082,21 @@
           console.error("Error handling reaction:", err);
         }
       }
-    function readNotifications() {
+    async function readNotifications() {
       const notificationCountContainer = document.getElementById("notificationCountContainer");
       const notificationCount = notificationCountContainer?.textContent?.trim();
       if(notificationCount === "0") {
         const NotificationListItems = document.querySelectorAll(".notification-link");
         //remove the unread indicator from the bell icon
         NotificationListItems.forEach(item => item.classList.remove("unread-indicator"));
+
       };
+      const response = await fetch("http://localhost:3000/read-notifications", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+      })
       const notificationCountElement = document.getElementById("notificationCountText");
       notificationCountElement.textContent = "0";
       notificationCountContainer.className = "notification-count-container-hidden";
@@ -1107,7 +1114,6 @@
       const notificationCountElement = document.getElementById("notificationCountText");
       const notificationCountContainer = document.getElementById("notificationCountContainer");
       const getAllOtherUsersNotifications = data.notifications;
-
       notificationCountContainer.className = "notification-count-container";
       notificationCountElement.textContent = getAllOtherUsersNotifications.length;
 
@@ -1140,9 +1146,14 @@
     });
     const data = await response.json();
     const getAllOtherUsersNotifications = data.notifications;
-    if (getAllOtherUsersNotifications.length > 0) {
-      const NotificationListItems = document.querySelectorAll(".notification-link");
-      return;
+    const wasNotificationRead = data.wasNotificationRead;
+    if (getAllOtherUsersNotifications.length > 0 && wasNotificationRead) {
+        getAllOtherUsersNotifications.forEach(item =>  {
+          const getNotificationsSection = document.getElementById("notificationsDropdown");
+          const { likeComment, commentPost, replyPost, likePost, likeReply } = createTextForNotificationType(item);
+          createNotificationElement(item, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection, wasNotificationRead);
+        });
+        return;
     }
     await checkNotifications();
   });
@@ -1174,7 +1185,7 @@
     return '';
 
   }
-  function createNotificationElement(notification, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection) {
+  function createNotificationElement(notification, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection, wasNotificationRead) {
     const notificationMessage = document.createElement("p");
     // Set the content of the notification elements
     notificationMessage.textContent = likeComment || commentPost || replyPost || likePost || likeReply;
@@ -1182,7 +1193,7 @@
     const minutesAgo = Math.floor((new Date() - new Date(notification.created_at)) / 60000);
     // Create the notification elements
     const notificationListItem = document.createElement("li");
-    notificationListItem.className = 'nav-item notification-link unread-indicator';
+    notificationListItem.className = `nav-item notification-link ${wasNotificationRead ? '' : 'unread-indicator'}`;
     const notificationLink = document.createElement("a");
     const profileIcon = document.createElement("figure");
     const profilePost = document.createElement("div");

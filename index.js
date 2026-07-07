@@ -45,17 +45,16 @@ import ErrorHandler from "./utils/error.js";
 import { getAllPostNotificationsDown } from "./database/repositories/post_notifications_down.js";
 import { getAllRepliesNotificationsDown } from "./database/repositories/reply_notifications_down.js";
 import { getAllCommentsNotificationsDown } from "./database/repositories/comment_notifications_down.js";
+import { getAllRepliesNotificationsDown as getAllRepliesNotificationsDownHelper } from "./utils/notififcationHelper.js";
 
 const app = express();
 
 const port = 3000;
-let notifications = {
-  postNotificationsDown: [],
-  commentNotificationsDown: [],
-  replyNotificationsDown: [],
-};
 
-let notificationsCache = [];
+let notificationsState = {
+  notifications: [],
+  wasRead: false,
+};
 
 const saltRounds = 10;
 const isProduction = process.env.NODE_ENV === "production";
@@ -94,11 +93,16 @@ app.use(async (req, res, next) => {
     const repliesNotifications = await getAllRepliesNotificationsDown(
       req.user.id,
     );
-    // Merge all notifications into a single array for the authenticated user.
-    notifications = [
+    let allNotifications = [
       ...postNotifications,
       ...commentsNotifications,
       ...repliesNotifications,
+    ];
+    const getAllRepliesNotificationsDownResult =
+      await getAllRepliesNotificationsDownHelper(allNotifications);
+    // Merge all notifications into a single array for the authenticated user.
+    notificationsState.notifications = [
+      ...getAllRepliesNotificationsDownResult,
     ];
     console.log(`Authenticated user: ${req}`);
   }
@@ -170,82 +174,32 @@ app.get("/login", (req, res) => {
     });
   }
 });
-app.get("/notifications", (req, res) => {
+app.get("/notifications", async (req, res) => {
   if (!req.isAuthenticated()) {
     return res.redirect("/login");
   }
-  let getAllOtherUsersNotifications = [];
 
-  // If there are notifications, filter them by type and send them to the client.
-  if (notifications.length > 0) {
-    const posts = notifications.filter(
-      (otherUser) => otherUser.notification_type === "posts_down",
-    );
-    const comments = notifications.filter(
-      (otherUser) => otherUser.notification_type === "comments_down",
-    );
-    const replies = notifications.filter(
-      (otherUser) => otherUser.notification_type === "replies_down",
-    );
-    if (posts.length > 0) {
-      posts.forEach((notification) => {
-        notification.reactions_to_posts.length > 0 &&
-          getAllOtherUsersNotifications.push(
-            ...notification.reactions_to_posts,
-          );
-        notification.reactions_to_comments.length > 0 &&
-          getAllOtherUsersNotifications.push(
-            ...notification.reactions_to_comments,
-          );
-        notification.reactions_to_replies.length > 0 &&
-          getAllOtherUsersNotifications.push(
-            ...notification.reactions_to_replies,
-          );
-        notification.other_comments.length > 0 &&
-          getAllOtherUsersNotifications.push(...notification.other_comments);
-        notification.other_replies.length > 0 &&
-          getAllOtherUsersNotifications.push(...notification.other_replies);
-      });
-    }
-    if (comments.length > 0) {
-      comments.forEach((notification) => {
-        getAllOtherUsersNotifications.push(
-          ...notification.reactions_to_comments,
-        );
-        getAllOtherUsersNotifications.push(
-          ...notification.reactions_to_replies,
-        );
-        getAllOtherUsersNotifications.push(...notification.replies_to_comments);
-      });
-    }
-    if (replies.length > 0) {
-      replies.forEach((notification) => {
-        notification.reactions_to_replies.length > 0 &&
-          getAllOtherUsersNotifications.push(
-            ...notification.reactions_to_replies,
-          );
-      });
-    }
-  }
-  getAllOtherUsersNotifications.sort(
-    (a, b) => new Date(b.created_at) - new Date(a.created_at),
-  );
-  notificationsCache = getAllOtherUsersNotifications;
   return res.json({
-    notifications: getAllOtherUsersNotifications || [],
+    notifications: notificationsState.notifications || [],
   });
 });
 app.get("/check-notifications-reloaded", (req, res) => {
   if (!req.isAuthenticated()) {
     return res.redirect("/login");
   }
-  const isNotificationsCacheEmpty =
-    !notificationsCache || notificationsCache.length === 0;
-  if (isNotificationsCacheEmpty) {
-    return res.json({
-      notifications: isNotificationsCacheEmpty ? [] : notificationsCache,
-    });
+
+  return res.json({
+    reloaded: notificationsState.notifications.length > 0 ? true : false,
+    notifications: notificationsState.notifications ?? [],
+    wasNotificationRead: notificationsState.wasRead,
+  });
+});
+app.post("/read-notifications", (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.redirect("/login");
   }
+  notificationsState.wasRead = true;
+  res.sendStatus(200);
 });
 
 app.get("/register", (req, res) => {
