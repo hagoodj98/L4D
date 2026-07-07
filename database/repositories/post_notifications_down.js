@@ -4,14 +4,14 @@ export const getAllPostNotificationsDown = async (userId) => {
   const sql = String.raw;
   const allPostNotificationsDownQuery = sql`
     SELECT
-    posts.id,
-    posts.post,
-    'posts_down' AS notification_type,
-    COALESCE(likes_to_posts.reaction_to_post, '[]'::json) AS reactions_to_posts,
-    COALESCE(likes_to_comments.reaction_to_comment, '[]'::json) AS reactions_to_comments,
-    COALESCE(likes_to_replies.reaction_to_replies, '[]'::json) AS reactions_to_replies,
-    COALESCE(other_comments_to_posts.comments, '[]'::json) AS other_comments,
-    COALESCE(other_replies_to_comments.other_replies, '[]'::json) AS other_replies
+        posts.id,
+        posts.post,
+        'posts_down' AS notification_type,
+        COALESCE(likes_to_posts.reaction_to_post, '[]'::json) AS reactions_to_posts,
+        COALESCE(likes_to_comments.reaction_to_comment, '[]'::json) AS reactions_to_comments,
+        COALESCE(likes_to_replies.reaction_to_replies, '[]'::json) AS reactions_to_replies,
+        COALESCE(other_comments_to_posts.comments, '[]'::json) AS other_comments,
+        COALESCE(other_replies_to_comments.other_replies, '[]'::json) AS other_replies
     FROM posts
     LEFT JOIN LATERAL (
         SELECT
@@ -22,7 +22,7 @@ export const getAllPostNotificationsDown = async (userId) => {
                     'reaction_type', reaction_type,
                     'created_at', created_at,
                     'post_id', post_id,
-                    'the_post', posts.post,
+                    'post', posts.post,
                     'notification_type', 'posts_down'
                 )
             ) AS reaction_to_post FROM posts_reactions
@@ -39,7 +39,7 @@ export const getAllPostNotificationsDown = async (userId) => {
                     'reaction_type', comments_reactions.reaction_type,
                     'created_at', comments_reactions.created_at,
                     'comment_id', comments.id,
-                    'the_comment', comments.comment_post,
+                    'comment_post', comments.comment_post,
                     'notification_type', 'posts_down'
                 )
             ) AS reaction_to_comment FROM comments_reactions
@@ -59,7 +59,7 @@ export const getAllPostNotificationsDown = async (userId) => {
                     'reaction_type', replies_reactions.reaction_type,
                     'created_at', replies_reactions.created_at,
                     'reply_id', replies_reactions.reply_id,
-                    'the_reply', replies.reply_post,
+                    'reply_post', replies.reply_post,
                     'notification_type', 'posts_down'
                     
                 )
@@ -68,7 +68,7 @@ export const getAllPostNotificationsDown = async (userId) => {
             LEFT JOIN replies ON replies_reactions.reply_id = replies.id
             WHERE replies_reactions.user_id != $1 AND replies_reactions.reply_id IN (
                 SELECT id FROM replies WHERE replies.comment_id IN (
-                    SELECT id FROM comments WHERE comments.post_id = posts.id
+                    SELECT id FROM comments WHERE comments.user_id = $1 AND comments.post_id = posts.id
                 )
             )
             GROUP BY replies_reactions.reply_id
@@ -79,11 +79,11 @@ export const getAllPostNotificationsDown = async (userId) => {
             json_agg(
                 json_build_object(
                     'user_name', users.display_name,
-                    'reply', comment_post,
+                    'comment_post', comment_post,
                     'created_at', created_at,
                     'post_id', post_id,
                     'notification_type', 'posts_down',
-                    'the_post', posts.post
+                    'post', posts.post
                 )
             ) AS comments FROM comments
             LEFT JOIN users ON comments.user_id = users.id
@@ -96,7 +96,7 @@ export const getAllPostNotificationsDown = async (userId) => {
             json_agg(
                 json_build_object(
                     'user_name', users.display_name,
-                    'reply', replies.reply_post,
+                    'reply_post', replies.reply_post,
                     'created_at', replies.created_at,
                     'comment_id', replies.comment_id,
                     'notification_type', 'posts_down'

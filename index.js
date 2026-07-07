@@ -54,6 +54,9 @@ let notifications = {
   commentNotificationsDown: [],
   replyNotificationsDown: [],
 };
+
+let notificationsCache = [];
+
 const saltRounds = 10;
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -172,7 +175,7 @@ app.get("/notifications", (req, res) => {
     return res.redirect("/login");
   }
   let getAllOtherUsersNotifications = [];
-  const notificationCount = getAllOtherUsersNotifications.length;
+
   // If there are notifications, filter them by type and send them to the client.
   if (notifications.length > 0) {
     const posts = notifications.filter(
@@ -224,10 +227,25 @@ app.get("/notifications", (req, res) => {
       });
     }
   }
-
+  getAllOtherUsersNotifications.sort(
+    (a, b) => new Date(b.created_at) - new Date(a.created_at),
+  );
+  notificationsCache = getAllOtherUsersNotifications;
   return res.json({
     notifications: getAllOtherUsersNotifications || [],
   });
+});
+app.get("/check-notifications-reloaded", (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.redirect("/login");
+  }
+  const isNotificationsCacheEmpty =
+    !notificationsCache || notificationsCache.length === 0;
+  if (isNotificationsCacheEmpty) {
+    return res.json({
+      notifications: isNotificationsCacheEmpty ? [] : notificationsCache,
+    });
+  }
 });
 
 app.get("/register", (req, res) => {

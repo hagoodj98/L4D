@@ -1107,7 +1107,6 @@
       const notificationCountElement = document.getElementById("notificationCountText");
       const notificationCountContainer = document.getElementById("notificationCountContainer");
       const getAllOtherUsersNotifications = data.notifications;
-      getAllOtherUsersNotifications.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
       notificationCountContainer.className = "notification-count-container";
       notificationCountElement.textContent = getAllOtherUsersNotifications.length;
@@ -1115,118 +1114,93 @@
        for (let otherUser of getAllOtherUsersNotifications) {
           const notification = otherUser;
           if(notification.notification_type === 'posts_down' ){
-              // Determine the notification message based on the type of reaction or reply
-            const likeComment = (notification.reaction_type && notification.comment_id ) ? `${notification.user_name} ${notification.reaction_type}d your comment` : '';
-            const replyComment = (notification.sub_reply) ? `${notification.user_name} replied to your comment` : '';
-            const replyPost = (notification.reply) ? `${notification.user_name} replied to your post` : '';
-            const likePost = (notification.reaction_type && !notification.comment_id) ? `${notification.user_name} ${notification.reaction_type}d your post` : '';
-            const likeReply = (notification.reaction_type && notification.reply_id) ? `${notification.user_name} ${notification.reaction_type}d your reply` : '';
-            const notificationMessage = document.createElement("p");
-            // Set the content of the notification elements
-            notificationMessage.textContent = likeComment || replyComment || replyPost || likePost || likeReply;
-            // Calculate the time difference in minutes
-            const minutesAgo = Math.floor((new Date() - new Date(notification.created_at)) / 60000);
-            // Create the notification elements
-            const notificationListItem = document.createElement("li");
-            notificationListItem.className = 'nav-item notification-link unread-indicator';
-            const notificationLink = document.createElement("a");
-            const profileIcon = document.createElement("figure");
-            const profilePost = document.createElement("div");
-            const unreadIndicator = document.createElement("figure");
-            const timeAgoContainer = document.createElement("div");
-
-            const notificationTime = document.createElement("p");
-            notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
-            //notificationLink.href = `/forum/${n.id}`;
-            notificationLink.className = 'nav-link';
-            notificationTime.className = 'notification-time';
-            notificationMessage.className = 'notification-message';
-            profileIcon.className = 'profile-icon';
-            profilePost.className = 'profile-post';
-            profileIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg"  fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10.5 8 10.5s4.757.726 5.468-2.13A7 7 0 0 0 8 1z"/></svg>`;
-            // Append the notification elements to the DOM
-            profilePost.appendChild(profileIcon)
-            profilePost.appendChild(notificationMessage)
-            getNotificationsSection.appendChild(notificationListItem).appendChild(notificationLink).appendChild(profilePost)
-            notificationLink.appendChild(timeAgoContainer).appendChild(notificationTime)
+            const { likeComment, commentPost, replyPost, likePost, likeReply } = createTextForNotificationType(notification);
+            createNotificationElement(notification, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection);
           }
           if(notification.notification_type === 'comments_down' ){
-            const likeComment = (notification.reaction_type && notification.comment) ? `${notification.user_name} ${notification.reaction_type}d your comment` : '';
-            const replyComment = (notification.the_reply) ? `${notification.user_name} replied to your comment` : '';
-            const likeReply = (notification.reaction_type && notification.reply) ? `${notification.user_name} ${notification.reaction_type}d your reply` : '';
-            const notificationMessage = document.createElement("p");
-            // Set the content of the notification elements
-            notificationMessage.textContent = likeComment || replyComment || likeReply;
-             // Set the content of the notification elements
-            notificationMessage.textContent = likeComment || replyComment || replyPost || likePost || likeReply;
-            // Calculate the time difference in minutes
-            const minutesAgo = Math.floor((new Date() - new Date(notification.created_at)) / 60000);
-            // Create the notification elements
-            const notificationListItem = document.createElement("li");
-            notificationListItem.className = 'nav-item notification-link unread-indicator';
-            const notificationLink = document.createElement("a");
-            const profileIcon = document.createElement("figure");
-            const profilePost = document.createElement("div");
-            const unreadIndicator = document.createElement("figure");
-            const timeAgoContainer = document.createElement("div");
-            const notificationTime = document.createElement("p");
-            notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
-            //notificationLink.href = `/forum/${n.id}`;
-            notificationLink.className = 'nav-link';
-            notificationTime.className = 'notification-time';
-            notificationMessage.className = 'notification-message';
-            profileIcon.className = 'profile-icon';
-            profilePost.className = 'profile-post';
-            profileIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg"  fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10.5 8 10.5s4.757.726 5.468-2.13A7 7 0 0 0 8 1z"/></svg>`;
-            // Append the notification elements to the DOM
-            profilePost.appendChild(profileIcon)
-            profilePost.appendChild(notificationMessage)
-            getNotificationsSection.appendChild(notificationListItem).appendChild(notificationLink).appendChild(profilePost)
-            notificationLink.appendChild(timeAgoContainer).appendChild(notificationTime)
+            const { likeComment, commentPost, replyPost, likePost, likeReply } = createTextForNotificationType(notification);
+            createNotificationElement(notification, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection);
           }
           if(notification.notification_type === 'replies_down' ){
-            const likeReply = (notification.reaction_type && notification.reply_id) ? `${notification.user_name} ${notification.reaction_type}d your reply` : '';
-            // Set the content of the notification elements
-            notificationMessage.textContent = likeReply;
-            const notificationMessage = document.createElement("p");
-
-             // Set the content of the notification elements
-            notificationMessage.textContent = likeComment || replyComment || replyPost || likePost || likeReply;
-            // Calculate the time difference in minutes
-            const minutesAgo = Math.floor((new Date() - new Date(notification.created_at)) / 60000);
-            // Create the notification elements
-            const notificationListItem = document.createElement("li");
-            notificationListItem.className = 'nav-item notification-link unread-indicator';
-            const notificationLink = document.createElement("a");
-            const profileIcon = document.createElement("figure");
-            const profilePost = document.createElement("div");
-            const unreadIndicator = document.createElement("figure");
-            const timeAgoContainer = document.createElement("div");
-            const notificationTime = document.createElement("p");
-            notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
-            //notificationLink.href = `/forum/${n.id}`;
-            notificationLink.className = 'nav-link';
-            notificationTime.className = 'notification-time';
-            notificationMessage.className = 'notification-message';
-            profileIcon.className = 'profile-icon';
-            profilePost.className = 'profile-post';
-            profileIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg"  fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10.5 8 10.5s4.757.726 5.468-2.13A7 7 0 0 0 8 1z"/></svg>`;
-            // Append the notification elements to the DOM
-            profilePost.appendChild(profileIcon)
-            profilePost.appendChild(notificationMessage)
-            getNotificationsSection.appendChild(notificationListItem).appendChild(notificationLink).appendChild(profilePost)
-            notificationLink.appendChild(timeAgoContainer).appendChild(notificationTime)
+            const {  likeComment, commentPost, replyPost, likePost, likeReply  } = createTextForNotificationType(notification);
+            createNotificationElement(notification, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection);
           }
        }
-
-      console.log(getNotificationsSection);
-
     }
 
-  document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", async () => {
     const list = <%- JSON.stringify(listAllContent) %>;
     if (!Array.isArray(list) || list.length === 0) return;
     listPosts(list);
-    checkNotifications();
+    const response = await fetch("http://localhost:3000/check-notifications-reloaded", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await response.json();
+    const getAllOtherUsersNotifications = data.notifications;
+    if (getAllOtherUsersNotifications.length > 0) {
+      const NotificationListItems = document.querySelectorAll(".notification-link");
+      return;
+    }
+    await checkNotifications();
   });
+  function createTextForNotificationType(notification) {
+    if (notification.notification_type === 'posts_down') {
+      // Determine the notification message based on the type of reaction or reply
+      const likePost = (notification.reaction_type && notification.post_id) ? `${notification.user_name} ${notification.reaction_type}d your post` : '';
+      const likeComment = (notification.reaction_type && notification.comment_id ) ? `${notification.user_name} ${notification.reaction_type}d your comment` : '';
+      const likeReply = (notification.reaction_type && notification.reply_id) ? `${notification.user_name} ${notification.reaction_type}d your reply` : '';
+      const commentPost = (!notification.reaction_type && notification.post_id) ? `${notification.user_name} commented on your post` : '';
+      const replyPost = (!notification.reaction_type && notification.comment_id) ? `${notification.user_name} replied to your comment` : '';
+      return {likePost, likeComment, likeReply, commentPost, replyPost,};
+    } else if (notification.notification_type === 'comments_down') {
+        const likeComment = (notification.reaction_type && notification.comment_id) ? `${notification.user_name} ${notification.reaction_type}d your comment` : '';
+         const likeReply = (notification.reaction_type && notification.reply_id) ? `${notification.user_name} ${notification.reaction_type}d your reply` : '';
+        const commentPost = (!notification.reaction_type && notification.comment_id) ? `${notification.user_name} replied to your comment` : '';
+
+        const likePost = null; // No likePost for comments_down
+        const replyPost = null; // No replyPost for comments_down
+        return {likePost, likeComment, likeReply, commentPost, replyPost};
+    } else if (notification.notification_type === 'replies_down') {
+        const likeReply = (notification.reaction_type && notification.reply_id) ? `${notification.user_name} ${notification.reaction_type}d your reply` : '';
+        const likeComment = null; // No likeComment for replies_down
+        const commentPost = null; // No commentPost for replies_down
+        const likePost = null; // No likePost for replies_down
+        const replyPost = null; // No replyPost for replies_down
+      return {likePost, likeComment,likeReply, commentPost, replyPost };
+    }
+    return '';
+
+  }
+  function createNotificationElement(notification, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection) {
+    const notificationMessage = document.createElement("p");
+    // Set the content of the notification elements
+    notificationMessage.textContent = likeComment || commentPost || replyPost || likePost || likeReply;
+    // Calculate the time difference in minutes
+    const minutesAgo = Math.floor((new Date() - new Date(notification.created_at)) / 60000);
+    // Create the notification elements
+    const notificationListItem = document.createElement("li");
+    notificationListItem.className = 'nav-item notification-link unread-indicator';
+    const notificationLink = document.createElement("a");
+    const profileIcon = document.createElement("figure");
+    const profilePost = document.createElement("div");
+    const unreadIndicator = document.createElement("figure");
+    const timeAgoContainer = document.createElement("div");
+    const notificationTime = document.createElement("p");
+    notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
+    //notificationLink.href = `/forum/${n.id}`;
+    notificationLink.className = 'nav-link';
+    notificationTime.className = 'notification-time';
+    notificationMessage.className = 'notification-message';
+    profileIcon.className = 'profile-icon';
+    profilePost.className = 'profile-post';
+    profileIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg"  fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10.5 8 10.5s4.757.726 5.468-2.13A7 7 0 0 0 8 1z"/></svg>`;
+    // Append the notification elements to the DOM
+    profilePost.appendChild(profileIcon)
+    profilePost.appendChild(notificationMessage)
+    getNotificationsSection.appendChild(notificationListItem).appendChild(notificationLink).appendChild(profilePost)
+    notificationLink.appendChild(timeAgoContainer).appendChild(notificationTime)
+  }
 </script>

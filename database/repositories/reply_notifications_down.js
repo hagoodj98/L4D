@@ -19,7 +19,7 @@ LEFT JOIN LATERAL (
                 'reaction_type', replies_reactions.reaction_type,
                 'created_at', replies_reactions.created_at,
                 'reply_id', replies_reactions.reply_id,
-                'the_reply', replies.reply_post,
+                'reply_post', replies.reply_post,
                 'notification_type', 'replies_down'
             )
         ) AS reactions_to_replies 

@@ -19,8 +19,8 @@ export const getAllCommentsNotificationsDown = async (userId) => {
                     'reaction_type', comments_reactions.reaction_type,
                     'notification_type', 'comments_down',
                     'created_at', comments_reactions.created_at,
-                    'comment', comment_id,
-                    'the_comment', comments.comment_post
+                    'comment_id', comment_id,
+                    'comment_post', comments.comment_post
                 )
             ) AS reaction FROM comments_reactions
             LEFT JOIN users ON comments_reactions.user_id = users.id
@@ -36,8 +36,8 @@ export const getAllCommentsNotificationsDown = async (userId) => {
                     'reaction_type', replies_reactions.reaction_type,
                     'notification_type', 'comments_down',
                     'created_at', replies_reactions.created_at,
-                    'reply', reply_id,
-                    'the_reply', replies.reply_post
+                    'reply_id', reply_id,
+                    'reply_post', replies.reply_post
                 )
             ) AS reaction_to_replies  FROM replies_reactions
             LEFT JOIN users ON replies_reactions.user_id = users.id
@@ -54,9 +54,9 @@ export const getAllCommentsNotificationsDown = async (userId) => {
                 json_build_object(
                     'user_name', users.display_name,
                     'created_at', replies.created_at,
-                    'comment', replies.comment_id,
-                    'the_comment', comments.comment_post,
-                    'the_reply', replies.reply_post,
+                    'comment_id', replies.comment_id,
+                    'comment_post', comments.comment_post,
+                    'reply_post', replies.reply_post,
                     'notification_type', 'comments_down'
                 )
             ) AS replies FROM replies
