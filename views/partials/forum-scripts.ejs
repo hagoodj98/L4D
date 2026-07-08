@@ -1101,38 +1101,6 @@
       notificationCountElement.textContent = "0";
       notificationCountContainer.className = "notification-count-container-hidden";
     }
-    async function checkNotifications() {
-      console.log("Checking notifications...");
-      const response = await fetch("http://localhost:3000/notifications", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const data = await response.json();
-      const getNotificationsSection = document.getElementById("notificationsDropdown");
-      const notificationCountElement = document.getElementById("notificationCountText");
-      const notificationCountContainer = document.getElementById("notificationCountContainer");
-      const getAllOtherUsersNotifications = data.notifications;
-      notificationCountContainer.className = "notification-count-container";
-      notificationCountElement.textContent = getAllOtherUsersNotifications.length;
-
-       for (let otherUser of getAllOtherUsersNotifications) {
-          const notification = otherUser;
-          if(notification.notification_type === 'posts_down' ){
-            const { likeComment, commentPost, replyPost, likePost, likeReply } = createTextForNotificationType(notification);
-            createNotificationElement(notification, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection);
-          }
-          if(notification.notification_type === 'comments_down' ){
-            const { likeComment, commentPost, replyPost, likePost, likeReply } = createTextForNotificationType(notification);
-            createNotificationElement(notification, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection);
-          }
-          if(notification.notification_type === 'replies_down' ){
-            const {  likeComment, commentPost, replyPost, likePost, likeReply  } = createTextForNotificationType(notification);
-            createNotificationElement(notification, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection);
-          }
-       }
-    }
 
   document.addEventListener("DOMContentLoaded", async () => {
     const list = <%- JSON.stringify(listAllContent) %>;
@@ -1154,8 +1122,18 @@
           createNotificationElement(item, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection, wasNotificationRead);
         });
         return;
+    } else if (getAllOtherUsersNotifications.length > 0 && !wasNotificationRead) {
+        const notificationCountElement = document.getElementById("notificationCountText");
+        const notificationCountContainer = document.getElementById("notificationCountContainer");
+        notificationCountContainer.className = "notification-count-container";
+        notificationCountElement.textContent = getAllOtherUsersNotifications.length;
+        getAllOtherUsersNotifications.forEach(item =>  {
+          const getNotificationsSection = document.getElementById("notificationsDropdown");
+          const { likeComment, commentPost, replyPost, likePost, likeReply } = createTextForNotificationType(item);
+          createNotificationElement(item, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection);
+        });
+        return;
     }
-    await checkNotifications();
   });
   function createTextForNotificationType(notification) {
     if (notification.notification_type === 'posts_down') {

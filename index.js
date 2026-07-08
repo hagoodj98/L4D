@@ -46,7 +46,10 @@ import { getAllPostNotificationsDown } from "./database/repositories/post_notifi
 import { getAllRepliesNotificationsDown } from "./database/repositories/reply_notifications_down.js";
 import { getAllCommentsNotificationsDown } from "./database/repositories/comment_notifications_down.js";
 import { getAllRepliesNotificationsDown as getAllRepliesNotificationsDownHelper } from "./utils/notififcationHelper.js";
-
+import {
+  updateNotificationsRead,
+  getNotificationsReadStatus,
+} from "./database/repositories/notifications_read.js";
 const app = express();
 
 const port = 3000;
@@ -98,12 +101,18 @@ app.use(async (req, res, next) => {
       ...commentsNotifications,
       ...repliesNotifications,
     ];
+    const getnotificationsReadStatus = await getNotificationsReadStatus(
+      req.user.id,
+    );
     const getAllRepliesNotificationsDownResult =
       await getAllRepliesNotificationsDownHelper(allNotifications);
+
     // Merge all notifications into a single array for the authenticated user.
     notificationsState.notifications = [
       ...getAllRepliesNotificationsDownResult,
     ];
+
+    notificationsState.wasRead = getnotificationsReadStatus.notifications_read;
     console.log(`Authenticated user: ${req}`);
   }
   // Store the current path for active nav link highlighting.
@@ -174,15 +183,7 @@ app.get("/login", (req, res) => {
     });
   }
 });
-app.get("/notifications", async (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.redirect("/login");
-  }
 
-  return res.json({
-    notifications: notificationsState.notifications || [],
-  });
-});
 app.get("/check-notifications-reloaded", (req, res) => {
   if (!req.isAuthenticated()) {
     return res.redirect("/login");
@@ -194,11 +195,14 @@ app.get("/check-notifications-reloaded", (req, res) => {
     wasNotificationRead: notificationsState.wasRead,
   });
 });
-app.post("/read-notifications", (req, res) => {
+app.post("/read-notifications", async (req, res) => {
   if (!req.isAuthenticated()) {
     return res.redirect("/login");
   }
-  notificationsState.wasRead = true;
+  // Update the notifications_read column for the authenticated user.
+  const userId = req.user.id;
+  const notificationsRead = await updateNotificationsRead(userId);
+  notificationsState.wasRead = notificationsRead.length > 0 ? true : false;
   res.sendStatus(200);
 });
 
