@@ -611,7 +611,9 @@ app.post("/post-reaction", async (req, res, next) => {
     if (existing && existing.reaction_type === reaction_type) {
       await removeReplyReaction(finalReplyId, req.user.id);
       return res.json({
-        reaction_type: `${existing.reaction_type}_removed_final_reply`,
+        reaction_intent: `remove`,
+        reactionButton: `${existing.reaction_type}Button`,
+        postType: `reply`,
       });
     } else if (existing && existing.reaction_type !== reaction_type) {
       const reaction = await updateReplyReaction(
@@ -620,7 +622,9 @@ app.post("/post-reaction", async (req, res, next) => {
         reaction_type,
       );
       return res.json({
-        reaction_type: `${reaction.reaction_type}_updated_final_reply`,
+        reaction_intent: `update`,
+        reactionButton: `${reaction.reaction_type}Button`,
+        postType: `reply`,
       });
     } else {
       const createdAt = new Date();
@@ -631,7 +635,9 @@ app.post("/post-reaction", async (req, res, next) => {
         createdAt,
       );
       return res.json({
-        reaction_type: `${reaction.reaction_type}_final_reply`,
+        reaction_intent: `add`,
+        reactionButton: `${reaction.reaction_type}Button`,
+        postType: `reply`,
       });
     }
   } else if (commentId) {
@@ -641,7 +647,9 @@ app.post("/post-reaction", async (req, res, next) => {
     if (existing && existing.reaction_type === reaction_type) {
       await removeCommentReaction(commentId, req.user.id);
       return res.json({
-        reaction_type: `${existing.reaction_type}_removed_comment`,
+        reaction_intent: `remove`,
+        reactionButton: `${existing.reaction_type}Button`,
+        postType: `comment`,
       });
     } else if (existing && existing.reaction_type !== reaction_type) {
       const reaction = await updateReactionComment(
@@ -650,7 +658,9 @@ app.post("/post-reaction", async (req, res, next) => {
         reaction_type,
       );
       return res.json({
-        reaction_type: `${reaction.reaction_type}_updated_comment`,
+        reaction_intent: `update`,
+        reactionButton: `${reaction.reaction_type}Button`,
+        postType: `comment`,
       });
     } else {
       const createdAt = new Date();
@@ -660,7 +670,11 @@ app.post("/post-reaction", async (req, res, next) => {
         reaction_type,
         createdAt,
       );
-      return res.json({ reaction_type: `${reaction.reaction_type}_comment` });
+      return res.json({
+        reaction_intent: `add`,
+        reactionButton: `${reaction.reaction_type}Button`,
+        postType: `comment`,
+      });
     }
   } else {
     // Post reactions follow the same toggle behavior as reply reactions.
@@ -669,10 +683,18 @@ app.post("/post-reaction", async (req, res, next) => {
     if (existing && existing.reaction_type === reaction_type) {
       await removeReaction(postId, req.user.id);
       // Return the new reaction state to the client for immediate UI update.
-      return res.json({ reaction_type: `${existing.reaction_type}_removed` });
+      return res.json({
+        reaction_intent: `remove`,
+        reactionButton: `${existing.reaction_type}Button`,
+        postType: `post`,
+      });
     } else if (existing && existing.reaction_type !== reaction_type) {
       const reaction = await updateReaction(postId, req.user.id, reaction_type);
-      return res.json({ reaction_type: `${reaction.reaction_type}_updated` });
+      return res.json({
+        reaction_intent: `update`,
+        reactionButton: `${reaction.reaction_type}Button`,
+        postType: `post`,
+      });
     } else {
       const createdAt = new Date();
       const reaction = await addReaction(
@@ -681,7 +703,11 @@ app.post("/post-reaction", async (req, res, next) => {
         reaction_type,
         createdAt,
       );
-      return res.json({ reaction_type: `${reaction.reaction_type}_post` });
+      return res.json({
+        reaction_intent: `add`,
+        reactionButton: `${reaction.reaction_type}Button`,
+        postType: `post`,
+      });
     }
   }
 });

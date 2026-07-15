@@ -69,7 +69,7 @@
                   <input type="hidden" name="post_id" value=" ${newPost.id} " />
                   <input type="hidden" name="reaction_type" value="like" />
                   <button
-                    id="likeButton-${newPost.id}"
+                    id="postLikeButton-${newPost.id}"
                     class="postButton"
                   >
                     <svg
@@ -84,12 +84,12 @@
                       ></path>
                     </svg>
                   </button>
-                <span id="likeCount-${newPost.id}" style="color: white"> 0 </span>
+                <span id="postLikeCount-${newPost.id}" style="color: white"> 0 </span>
                 <form onsubmit="handleReaction(${newPost.id}, null, 'dislike'); return false;">
                   <input type="hidden" name="post_id" value=" ${newPost.id} " />
                   <input type="hidden" name="reaction_type" value="dislike" />
                   <button
-                    id="dislikeButton-${newPost.id}"
+                    id="postDislikeButton-${newPost.id}"
                     class="postButton"
                   >
                     <svg
@@ -104,7 +104,7 @@
                       ></path>
                     </svg>
                   </button>
-                <span id="dislikeCount-${newPost.id}" style="color: white"> 0 </span>
+                <span id="postDislikeCount-${newPost.id}" style="color: white"> 0 </span>
                 </form>
                 <button
                   class="reply roboto-condensed"
@@ -115,13 +115,13 @@
               </div>
               <button
                   onclick="showAllReplies(${newPost.id}, '${username}')"
-                  id="commentButton-${newPost.id}"
+                  id="showAllComments-for-post-${newPost.id}"
                   class="comment postButton"
                 >
-                <span  style="color: white"> <span id="replyCount-${newPost.id}">0</span> replies </span>
+                <span  style="color: white"> <span id="commentCount-for-post-${newPost.id}">0</span> replies </span>
                 </button>
               <div
-                id="replyInputBox-${newPost.id}"
+                id="create-comment-for-post-${newPost.id}"
                 style="display: none"
                 class="forum-reply-editor-wrap"
               >
@@ -149,7 +149,7 @@
                   </div>
                 </form>
               </div>
-              <div id="commentInputBox-${newPost.id}" style="display: none"></div>
+              <div id="create-comment-for-post-${newPost.id}" style="display: none"></div>
             </div>`;
           postsContainer.insertAdjacentHTML('afterbegin', newHTML);
           const insertedPost = postsContainer.querySelector(".new-post");
@@ -167,11 +167,11 @@
 
         if (replying) {
           if(panelType === 'firstTier') {
-            const replySection = document.getElementById(`replyInputBox-${id}`);
+            const replySection = document.getElementById(`create-comment-for-post-${id}`);
             replySection.style.display = replySection.style.display === "none" ? "block" : "none";
             return;
           }
-          const finalReplyBox = document.getElementById(`finalReplyInputBox-${id}`);
+          const finalReplyBox = document.getElementById(`create-reply-for-comment-${id}`);
           if (finalReplyBox.style.display === "block") {
             finalReplyBox.style.display = "none";
             return;
@@ -180,14 +180,14 @@
             return;
           }
         }
-        const replyBox = document.getElementById(`replyInputBox-${id}`);
+        const replyBox = document.getElementById(`create-comment-for-post-${id}`);
         replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
     }
     function showAllReplies(id, isFirstReplyTier, isSecondReplyTier, replied = false, panelType) {
 
       if (replied) {
         if (isSecondReplyTier) {
-          const finalReplySection = document.getElementById(`finalReplyCommentInputBox-${id}`);
+          const finalReplySection = document.getElementById(`replies-${id}`);
           if (finalReplySection.style.display === "block") {
             finalReplySection.style.display = "none";
             return;
@@ -196,32 +196,30 @@
             return;
           }
         } else if (isFirstReplyTier) {
-          const replySection = document.getElementById(`commentInputBox-${id}`);
+          const replySection = document.getElementById(`comments-${id}`);
           replySection.style.display = replySection.style.display === "none" ? "block" : "none";
         }
           else {
-            const replySection = document.getElementById(`commentInputBox-${id}`);
+            const replySection = document.getElementById(`comments-${id}`);
             replySection.style.display = replySection.style.display === "none" ? "block" : "none";
           }
         }
         else {
           if (panelType === "secondTier") {
-               const finalReplySection = document.getElementById(`finalReplyCommentInputBox-${id}`);
+               const finalReplySection = document.getElementById(`replies-${id}`);
               finalReplySection.style.display = finalReplySection.style.display === "none" ? "block" : "none";
           } else if (panelType === "firstTier") {
-          const replySection = document.getElementById(`commentInputBox-${id}`);
+          const replySection = document.getElementById(`comments-${id}`);
           replySection.style.display = replySection.style.display === "none" ? "block" : "none";
           }
         }
     }
       async function handleReplySubmit(postId, replyId, username) {
-
         let replyRoute;
-
         if (replyId && !postId) {
-          replyRoute = document.querySelector(`#finalReplyInputBox-${replyId} textarea`);
+          replyRoute = document.querySelector(`#create-reply-for-comment-${replyId} textarea`);
         } else if (postId && !replyId) {
-          replyRoute = document.querySelector(`#replyInputBox-${postId} textarea`);
+          replyRoute = document.querySelector(`#create-comment-for-post-${postId} textarea`);
         }
         const replyContent = replyRoute.value.trim();
         if (!replyContent) return;
@@ -243,11 +241,11 @@
               let updateReplyCountElementId;
               let refreshedReplySectionId;
               if (replyId && !postId) {
-                refreshedReplySectionId = document.getElementById(`finalReplyCommentInputBox-${replyId}`);
-                updateReplyCountElementId = document.getElementById(`finalReplyCount-${replyId}`);
+                refreshedReplySectionId = document.getElementById(`create-reply-for-comment-${replyId}`);
+                updateReplyCountElementId = document.getElementById(`replyCount-for-comment-${replyId}`);
               } else if (postId && !replyId) {
-                refreshedReplySectionId = document.getElementById(`commentInputBox-${postId}`);
-                updateReplyCountElementId = document.getElementById(`replyCount-${postId}`);
+                refreshedReplySectionId = document.getElementById(`create-comment-for-post-${postId}`);
+                updateReplyCountElementId = document.getElementById(`commentCount-for-post-${postId}`);
               }
               replyRoute.value = "";
               const isPanelOpen = refreshedReplySectionId.style.display === "block";
@@ -301,7 +299,7 @@
                       />
                       <input type="hidden" name="reaction_type" value="like" />
                       <button
-                        id="finalReplyLikeButton-${newSubReply.id}"
+                        id="replyLikeButton-${newSubReply.id}"
                         class="postButton  ${newSubReply.current_user_reaction === "like" ? "reaction-color" : ""} "
                       >
                         <svg
@@ -316,7 +314,7 @@
                           ></path>
                         </svg>
                       </button>
-                      <span id="finalReplyLikeCount-${newSubReply.id}" style="color: white"> 0 </span>
+                      <span id="replyLikeCount-${newSubReply.id}" style="color: white"> 0 </span>
                     </form>
                     <form onsubmit="handleReaction(null,null, ${newSubReply.id}, 'dislike'); return false;">
                       <input
@@ -330,7 +328,7 @@
                         value="dislike"
                       />
                       <button
-                        id="finalReplyDislikeButton-${newSubReply.id}"
+                        id="replyDislikeButton-${newSubReply.id}"
                         class="postButton  ${newSubReply.current_user_reaction === "dislike" ? "reaction-color" : ""} "
                       >
                         <svg
@@ -345,7 +343,7 @@
                           ></path>
                         </svg>
                       </button>
-                      <span id="finalReplyDislikeCount-${newSubReply.id}" style="color: white"> 0 </span>
+                      <span id="replyDislikeCount-${newSubReply.id}" style="color: white"> 0 </span>
                     </form>
                     </div>
                   </div>`;
@@ -446,10 +444,11 @@
                   id="commentButton-${newReplyData.id}"
                   class="comment postButton  ${newReplyData.current_user_reaction === "comment" ? "reaction-color" : ""} "
                 >
-                  <span style="color: white"> <span id="replyCount-${newReplyData.id}">0</span> replies </span>
+
+                  <span style="color: white"> <span id="replyCount-for-comment-${newReplyData.id}">0</span> replies </span>
                 </button>
                 <div
-                  id="replyInputBox-${newReplyData.id}"
+                  id="create-reply-for-comment-${newReplyData.id}"
                   style="display: none"
                   class="forum-reply-editor-wrap"
                 >
@@ -561,7 +560,7 @@
                     <input type="hidden" name="post_id" value="${p.id}" />
                     <input type="hidden" name="reaction_type" value="like" />
                     <button
-                      id="likeButton-${p.id}"
+                      id="postLikeButton-${p.id}"
                       class="postButton  ${p.current_user_reaction === "like" ? "reaction-color" : ""} "
                     >
                       <svg
@@ -577,12 +576,12 @@
                       </svg>
                     </button>
                   </form>
-                  <span id="likeCount-${p.id}" style="color: white"> ${p.likes} </span>
+                  <span id="postLikeCount-${p.id}" style="color: white"> ${p.likes} </span>
                   <form onsubmit="handleReaction(${p.id}, null, null, 'dislike'); return false;">
                     <input type="hidden" name="post_id" value="${p.id}" />
                     <input type="hidden" name="reaction_type" value="dislike" />
                     <button
-                      id="dislikeButton-${p.id}"
+                      id="postDislikeButton-${p.id}"
                       class="postButton ${p.current_user_reaction === "dislike" ? "reaction-color" : ""} "
                     >
                       <svg
@@ -598,7 +597,7 @@
                       </svg>
                     </button>
                   </form>
-                  <span id="dislikeCount-${p.id}" style="color: white"> ${p.dislikes} </span>
+                  <span id="postDislikeCount-${p.id}" style="color: white"> ${p.dislikes} </span>
                   <button
                     class="reply roboto-condensed"
                     onclick="toggleReplyBox(${p.id})"
@@ -608,13 +607,13 @@
                 </div>
                 <button
                   onclick="showAllReplies(${p.id}, true, false, false, 'firstTier')"
-                  id="commentButton-${p.id}"
+                  id="postcommentButton-${p.id}"
                   class="comment postButton  ${p.current_user_reaction === "comment" ? "reaction-color" : ""} "
                 >
-                  <span  style="color: white"> <span id="replyCount-${p.id}">${p.comment_count}</span> replies </span>
+                  <span  style="color: white"> <span id="commentCount-for-post-${p.id}">${p.comment_count}</span> replies </span>
                 </button>
                 <div
-                  id="replyInputBox-${p.id}"
+                  id="create-comment-for-post-${p.id}"
                   style="display: none"
                   class="forum-reply-editor-wrap"
                 >
@@ -641,7 +640,7 @@
                     </div>
                   </form>
                 </div>
-                <div id="commentInputBox-${p.id}" style="display: none">
+                <div id="comments-${p.id}" style="display: none">
                     ${p.comments
                       .flatMap((comment) => {
                         const created = new Date(comment.created_at);
@@ -740,10 +739,10 @@
                             id="commentButton-${comment.id}"
                             class="comment postButton  ${comment.current_user_reaction === "comment" ? "reaction-color" : ""} "
                           >
-                            <span style="color: white"> <span id="finalReplyCount-${comment.id}">${comment.reply_count}</span> replies </span>
+                            <span style="color: white"> <span id="replyCount-for-comment-${comment.id}">${comment.reply_count}</span> replies </span>
                           </button>
                           <div
-                            id="finalReplyInputBox-${comment.id}"
+                            id="create-reply-for-comment-${comment.id}"
                             style="display: none"
                             class="forum-reply-editor-wrap"
                           >
@@ -770,7 +769,7 @@
                               </div>
                             </form>
                           </div>
-                          <div id="finalReplyCommentInputBox-${comment.id}" style="display: none">
+                          <div id="replies-${comment.id}" style="display: none">
                             ${comment.replies.map((reply) => {
                               const created = new Date(reply.created_at);
                               const day = created.getDate().toString().padStart(2, "0");
@@ -810,7 +809,7 @@
                                     />
                                     <input type="hidden" name="reaction_type" value="like" />
                                     <button
-                                      id="finalReplyLikeButton-${reply.id}"
+                                      id="replyLikeButton-${reply.id}"
                                       class="postButton  ${reply.current_user_reaction === "like" ? "reaction-color" : ""} "
                                     >
                                       <svg
@@ -825,7 +824,7 @@
                                         ></path>
                                       </svg>
                                     </button>
-                                    <span id="finalReplyLikeCount-${reply.id}" style="color: white"> ${reply.likes} </span>
+                                    <span id="replyLikeCount-${reply.id}" style="color: white"> ${reply.likes} </span>
                                   </form>
                                   <form onsubmit="handleReaction(null, null, ${reply.id}, 'dislike'); return false;">
                                     <input
@@ -839,7 +838,7 @@
                                       value="dislike"
                                     />
                                     <button
-                                      id="finalReplyDislikeButton-${reply.id}"
+                                      id="replyDislikeButton-${reply.id}"
                                       class="postButton  ${reply.current_user_reaction === "dislike" ? "reaction-color" : ""} "
                                     >
                                       <svg
@@ -854,7 +853,7 @@
                                         ></path>
                                       </svg>
                                     </button>
-                                    <span id="finalReplyDislikeCount-${reply.id}" style="color: white"> ${reply.dislikes} </span>
+                                    <span id="replyDislikeCount-${reply.id}" style="color: white"> ${reply.dislikes} </span>
                                   </form>
                                 </div>
                               `
@@ -889,195 +888,14 @@
             return;
           }
           const data = await response.json();
-          // Update the UI based on the new reaction state
-          if (data.reaction_type) {
-            ///
-            const likeButton = document.getElementById(`likeButton-${postId}`);
-            const likeCount = document.getElementById(`likeCount-${postId}`);
-            const dislikeButton = document.getElementById(`dislikeButton-${postId}`);
-            const dislikeCount = document.getElementById(`dislikeCount-${postId}`);
-            ///
-            const commentLikeCount = document.getElementById(`commentLikeCount-${commentId}`);
-            const commentDislikeCount = document.getElementById(`commentDislikeCount-${commentId}`);
-            const commentLikeButton = document.getElementById(`commentLikeButton-${commentId}`);
-            const commentDislikeButton = document.getElementById(`commentDislikeButton-${commentId}`);
-            ///
-            const finalReplyLikeCount = document.getElementById(`finalReplyLikeCount-${finalReplyId}`);
-            const finalReplyDislikeCount = document.getElementById(`finalReplyDislikeCount-${finalReplyId}`);
-            const finalReplyLikeButton = document.getElementById(`finalReplyLikeButton-${finalReplyId}`);
-            const finalReplyDislikeButton = document.getElementById(`finalReplyDislikeButton-${finalReplyId}`);
-            if (data.reaction_type === "like" || data.reaction_type === "like_final_reply" || data.reaction_type === "like_removed_final_reply" || data.reaction_type === "like_updated_final_reply" || data.reaction_type === 'like_removed' || data.reaction_type === 'like_updated' || data.reaction_type === 'like_comment' || data.reaction_type === 'like_removed_comment' || data.reaction_type === 'like_updated_comment') {
-              if (data.reaction_type === 'like_updated_final_reply') {
-                // This means the user switched from dislike to like on a final reply
-                const currentDislikeCount = Number(finalReplyDislikeCount.textContent);
-                const newDislikeCount = currentDislikeCount - 1;
-                finalReplyDislikeCount.textContent = newDislikeCount;
-                finalReplyDislikeButton.classList.remove("reaction-color");
+          const reactionButton = data.reactionButton;
+          const reactionIntent = data.reaction_intent;
+          const postType = data.postType;
 
-                const currentLikeCount = Number(finalReplyLikeCount.textContent);
-                const newLikeCount = currentLikeCount + 1;
-                finalReplyLikeCount.textContent = newLikeCount;
-                finalReplyLikeButton.classList.add("reaction-color");
-                return;
-              }
-              if (data.reaction_type === 'like_final_reply') {
-                // This means a like was added to a final reply
-                const currentLikeCount = Number(finalReplyLikeCount.textContent);
-                const newLikeCount = currentLikeCount + 1;
-                finalReplyLikeCount.textContent = newLikeCount;
-                finalReplyLikeButton.classList.add("reaction-color");
-                return;
-              }
-              if (data.reaction_type === 'like_removed_final_reply') {
-                // This means a like was removed from a final reply
-                const currentLikeCount = Number(finalReplyLikeCount.textContent);
-                const newLikeCount = currentLikeCount - 1;
-                finalReplyLikeCount.textContent = newLikeCount;
-                finalReplyLikeButton.classList.remove("reaction-color");
-                return;
-              }
-              if (data.reaction_type === 'like_updated_comment') {
-                // This means the user switched from dislike to like on a comment
-                const currentDislikeCount = Number(commentDislikeCount.textContent);
-                const newDislikeCount = currentDislikeCount - 1;
-                commentDislikeCount.textContent = newDislikeCount;
-                commentDislikeButton.classList.remove("reaction-color");
+          handleReactionIntent(reactionIntent, reactionButton, postType, postId, commentId, finalReplyId);
 
-                const currentLikeCount = Number(commentLikeCount.textContent);
-                const newLikeCount = currentLikeCount + 1;
-                commentLikeCount.textContent = newLikeCount;
-                commentLikeButton.classList.add("reaction-color");
-                return;
-              }
-              if(data.reaction_type === 'like_comment') {
-                // This means a like was added to a comment
-                const currentLikeCount = Number(commentLikeCount.textContent);
-                const newLikeCount = currentLikeCount + 1;
-                commentLikeCount.textContent = newLikeCount;
-                commentLikeButton.classList.add("reaction-color");
-                return;
-              }
-              if (data.reaction_type === 'like_removed_comment') {
-                // This means a like was removed from a comment
-                const currentLikeCount = Number(commentLikeCount.textContent);
-                const newLikeCount = currentLikeCount - 1;
-                commentLikeCount.textContent = newLikeCount;
-                commentLikeButton.classList.remove("reaction-color");
-                return;
-              }
 
-              if (data.reaction_type === 'like_updated') {
-                 // This means the user switched from dislike to like
-                const currentDislikeCount = Number(dislikeCount.textContent);
-                const newDislikeCount = currentDislikeCount - 1;
-                dislikeCount.textContent = newDislikeCount;
-                dislikeButton.classList.remove("reaction-color");
 
-                const currentLikeCount = Number(likeCount.textContent);
-                const newLikeCount = currentLikeCount + 1;
-                likeCount.textContent = newLikeCount;
-                likeButton.classList.add("reaction-color");
-                return;
-              }
-              if (data.reaction_type !== 'like') {
-                  const currentlikeCount = Number(likeCount.textContent);
-                  const newCount = currentlikeCount - 1;
-                  likeCount.textContent = newCount;
-                 likeButton.classList.remove("reaction-color");
-                 return;
-              }
-              const currentlikeCount = Number(likeCount.textContent);
-              const newCount = currentlikeCount + 1;
-              likeCount.textContent = newCount;
-              likeButton.classList.add("reaction-color");
-            } else if (data.reaction_type.includes("dislike") || data.reaction_type === 'dislike_final_reply' || data.reaction_type === 'dislike_removed_final_reply' || data.reaction_type === 'dislike_updated_final_reply' || data.reaction_type === 'dislike_removed' || data.reaction_type === 'dislike_updated' || data.reaction_type === 'dislike_removed_comment' || data.reaction_type === 'dislike_updated_comment') {
-              if( data.reaction_type === 'dislike_updated_final_reply') {
-                // This means the user switched from like to dislike on a final reply
-                const currentLikeCount = Number(finalReplyLikeCount.textContent);
-                const newLikeCount = currentLikeCount - 1;
-                finalReplyLikeCount.textContent = newLikeCount;
-                finalReplyLikeButton.classList.remove("reaction-color");
-
-                const currentDislikeCount = Number(finalReplyDislikeCount.textContent);
-                const newDislikeCount = currentDislikeCount + 1;
-                finalReplyDislikeCount.textContent = newDislikeCount;
-                finalReplyDislikeButton.classList.add("reaction-color");
-                return;
-              }
-              if (data.reaction_type === 'dislike_final_reply') {
-                // This means a dislike was added to a final reply
-                const currentDislikeCount = Number(finalReplyDislikeCount.textContent);
-                const newDislikeCount = currentDislikeCount + 1;
-                finalReplyDislikeCount.textContent = newDislikeCount;
-                finalReplyDislikeButton.classList.add("reaction-color");
-                return;
-              }
-              if (data.reaction_type === 'dislike_removed_final_reply') {
-                // This means a dislike was removed from a final reply
-                const currentDislikeCount = Number(finalReplyDislikeCount.textContent);
-                const newDislikeCount = currentDislikeCount - 1;
-                finalReplyDislikeCount.textContent = newDislikeCount;
-                finalReplyDislikeButton.classList.remove("reaction-color");
-                return;
-              }
-              if (data.reaction_type === 'dislike_updated_comment') {
-                // This means the user switched from like to dislike on a comment
-                const currentLikeCount = Number(commentLikeCount.textContent);
-                const newLikeCount = currentLikeCount - 1;
-                commentLikeCount.textContent = newLikeCount;
-                commentLikeButton.classList.remove("reaction-color");
-
-                const currentDislikeCount = Number(commentDislikeCount.textContent);
-                const newDislikeCount = currentDislikeCount + 1;
-                commentDislikeCount.textContent = newDislikeCount;
-                commentDislikeButton.classList.add("reaction-color");
-                return;
-              }
-              if (data.reaction_type === 'dislike_comment') {
-                // This means a dislike was added to a comment
-                const currentDislikeCount = Number(commentDislikeCount.textContent);
-                const newDislikeCount = currentDislikeCount + 1;
-                commentDislikeCount.textContent = newDislikeCount;
-                commentDislikeButton.classList.add("reaction-color");
-                return;
-              }
-              if(data.reaction_type === 'dislike_removed_comment') {
-                // This means a dislike was removed from a comment
-                const currentDislikeCount = Number(commentDislikeCount.textContent);
-                const newDislikeCount = currentDislikeCount - 1;
-                commentDislikeCount.textContent = newDislikeCount;
-                commentDislikeButton.classList.remove("reaction-color");
-                return;
-              }
-
-              if (data.reaction_type === 'dislike_updated') {
-                // This means the user switched from like to dislike
-                const currentLikeCount = Number(likeCount.textContent);
-                const newLikeCount = currentLikeCount - 1;
-                likeCount.textContent = newLikeCount;
-                likeButton.classList.remove("reaction-color");
-
-                const currentDislikeCount = Number(dislikeCount.textContent);
-                const newDislikeCount = currentDislikeCount + 1;
-                dislikeCount.textContent = newDislikeCount;
-                dislikeButton.classList.add("reaction-color");
-                return;
-              }
-              if (data.reaction_type !== 'dislike') {
-                // This means a dislike was removed
-                const currentDislikeCount = Number(dislikeCount.textContent);
-                const newCount = currentDislikeCount - 1;
-                dislikeCount.textContent = newCount;
-                dislikeButton.classList.remove("reaction-color");
-                return;
-              }
-              // This means a dislike was added
-              const currentDislikeCount = Number(dislikeCount.textContent);
-              const newCount = currentDislikeCount + 1;
-              dislikeCount.textContent = newCount;
-              dislikeButton.classList.add("reaction-color");
-            }
-          }
         } catch (err) {
           console.error("Error handling reaction:", err);
         }
@@ -1140,6 +958,7 @@
       }
     }
   });
+
   function createTextForNotificationType(notification) {
     if (notification.notification_type === 'posts_down') {
       // Determine the notification message based on the type of reaction or reply
@@ -1282,5 +1101,86 @@
       }
       console.log("Received SSE message:", lengthOfNotifications);
     };
+  }
+  function handleReactionIntent(
+    reactionIntent,
+    reactionButton,
+    postType,
+    postId,
+    commentId,
+    replyId,
+  ) {
+    const id = postId ?? commentId ?? replyId;
+    const likeButton = document.getElementById(`${postType}LikeButton-${id}`);
+    const dislikeButton = document.getElementById(
+      `${postType}DislikeButton-${id}`,
+    );
+    const likeCount = document.getElementById(`${postType}LikeCount-${id}`);
+    const dislikeCount = document.getElementById(
+      `${postType}DislikeCount-${id}`,
+    );
+
+    if (reactionIntent === "add") {
+      // This means a like was added to a final reply
+      const currentLikeCount = Number(
+        reactionButton === "likeButton"
+          ? likeCount.textContent
+          : dislikeCount.textContent,
+      );
+      const newLikeCount = currentLikeCount + 1;
+      reactionButton === "likeButton"
+        ? (likeCount.textContent = newLikeCount)
+        : (dislikeCount.textContent = newLikeCount);
+      reactionButton === "likeButton"
+        ? likeButton.classList.add("reaction-color")
+        : dislikeButton.classList.add("reaction-color");
+      return;
+    } else if (reactionIntent === "remove") {
+      // This means a like was removed from a final reply
+      const currentLikeCount = Number(
+        reactionButton === "likeButton"
+          ? likeCount.textContent
+          : dislikeCount.textContent,
+      );
+      const newLikeCount = currentLikeCount - 1;
+      reactionButton === "likeButton"
+        ? (likeCount.textContent = newLikeCount)
+        : (dislikeCount.textContent = newLikeCount);
+      reactionButton === "likeButton"
+        ? likeButton.classList.remove("reaction-color")
+        : dislikeButton.classList.remove("reaction-color");
+      return;
+    } else if (reactionIntent === "update") {
+      // This means the user switched from dislike to like on a final reply
+      const currentOppositeReactionCount = Number(
+        reactionButton === "likeButton"
+          ? dislikeCount.textContent
+          : likeCount.textContent,
+      );
+      const newOppositeReactionCount = currentOppositeReactionCount - 1;
+      reactionButton === "likeButton"
+        ? (dislikeCount.textContent = newOppositeReactionCount)
+        : (likeCount.textContent = newOppositeReactionCount);
+      reactionButton === "likeButton"
+        ? dislikeButton.classList.remove("reaction-color")
+        : likeButton.classList.remove("reaction-color");
+      const currentLikeCount = Number(
+        reactionButton === "likeButton"
+          ? likeCount.textContent
+          : dislikeCount.textContent,
+      );
+      const newLikeCount = currentLikeCount + 1;
+      reactionButton === "likeButton"
+        ? (likeCount.textContent = newLikeCount)
+        : (dislikeCount.textContent = newLikeCount);
+      reactionButton === "likeButton"
+        ? likeButton.classList.add("reaction-color")
+        : dislikeButton.classList.add("reaction-color");
+      return;
+    }
+    const currentlikeCount = Number(likeCount.textContent);
+    const newCount = currentlikeCount + 1;
+    likeCount.textContent = newCount;
+    likeButton.classList.add("reaction-color");
   }
 </script>
