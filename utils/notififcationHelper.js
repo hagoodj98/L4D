@@ -1,15 +1,15 @@
-export const getAllRepliesNotificationsDown = async (notifications) => {
+export const getAllSourcedNotifications = async (sourcedNotifications) => {
   let getAllOtherUsersNotifications = [];
 
   // If there are notifications, filter them by type and send them to the client.
-  if (notifications.length > 0) {
-    const posts = notifications.filter(
+  if (sourcedNotifications.length > 0) {
+    const posts = sourcedNotifications.filter(
       (otherUser) => otherUser.notification_type === "posts_down",
     );
-    const comments = notifications.filter(
+    const comments = sourcedNotifications.filter(
       (otherUser) => otherUser.notification_type === "comments_down",
     );
-    const replies = notifications.filter(
+    const replies = sourcedNotifications.filter(
       (otherUser) => otherUser.notification_type === "replies_down",
     );
     if (posts.length > 0) {

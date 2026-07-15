@@ -42,22 +42,18 @@ import {
   updateReaction as updateReplyReaction,
 } from "./database/repositories/replies_reactions.js";
 import ErrorHandler from "./utils/error.js";
-import { getAllPostNotificationsDown } from "./database/repositories/post_notifications_down.js";
-import { getAllRepliesNotificationsDown } from "./database/repositories/reply_notifications_down.js";
-import { getAllCommentsNotificationsDown } from "./database/repositories/comment_notifications_down.js";
-import { getAllRepliesNotificationsDown as getAllRepliesNotificationsDownHelper } from "./utils/notififcationHelper.js";
+import { fetchAllNotifications } from "./database/repositories/user_notifications.js";
+import { getAllSourcedNotifications as mergeAllSourcedNotifications } from "./utils/notififcationHelper.js";
 import {
-  updateNotificationsRead,
-  getNotificationsReadStatus,
-} from "./database/repositories/notifications_read.js";
+  getNotificationState,
+  saveNotifcationState,
+} from "./database/repositories/user_notifications.js";
+
 const app = express();
 
 const port = 3000;
 
-let notificationsState = {
-  notifications: [],
-  wasRead: false,
-};
+const cachedUserNotificationState = new Map(); // Map to store notification states for each user
 
 const saltRounds = 10;
 const isProduction = process.env.NODE_ENV === "production";
@@ -88,32 +84,59 @@ app.use(passport.session());
 app.use(async (req, res, next) => {
   res.locals.user = req.user ? req.user.display_name : null;
   if (req.user) {
-    const postNotifications = await getAllPostNotificationsDown(req.user.id);
-    // Fetch notifications for replies and comments, then merge them with post notifications. Assuming the user only leaves a reply or commment. We need a way to notify user. Unlike posts, the current user did not create any post on the main thread.
-    const commentsNotifications = await getAllCommentsNotificationsDown(
-      req.user.id,
-    );
-    const repliesNotifications = await getAllRepliesNotificationsDown(
-      req.user.id,
-    );
-    let allNotifications = [
-      ...postNotifications,
+    // Check if the user's notification state is already cached. If not, fetch it from the database and cache it.
+    if (!cachedUserNotificationState.has(req.user.id)) {
+      const cachedNotificationsState = await getNotificationState(req.user.id);
+      if (cachedNotificationsState?.notification_state?.notifications) {
+        cachedUserNotificationState.set(
+          req.user.id,
+          cachedNotificationsState.notification_state.notifications,
+        );
+      }
+    }
+    // Retrieve the cached notification state for the authenticated user, if available.
+    const cachedNotifications =
+      cachedUserNotificationState.get(req.user.id) ?? [];
+    // If there are cached notifications, use them to avoid unnecessary database queries.
+    if (cachedNotifications.length > 0) {
+      res.locals.notificationState = cachedNotifications;
+      res.locals.currentPath = req.path;
+      return next(); // Use the cached state and skip fetching from the database
+    }
+    // Fetch notifications for posts, comments, and replies for the authenticated user from the database.
+    const { postsNotifications, commentsNotifications, repliesNotifications } =
+      await fetchAllNotifications(req.user.id);
+    // Merge all notifications into a single array for the authenticated user.
+    let allSourcedNotifications = [
+      ...postsNotifications,
       ...commentsNotifications,
       ...repliesNotifications,
     ];
-    const getnotificationsReadStatus = await getNotificationsReadStatus(
-      req.user.id,
+    // Process and merge all sourced notifications with the cached notifications.
+    const IndividualNotifications = await mergeAllSourcedNotifications(
+      allSourcedNotifications,
+      cachedNotifications,
     );
-    const getAllRepliesNotificationsDownResult =
-      await getAllRepliesNotificationsDownHelper(allNotifications);
-
-    // Merge all notifications into a single array for the authenticated user.
-    notificationsState.notifications = [
-      ...getAllRepliesNotificationsDownResult,
-    ];
-
-    notificationsState.wasRead = getnotificationsReadStatus.notifications_read;
-    console.log(`Authenticated user: ${req}`);
+    // Mark all individual notifications as unread before saving to the database.
+    const notificationMarkedUnread = IndividualNotifications.map(
+      (notification) => ({
+        id: crypto.randomUUID(),
+        ...notification,
+        wasRead: false,
+      }),
+    );
+    // Save the updated notification state to the database.
+    const getNotificationsState = await saveNotifcationState(
+      req.user.id,
+      notificationMarkedUnread,
+    );
+    // Retrieve the updated notification state from the database response.
+    const notifications =
+      getNotificationsState[0].notification_state.notifications;
+    cachedUserNotificationState.set(req.user.id, notifications);
+    // Cache the updated notification state for the authenticated user.
+    console.log(`Authenticated user: ${req.user.display_name}`);
+    res.locals.notificationState = notifications;
   }
   // Store the current path for active nav link highlighting.
   res.locals.currentPath = req.path;
@@ -189,10 +212,12 @@ app.get("/check-notifications-reloaded", (req, res) => {
     return res.redirect("/login");
   }
 
+  const userId = req.user.id;
+  const userNotifications = cachedUserNotificationState.get(userId) || [];
+
   return res.json({
-    reloaded: notificationsState.notifications.length > 0 ? true : false,
-    notifications: notificationsState.notifications ?? [],
-    wasNotificationRead: notificationsState.wasRead,
+    notifications: userNotifications,
+    wasNotificationRead: userNotifications.wasRead,
   });
 });
 app.post("/read-notifications", async (req, res) => {
@@ -201,9 +226,148 @@ app.post("/read-notifications", async (req, res) => {
   }
   // Update the notifications_read column for the authenticated user.
   const userId = req.user.id;
-  const notificationsRead = await updateNotificationsRead(userId);
-  notificationsState.wasRead = notificationsRead.length > 0 ? true : false;
+  const userNotifications = cachedUserNotificationState.get(userId) ?? [];
+
+  const convertNotificationsToRead = userNotifications.map((notification) => {
+    if (notification.wasRead === false) {
+      notification.wasRead = true;
+    }
+    return notification;
+  });
+  //save the updated notification state to the database
+  const notificationsRead = await saveNotifcationState(
+    userId,
+    convertNotificationsToRead,
+  );
+  // Update the cached notification state with the latest data from the database
+  cachedUserNotificationState.set(
+    userId,
+    notificationsRead[0].notification_state.notifications,
+  );
   res.sendStatus(200);
+});
+app.get("/update-notifications", (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.redirect("/login");
+  }
+  // Set headers for SSE (Server-Sent Events)
+  res.setHeader("Content-Type", "text/event-stream"); // Set headers for SSE (Server-Sent Events)
+  res.setHeader("Cache-Control", "no-cache"); // Disable caching
+  res.setHeader("Connection", "keep-alive"); // Keep the connection open
+
+  // Keep the connection open for future updates
+  const intervalId = setInterval(async () => {
+    const userId = req.user.id;
+    const getUserNotification = cachedUserNotificationState.get(userId) || [];
+    const cachedNotifications = getUserNotification ?? [];
+    //check to see if there are new notifications for the user by pulling from database
+    const { postsNotifications, commentsNotifications, repliesNotifications } =
+      await fetchAllNotifications(userId);
+    let allSourcedNotifications = [
+      ...postsNotifications,
+      ...commentsNotifications,
+      ...repliesNotifications,
+    ];
+    const IndividualNotifications = await mergeAllSourcedNotifications(
+      allSourcedNotifications,
+    );
+    //at this point, the cache is the only aspect with an id. the individual notifications from the database may not have an id yet. So we need to map the id's from the cache if certain keys match.
+    const mapNotificationsById = IndividualNotifications?.map(
+      (notification) => {
+        const cachedNotification = cachedNotifications.find((cacheN) => {
+          const notificationTypeMatch =
+            cacheN.notification_type === notification.notification_type;
+          const postType = cacheN.post
+            ? cacheN.post === notification.post
+            : cacheN.comment_post
+              ? cacheN.comment_post === notification.comment_post
+              : cacheN.reply_post
+                ? cacheN.reply_post === notification.reply_post
+                : null;
+          const idMatch = cacheN.post_id
+            ? cacheN.post_id === notification.post_id
+            : cacheN.comment_id
+              ? cacheN.comment_id === notification.comment_id
+              : cacheN.reply_id
+                ? cacheN.reply_id === notification.reply_id
+                : null;
+          const reactionTypeMatch =
+            cacheN.reaction_type === notification.reaction_type;
+          const createdAtMatch = cacheN.created_at === notification.created_at;
+          const userMatch = cacheN.user_name === notification.user_name;
+          // Check if the cached notification matches the current notification based on various criteria.
+          if (
+            idMatch &&
+            notificationTypeMatch &&
+            postType &&
+            reactionTypeMatch &&
+            createdAtMatch &&
+            userMatch
+          ) {
+            return {
+              id: cacheN.id,
+              ...notification,
+            };
+          }
+        });
+        // If no matching cached notification is found, create a new notification with a unique ID and mark it as unread.
+        return (
+          cachedNotification ?? {
+            id: crypto.randomUUID(),
+            ...notification,
+            wasRead: false,
+          }
+        );
+      },
+    );
+
+    const areAllNotificationsRead = mapNotificationsById.every(
+      (notification) => notification.wasRead,
+    );
+    //if none of the notifications are read, including any new notifications, send the count to the client
+    if (!areAllNotificationsRead) {
+      let payload = {};
+      //we want to check if all notifications aren't read before we determine how many the other individual notifications are unread
+      const allAreUnread = mapNotificationsById.filter(
+        (notification) => !notification.wasRead,
+      ).length;
+      // If all notifications are unread, send the count to the client immediately.
+      if (allAreUnread === mapNotificationsById.length) {
+        payload = {
+          count: allAreUnread,
+          notifications: mapNotificationsById,
+        };
+        res.write(`data: ${JSON.stringify({ payload })}\n\n`);
+        return;
+      }
+      //select the few marked as unread
+      const fewAreUnread = mapNotificationsById.filter(
+        (notification) => !notification.wasRead,
+      );
+      // Save the updated notification state to the database because we are pulling from database and need to make sure we save this state in the users table. At this point in the code, there was something added to the notifications array that needs to be persisted. As a result, we call the function to save the current state.
+      await saveNotifcationState(userId, mapNotificationsById);
+      //save to cache
+      cachedUserNotificationState.set(userId, mapNotificationsById);
+      // If only a few notifications are unread, send the count to the client.
+      if (fewAreUnread.length > 0) {
+        payload = {
+          count: fewAreUnread.length,
+          notifications: mapNotificationsById,
+        };
+      }
+      res.write(`data: ${JSON.stringify({ payload })}\n\n`);
+      return;
+    } else {
+      // If all notifications are read, do nothing and return early.
+      return;
+    }
+  }, 5000); // Send updates every 5 seconds
+
+  // Clean up when the client disconnects
+  req.on("close", () => {
+    clearInterval(intervalId);
+    res.end();
+  });
 });
 
 app.get("/register", (req, res) => {
@@ -270,6 +434,7 @@ app.get("/forumpagination", async (req, res, next) => {
     return next(new ErrorHandler(500, "Internal Server Error", err));
   }
 });
+
 app.post("/login", async (req, res, next) => {
   // Keep local auth result handling in this route so form-specific errors
   // can be normalized into the central error middleware.

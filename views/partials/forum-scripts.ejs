@@ -1089,8 +1089,8 @@
         const NotificationListItems = document.querySelectorAll(".notification-link");
         //remove the unread indicator from the bell icon
         NotificationListItems.forEach(item => item.classList.remove("unread-indicator"));
-
       };
+
       const response = await fetch("http://localhost:3000/read-notifications", {
           method: "POST",
           headers: {
@@ -1114,25 +1114,30 @@
     });
     const data = await response.json();
     const getAllOtherUsersNotifications = data.notifications;
-    const wasNotificationRead = data.wasNotificationRead;
-    if (getAllOtherUsersNotifications.length > 0 && wasNotificationRead) {
-        getAllOtherUsersNotifications.forEach(item =>  {
-          const getNotificationsSection = document.getElementById("notificationsDropdown");
-          const { likeComment, commentPost, replyPost, likePost, likeReply } = createTextForNotificationType(item);
-          createNotificationElement(item, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection, wasNotificationRead);
-        });
-        return;
-    } else if (getAllOtherUsersNotifications.length > 0 && !wasNotificationRead) {
-        const notificationCountElement = document.getElementById("notificationCountText");
+    const notificationsNotRead = getAllOtherUsersNotifications.filter(item => item.wasRead === false);
+    const notificationRead = getAllOtherUsersNotifications.filter(item => item.wasRead === true);
+    if (getAllOtherUsersNotifications.length > 0) {
+      if (notificationsNotRead.length !== 0) {
         const notificationCountContainer = document.getElementById("notificationCountContainer");
+        const notificationCountElement = document.getElementById("notificationCountText");
+        notificationCountElement.textContent = notificationsNotRead.length;
         notificationCountContainer.className = "notification-count-container";
-        notificationCountElement.textContent = getAllOtherUsersNotifications.length;
-        getAllOtherUsersNotifications.forEach(item =>  {
+        notificationsNotRead.forEach(item =>  {
           const getNotificationsSection = document.getElementById("notificationsDropdown");
           const { likeComment, commentPost, replyPost, likePost, likeReply } = createTextForNotificationType(item);
-          createNotificationElement(item, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection);
+          createNotificationElement(item, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection, false);
         });
         return;
+      }
+      if (notificationRead.length !== 0) {
+        //We don't need to show the notification count for read notifications
+        notificationRead.forEach(item =>  {
+          const getNotificationsSection = document.getElementById("notificationsDropdown");
+          const { likeComment, commentPost, replyPost, likePost, likeReply } = createTextForNotificationType(item);
+          createNotificationElement(item, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection, true);
+        });
+        return;
+      }
     }
   });
   function createTextForNotificationType(notification) {
@@ -1143,7 +1148,7 @@
       const likeReply = (notification.reaction_type && notification.reply_id) ? `${notification.user_name} ${notification.reaction_type}d your reply` : '';
       const commentPost = (!notification.reaction_type && notification.post_id) ? `${notification.user_name} commented on your post` : '';
       const replyPost = (!notification.reaction_type && notification.comment_id) ? `${notification.user_name} replied to your comment` : '';
-      return {likePost, likeComment, likeReply, commentPost, replyPost,};
+      return {likePost, likeComment, likeReply, commentPost, replyPost};
     } else if (notification.notification_type === 'comments_down') {
         const likeComment = (notification.reaction_type && notification.comment_id) ? `${notification.user_name} ${notification.reaction_type}d your comment` : '';
          const likeReply = (notification.reaction_type && notification.reply_id) ? `${notification.user_name} ${notification.reaction_type}d your reply` : '';
@@ -1172,6 +1177,7 @@
     // Create the notification elements
     const notificationListItem = document.createElement("li");
     notificationListItem.className = `nav-item notification-link ${wasNotificationRead ? '' : 'unread-indicator'}`;
+
     const notificationLink = document.createElement("a");
     const profileIcon = document.createElement("figure");
     const profilePost = document.createElement("div");
@@ -1191,5 +1197,90 @@
     profilePost.appendChild(notificationMessage)
     getNotificationsSection.appendChild(notificationListItem).appendChild(notificationLink).appendChild(profilePost)
     notificationLink.appendChild(timeAgoContainer).appendChild(notificationTime)
+  }
+</script>
+<script>
+  const notificationCountElement = document.getElementById(
+    "notificationCountText",
+  );
+  const notificationCountContainer = document.getElementById(
+    "notificationCountContainer",
+  );
+  if (typeof EventSource !== undefined) {
+    const source = new EventSource("/update-notifications");
+    source.onmessage = (e) => {
+      const lengthOfNotifications = JSON.parse(e.data).payload.count;
+      const notifications = JSON.parse(e.data).payload.notifications ?? [];
+      if (
+        notificationCountContainer.classList.contains(
+          "notification-count-container-hidden",
+        )
+      ) {
+        notificationCountContainer.classList.remove(
+          "notification-count-container-hidden",
+        );
+      }
+      const notificationsNotRead = notifications.filter(
+        (item) => item.wasRead === false,
+      );
+      const notificationRead = notifications.filter(
+        (item) => item.wasRead === true,
+      );
+      if (notifications.length > 0) {
+        //clear the notifications section before replacing them
+        const getNotificationsSection = document.getElementById(
+          "notificationsDropdown",
+        );
+        getNotificationsSection.replaceChildren();
+        if (notificationsNotRead.length !== 0) {
+          const notificationCountContainer = document.getElementById(
+            "notificationCountContainer",
+          );
+          const notificationCountElement = document.getElementById(
+            "notificationCountText",
+          );
+          notificationCountElement.textContent = notificationsNotRead.length;
+          notificationCountContainer.className = "notification-count-container";
+          notificationsNotRead.forEach((item) => {
+            const getNotificationsSection = document.getElementById(
+              "notificationsDropdown",
+            );
+            const { likeComment, commentPost, replyPost, likePost, likeReply } =
+              createTextForNotificationType(item);
+            createNotificationElement(
+              item,
+              likeComment,
+              commentPost,
+              replyPost,
+              likePost,
+              likeReply,
+              getNotificationsSection,
+              false,
+            );
+          });
+        }
+        if (notificationRead.length !== 0) {
+          //We don't need to show the notification count for read notifications
+          notificationRead.forEach((item) => {
+            const getNotificationsSection = document.getElementById(
+              "notificationsDropdown",
+            );
+            const { likeComment, commentPost, replyPost, likePost, likeReply } =
+              createTextForNotificationType(item);
+            createNotificationElement(
+              item,
+              likeComment,
+              commentPost,
+              replyPost,
+              likePost,
+              likeReply,
+              getNotificationsSection,
+              true,
+            );
+          });
+        }
+      }
+      console.log("Received SSE message:", lengthOfNotifications);
+    };
   }
 </script>
