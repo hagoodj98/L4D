@@ -86,8 +86,14 @@ test.describe("Notification SSE flows", () => {
     browser,
   }) => {
     const suffix = uniqueSuffix();
-    const { user1Context, user97Context, user1Page, user97Name, postId, postText } =
-      await createNotificationScenario(browser, suffix);
+    const {
+      user1Context,
+      user97Context,
+      user1Page,
+      user97Name,
+      postId,
+      postText,
+    } = await createNotificationScenario(browser, suffix);
 
     try {
       await waitForUnreadNotification(user1Page);
@@ -107,7 +113,9 @@ test.describe("Notification SSE flows", () => {
         user97Name,
       );
       await expect(
-        user1Page.locator(".notification-link a .notification-source-post").first(),
+        user1Page
+          .locator(".notification-link a .notification-source-post")
+          .first(),
       ).toHaveText(`"${postText.slice(0, 20)}..."`);
     } finally {
       await user1Context.close();
@@ -119,8 +127,14 @@ test.describe("Notification SSE flows", () => {
     browser,
   }) => {
     const suffix = uniqueSuffix();
-    const { user1Context, user97Context, user1Page, user97Name, postId, postText } =
-      await createNotificationScenario(browser, suffix);
+    const {
+      user1Context,
+      user97Context,
+      user1Page,
+      user97Name,
+      postId,
+      postText,
+    } = await createNotificationScenario(browser, suffix);
 
     try {
       await waitForUnreadNotification(user1Page);
@@ -147,7 +161,9 @@ test.describe("Notification SSE flows", () => {
         user97Name,
       );
       await expect(
-        user1Page.locator(".notification-link a .notification-source-post").first(),
+        user1Page
+          .locator(".notification-link a .notification-source-post")
+          .first(),
       ).toHaveText(`"${postText.slice(0, 20)}..."`);
       await expect(notificationItems.first()).not.toHaveClass(
         /unread-indicator/,
