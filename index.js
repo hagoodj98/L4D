@@ -43,10 +43,10 @@ import {
 } from "./database/repositories/replies_reactions.js";
 import ErrorHandler from "./utils/error.js";
 import { fetchAllNotifications } from "./database/repositories/user_notifications.js";
-import { getAllSourcedNotifications as mergeAllSourcedNotifications } from "./utils/notififcationHelper.js";
+import { getAllSourcedNotifications as mergeAllSourcedNotifications } from "./utils/notificationHelper.js";
 import {
   getNotificationState,
-  saveNotifcationState,
+  saveNotificationState,
 } from "./database/repositories/user_notifications.js";
 
 const app = express();
@@ -104,13 +104,16 @@ app.use(async (req, res, next) => {
       return next(); // Use the cached state and skip fetching from the database
     }
     // Fetch notifications for posts, comments, and replies for the authenticated user from the database.
-    const { postsNotifications, commentsNotifications, repliesNotifications } =
-      await fetchAllNotifications(req.user.id);
+    const {
+      postsNotificationsSource,
+      commentsNotificationSource,
+      repliesNotificationsSource,
+    } = await fetchAllNotifications(req.user.id);
     // Merge all notifications into a single array for the authenticated user.
     let allSourcedNotifications = [
-      ...postsNotifications,
-      ...commentsNotifications,
-      ...repliesNotifications,
+      ...postsNotificationsSource,
+      ...commentsNotificationSource,
+      ...repliesNotificationsSource,
     ];
     // Process and merge all sourced notifications with the cached notifications.
     const IndividualNotifications = await mergeAllSourcedNotifications(
@@ -126,7 +129,7 @@ app.use(async (req, res, next) => {
       }),
     );
     // Save the updated notification state to the database.
-    const getNotificationsState = await saveNotifcationState(
+    const getNotificationsState = await saveNotificationState(
       req.user.id,
       notificationMarkedUnread,
     );
@@ -235,7 +238,7 @@ app.post("/read-notifications", async (req, res) => {
     return notification;
   });
   //save the updated notification state to the database
-  const notificationsRead = await saveNotifcationState(
+  const notificationsRead = await saveNotificationState(
     userId,
     convertNotificationsToRead,
   );
@@ -261,12 +264,15 @@ app.get("/update-notifications", (req, res) => {
     const getUserNotification = cachedUserNotificationState.get(userId) || [];
     const cachedNotifications = getUserNotification ?? [];
     //check to see if there are new notifications for the user by pulling from database
-    const { postsNotifications, commentsNotifications, repliesNotifications } =
-      await fetchAllNotifications(userId);
+    const {
+      postsNotificationsSource,
+      commentsNotificationSource,
+      repliesNotificationsSource,
+    } = await fetchAllNotifications(userId);
     let allSourcedNotifications = [
-      ...postsNotifications,
-      ...commentsNotifications,
-      ...repliesNotifications,
+      ...postsNotificationsSource,
+      ...commentsNotificationSource,
+      ...repliesNotificationsSource,
     ];
     const IndividualNotifications = await mergeAllSourcedNotifications(
       allSourcedNotifications,
@@ -345,7 +351,7 @@ app.get("/update-notifications", (req, res) => {
         (notification) => !notification.wasRead,
       );
       // Save the updated notification state to the database because we are pulling from database and need to make sure we save this state in the users table. At this point in the code, there was something added to the notifications array that needs to be persisted. As a result, we call the function to save the current state.
-      await saveNotifcationState(userId, mapNotificationsById);
+      await saveNotificationState(userId, mapNotificationsById);
       //save to cache
       cachedUserNotificationState.set(userId, mapNotificationsById);
       // If only a few notifications are unread, send the count to the client.

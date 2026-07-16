@@ -67,6 +67,145 @@ async function createNotificationScenario(browser, suffix) {
   };
 }
 
+async function createTwoUserScenario(browser, suffix, scope) {
+  const ownerName = `e2e-notif-owner-${scope}-${suffix}`;
+  const actorName = `e2e-notif-actor-${scope}-${suffix}`;
+  const ownerEmail = `${ownerName}@example.com`;
+  const actorEmail = `${actorName}@example.com`;
+
+  const ownerContext = await browser.newContext();
+  const actorContext = await browser.newContext();
+  const ownerPage = await ownerContext.newPage();
+  const actorPage = await actorContext.newPage();
+
+  await registerUser(ownerPage, ownerName, ownerEmail);
+  await registerUser(actorPage, actorName, actorEmail);
+
+  return {
+    ownerContext,
+    actorContext,
+    ownerPage,
+    actorPage,
+    ownerName,
+    actorName,
+  };
+}
+
+async function createPost(page, postText) {
+  const result = await page.evaluate(
+    async ({ postText }) => {
+      const response = await fetch("/add-post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPost: postText }),
+      });
+      return response.json();
+    },
+    { postText },
+  );
+
+  expect(result.success).toBe(true);
+  return result.post;
+}
+
+async function addCommentToPost(page, postId, commentText) {
+  const result = await page.evaluate(
+    async ({ postId, commentText }) => {
+      const response = await fetch("/add-reply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          post_id: String(postId),
+          comment_post: commentText,
+        }),
+      });
+      return response.json();
+    },
+    { postId, commentText },
+  );
+
+  expect(result.success).toBe(true);
+  return result.reply;
+}
+
+async function addReplyToComment(page, commentId, replyText) {
+  const result = await page.evaluate(
+    async ({ commentId, replyText }) => {
+      const response = await fetch("/add-reply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reply_id: String(commentId),
+          comment_post: replyText,
+        }),
+      });
+      return response.json();
+    },
+    { commentId, replyText },
+  );
+
+  expect(result.success).toBe(true);
+  expect(result.subReply).toBe(true);
+  return result.reply;
+}
+
+async function waitForNotification(ownerPage, expected) {
+  await expect
+    .poll(
+      async () =>
+        ownerPage.evaluate(async (target) => {
+          const response = await fetch("/check-notifications-reloaded", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          });
+          const payload = await response.json();
+          return payload.notifications.some((notification) => {
+            if (target.type && notification.notification_type !== target.type) {
+              return false;
+            }
+
+            if (target.userName && notification.user_name !== target.userName) {
+              return false;
+            }
+
+            if (
+              Object.prototype.hasOwnProperty.call(target, "reactionType") &&
+              !(target.reactionType === null
+                ? notification.reaction_type == null
+                : notification.reaction_type === target.reactionType)
+            ) {
+              return false;
+            }
+
+            if (
+              target.postId &&
+              String(notification.post_id) !== String(target.postId)
+            ) {
+              return false;
+            }
+
+            if (
+              target.commentId &&
+              String(notification.comment_id) !== String(target.commentId)
+            ) {
+              return false;
+            }
+
+            if (
+              target.replyId &&
+              String(notification.reply_id) !== String(target.replyId)
+            ) {
+              return false;
+            }
+
+            return true;
+          });
+        }, expected),
+      { timeout: 25_000 },
+    )
+    .toBe(true);
+}
+
 async function waitForUnreadNotification(page) {
   await expect
     .poll(
@@ -173,6 +312,183 @@ test.describe("Notification SSE flows", () => {
     } finally {
       await user1Context.close();
       await user97Context.close();
+    }
+  });
+
+  test("notifies post owner when another user reacts to and comments on the post", async ({
+    browser,
+  }) => {
+    const suffix = uniqueSuffix();
+    const { ownerContext, actorContext, ownerPage, actorPage, actorName } =
+      await createTwoUserScenario(browser, suffix, "post");
+
+    const postText = `post notifications ${suffix}`;
+
+    try {
+      const post = await createPost(ownerPage, postText);
+
+      const postReactionResponse = await actorPage.request.post(
+        "/post-reaction",
+        {
+          data: {
+            post_id: String(post.id),
+            reaction_type: "like",
+          },
+        },
+      );
+      expect(postReactionResponse.status()).toBe(200);
+
+      const comment = await addCommentToPost(
+        actorPage,
+        post.id,
+        `comment on post ${suffix}`,
+      );
+      expect(comment.id).toBeTruthy();
+
+      await waitForNotification(ownerPage, {
+        type: "posts_down",
+        userName: actorName,
+        reactionType: "like",
+        postId: post.id,
+      });
+
+      await waitForNotification(ownerPage, {
+        type: "posts_down",
+        userName: actorName,
+        reactionType: null,
+        postId: post.id,
+      });
+
+      await ownerPage.reload();
+      await expect(ownerPage.locator("#notificationsDropdown")).toContainText(
+        `${actorName} liked your post`,
+      );
+      await expect(ownerPage.locator("#notificationsDropdown")).toContainText(
+        `${actorName} commented on your post`,
+      );
+      await expect(ownerPage.locator("#notificationsDropdown")).toContainText(
+        `"${postText.slice(0, 20)}..."`,
+      );
+    } finally {
+      await ownerContext.close();
+      await actorContext.close();
+    }
+  });
+
+  test("notifies comment owner when another user reacts to and replies to the comment", async ({
+    browser,
+  }) => {
+    const suffix = uniqueSuffix();
+    const { ownerContext, actorContext, ownerPage, actorPage, actorName } =
+      await createTwoUserScenario(browser, suffix, "comment");
+
+    const postText = `comment base post ${suffix}`;
+    const ownerCommentText = `owner comment ${suffix}`;
+
+    try {
+      const post = await createPost(ownerPage, postText);
+      const ownerComment = await addCommentToPost(
+        ownerPage,
+        post.id,
+        ownerCommentText,
+      );
+
+      const commentReactionResponse = await actorPage.request.post(
+        "/post-reaction",
+        {
+          data: {
+            comment_post_id: String(ownerComment.id),
+            reaction_type: "like",
+          },
+        },
+      );
+      expect(commentReactionResponse.status()).toBe(200);
+
+      const reply = await addReplyToComment(
+        actorPage,
+        ownerComment.id,
+        `reply to comment ${suffix}`,
+      );
+      expect(reply.id).toBeTruthy();
+
+      await waitForNotification(ownerPage, {
+        type: "comments_down",
+        userName: actorName,
+        reactionType: "like",
+        commentId: ownerComment.id,
+      });
+
+      await waitForNotification(ownerPage, {
+        type: "comments_down",
+        userName: actorName,
+        reactionType: null,
+        commentId: ownerComment.id,
+      });
+
+      await ownerPage.reload();
+      await expect(ownerPage.locator("#notificationsDropdown")).toContainText(
+        `${actorName} liked your comment`,
+      );
+      await expect(ownerPage.locator("#notificationsDropdown")).toContainText(
+        `${actorName} replied to your comment`,
+      );
+      await expect(ownerPage.locator("#notificationsDropdown")).toContainText(
+        `"${ownerCommentText.slice(0, 20)}..."`,
+      );
+    } finally {
+      await ownerContext.close();
+      await actorContext.close();
+    }
+  });
+
+  test("notifies reply owner when another user reacts to the reply", async ({
+    browser,
+  }) => {
+    const suffix = uniqueSuffix();
+    const { ownerContext, actorContext, ownerPage, actorPage, actorName } =
+      await createTwoUserScenario(browser, suffix, "reply");
+
+    try {
+      const post = await createPost(ownerPage, `reply base post ${suffix}`);
+      const ownerComment = await addCommentToPost(
+        ownerPage,
+        post.id,
+        `owner comment for reply ${suffix}`,
+      );
+      const ownerFinalReply = await addReplyToComment(
+        ownerPage,
+        ownerComment.id,
+        `owner final reply ${suffix}`,
+      );
+
+      const finalReplyReactionResponse = await actorPage.request.post(
+        "/post-reaction",
+        {
+          data: {
+            final_reply_id: String(ownerFinalReply.id),
+            reaction_type: "dislike",
+          },
+        },
+      );
+      expect(finalReplyReactionResponse.status()).toBe(200);
+
+      await waitForNotification(ownerPage, {
+        type: "replies_down",
+        userName: actorName,
+        reactionType: "dislike",
+        replyId: ownerFinalReply.id,
+      });
+
+      await ownerPage.reload();
+      await expect(ownerPage.locator("#notificationsDropdown")).toContainText(
+        `${actorName} disliked your reply`,
+      );
+      await expect(ownerPage.locator("#notificationsDropdown")).toContainText(
+        `"${`owner final reply ${suffix}`.slice(0, 20)}..."`,
+      );
+    } finally {
+      await ownerContext.close();
+      await actorContext.close();
     }
   });
 });

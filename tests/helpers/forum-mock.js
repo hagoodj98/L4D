@@ -205,8 +205,8 @@ export function setupPgMock() {
 
         if (
           sql.includes("'posts_down' AS notification_type") &&
-          sql.includes("other_comments_to_posts") &&
-          sql.includes("other_replies_to_comments")
+          sql.includes("likes_to_posts") &&
+          sql.includes("other_comments_to_posts")
         ) {
           return { rows: [] };
         }

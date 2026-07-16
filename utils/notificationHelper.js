@@ -18,27 +18,14 @@ export const getAllSourcedNotifications = async (sourcedNotifications) => {
           getAllOtherUsersNotifications.push(
             ...notification.reactions_to_posts,
           );
-        notification.reactions_to_comments.length > 0 &&
-          getAllOtherUsersNotifications.push(
-            ...notification.reactions_to_comments,
-          );
-        notification.reactions_to_replies.length > 0 &&
-          getAllOtherUsersNotifications.push(
-            ...notification.reactions_to_replies,
-          );
         notification.other_comments.length > 0 &&
           getAllOtherUsersNotifications.push(...notification.other_comments);
-        notification.other_replies.length > 0 &&
-          getAllOtherUsersNotifications.push(...notification.other_replies);
       });
     }
     if (comments.length > 0) {
       comments.forEach((notification) => {
         getAllOtherUsersNotifications.push(
           ...notification.reactions_to_comments,
-        );
-        getAllOtherUsersNotifications.push(
-          ...notification.reactions_to_replies,
         );
         getAllOtherUsersNotifications.push(...notification.replies_to_comments);
       });
