@@ -85,15 +85,7 @@ app.use(async (req, res, next) => {
   res.locals.user = req.user ? req.user.display_name : null;
   if (req.user) {
     // Check if the user's notification state is already cached. If not, fetch it from the database and cache it.
-    if (!cachedUserNotificationState.has(req.user.id)) {
-      const cachedNotificationsState = await getNotificationState(req.user.id);
-      if (cachedNotificationsState?.notification_state?.notifications) {
-        cachedUserNotificationState.set(
-          req.user.id,
-          cachedNotificationsState.notification_state.notifications,
-        );
-      }
-    }
+
     // Retrieve the cached notification state for the authenticated user, if available.
     const cachedNotifications =
       cachedUserNotificationState.get(req.user.id) ?? [];
