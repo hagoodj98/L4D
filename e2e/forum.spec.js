@@ -9,7 +9,7 @@ function uniqueSuffix() {
 function firstTierRepliesButton(page, id) {
   return page
     .locator(
-      `button#commentButton-${id}[onclick*="showAllReplies(${id}, true, false"]`,
+      `button#postcommentButton-${id}[onclick*="showAllReplies(${id}, true, false"]`,
     )
     .first();
 }
@@ -56,7 +56,7 @@ test.describe("Forum authenticated flows", () => {
 
     await targetPostCard.locator("button.reply").click();
     const replyTextarea = targetPostCard.locator(
-      "div[id^='replyInputBox'] textarea[name='reply']",
+      "div[id^='create-comment-for-post'] textarea[name='reply']",
     );
     await expect(replyTextarea).toBeVisible();
     await replyTextarea.fill(replyText);
@@ -95,7 +95,7 @@ test.describe("Forum authenticated flows", () => {
 
     await postCard.locator("button.reply").first().click();
     const postReplyTextarea = postCard.locator(
-      "div[id^='replyInputBox'] textarea[name='reply']",
+      "div[id^='create-comment-for-post'] textarea[name='reply']",
     );
     await expect(postReplyTextarea).toBeVisible();
     await postReplyTextarea.fill(replyText);
@@ -104,7 +104,7 @@ test.describe("Forum authenticated flows", () => {
     const replyCard = page
       .locator(".forum-reply-card", { hasText: replyText })
       .first();
-    await expect(replyCard).toBeVisible();
+    await expect(replyCard).toContainText(replyText);
 
     const postId = await postCard
       .locator("input[name='post_id']")
@@ -151,7 +151,9 @@ test.describe("Forum authenticated flows", () => {
     await firstTierRepliesButton(page, cleanPostId).click();
     await secondTierRepliesButton(page, replyId).click();
     await expect(page.getByText(subReplyText)).toBeVisible();
-    await expect(page.locator(`#finalReplyCount-${replyId}`)).toHaveText("1");
+    await expect(page.locator(`#replyCount-for-comment-${replyId}`)).toHaveText(
+      "1",
+    );
   });
 
   test("authenticated user can react to a final-tier reply", async ({
@@ -183,7 +185,7 @@ test.describe("Forum authenticated flows", () => {
 
     await postCard.locator("button.reply").click();
     const postReplyTextarea = postCard.locator(
-      "div[id^='replyInputBox'] textarea[name='reply']",
+      "div[id^='create-comment-for-post'] textarea[name='reply']",
     );
     await expect(postReplyTextarea).toBeVisible();
     await postReplyTextarea.fill(replyText);
@@ -230,16 +232,12 @@ test.describe("Forum authenticated flows", () => {
     await firstTierRepliesButton(page, postId).click();
     await secondTierRepliesButton(page, replyId).click();
 
-    const finalReplyLikeButton = page.locator(
-      `#finalReplyLikeButton-${subReplyId}`,
-    );
+    const finalReplyLikeButton = page.locator(`#replyLikeButton-${subReplyId}`);
     await expect(finalReplyLikeButton).toBeVisible();
     await finalReplyLikeButton.click();
 
     await expect(finalReplyLikeButton).toHaveClass(/reaction-color/);
-    await expect(page.locator(`#finalReplyLikeCount-${subReplyId}`)).toHaveText(
-      "1",
-    );
+    await expect(page.locator(`#replyLikeCount-${subReplyId}`)).toHaveText("1");
   });
 
   test("authenticated user can toggle off a final-tier like reaction", async ({
@@ -270,7 +268,7 @@ test.describe("Forum authenticated flows", () => {
 
     await postCard.locator("button.reply").click();
     const postReplyTextarea = postCard.locator(
-      "div[id^='replyInputBox'] textarea[name='reply']",
+      "div[id^='create-comment-for-post'] textarea[name='reply']",
     );
     await expect(postReplyTextarea).toBeVisible();
     await postReplyTextarea.fill(replyText);
@@ -316,18 +314,14 @@ test.describe("Forum authenticated flows", () => {
     await firstTierRepliesButton(page, postId).click();
     await secondTierRepliesButton(page, replyId).click();
 
-    const finalReplyLikeButton = page.locator(
-      `#finalReplyLikeButton-${subReplyId}`,
-    );
+    const finalReplyLikeButton = page.locator(`#replyLikeButton-${subReplyId}`);
     await expect(finalReplyLikeButton).toBeVisible();
     await finalReplyLikeButton.click();
     await expect(finalReplyLikeButton).toHaveClass(/reaction-color/);
 
     await finalReplyLikeButton.click();
     await expect(finalReplyLikeButton).not.toHaveClass(/reaction-color/);
-    await expect(page.locator(`#finalReplyLikeCount-${subReplyId}`)).toHaveText(
-      "0",
-    );
+    await expect(page.locator(`#replyLikeCount-${subReplyId}`)).toHaveText("0");
   });
 
   test("authenticated user can dislike a final-tier reply", async ({
@@ -358,7 +352,7 @@ test.describe("Forum authenticated flows", () => {
 
     await postCard.locator("button.reply").click();
     const postReplyTextarea = postCard.locator(
-      "div[id^='replyInputBox'] textarea[name='reply']",
+      "div[id^='create-comment-for-post'] textarea[name='reply']",
     );
     await expect(postReplyTextarea).toBeVisible();
     await postReplyTextarea.fill(replyText);
@@ -405,14 +399,14 @@ test.describe("Forum authenticated flows", () => {
     await secondTierRepliesButton(page, replyId).click();
 
     const finalReplyDislikeButton = page.locator(
-      `#finalReplyDislikeButton-${subReplyId}`,
+      `#replyDislikeButton-${subReplyId}`,
     );
     await expect(finalReplyDislikeButton).toBeVisible();
     await finalReplyDislikeButton.click();
 
     await expect(finalReplyDislikeButton).toHaveClass(/reaction-color/);
-    await expect(
-      page.locator(`#finalReplyDislikeCount-${subReplyId}`),
-    ).toHaveText("1");
+    await expect(page.locator(`#replyDislikeCount-${subReplyId}`)).toHaveText(
+      "1",
+    );
   });
 });

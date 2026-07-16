@@ -14,11 +14,41 @@
   background-color: #6e9731; /* Initial color */
   transition: background-color 4s ease; /* Handles the fade effect */
 }
+.notification-source-post-container {
+  background-color: #6e973183;
+  padding: 2px;
+}
+.notification-source-post {
+  font-size: small;
+  color: rgba(255, 255, 255, 0.46);
+}
 .new-sub-reply {
   background-color: #8f1f1f; /* Initial color */
   transition: background-color 4s ease; /* Handles the fade effect */
 }
-
+.notification-link {
+  text-decoration: none;
+  color: white;
+}
+.unread-indicator {
+  background-color: #8f1f1f74;
+  border-radius: 15px;
+}
+.notification-count-container-hidden {
+  display: none;
+}
+#notificationCountButton {
+  border: 2px solid #6e9731;
+}
+.notification-count-container {
+  background-color: #8f1f1f;
+  position: absolute;
+  top: 1px;
+  height: 17px;
+  right: 1px;
+  font-size: 14px;
+  padding: 2px;
+}
 .forum-post-card.new-post,
 .forum-reply-card.new-reply {
   background: #6e9731;
@@ -993,8 +1023,34 @@ h3 {
   .contentleft {
     padding: 25px 0px 10px 100px;
   }
+  #notificationsDropdown {
+    width: 350px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
   .contentright {
     padding: 25px 100px 10px 0px;
+  }
+  .profile-post {
+    display: flex;
+  }
+  .bi-person-circle {
+    width: 50%;
+  }
+  .profile-icon {
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    padding: 10px;
+  }
+  .notification-message {
+    font-size: 14px;
+    padding: 5px;
+    flex: 2;
+  }
+  .notification-time {
+    font-size: 12px;
+    color: #6e9731;
   }
 }
 textarea[type="text"],
@@ -1007,7 +1063,7 @@ select {
   border-radius: 4px;
   box-sizing: border-box;
 }
-button[type="submit"]:not(.unstyledPaginationButtons) {
+button[type="submit"]:not(.unstyledPaginationButtons):not(.bell-button) {
   width: 100%;
   background-color: #f23030;
   color: white;
@@ -1016,6 +1072,18 @@ button[type="submit"]:not(.unstyledPaginationButtons) {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+}
+.bell-button {
+  border: none;
+  color: white;
+  position: relative;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.bell-button:hover {
+  color: #6e9731;
+  background-color: none;
 }
 .unstyledPaginationButtons {
   border: none;
@@ -1029,7 +1097,7 @@ button[type="submit"]:not(.unstyledPaginationButtons) {
   color: white;
 }
 
-button[type="submit"]:not(.unstyledPaginationButtons):hover {
+button[type="submit"]:not(.unstyledPaginationButtons):not(.bell-button):hover {
   background-color: #f23030aa;
 }
 

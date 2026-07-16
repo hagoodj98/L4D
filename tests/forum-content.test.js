@@ -76,8 +76,10 @@ describe("Forum content flows", () => {
 
     expect(forumResponse.status).toBe(200);
     expect(forumResponse.text).toContain("showAllReplies(");
-    expect(forumResponse.text).toContain('id="commentButton-${c.id}"');
-    expect(forumResponse.text).toContain('id="commentInputBox-${c.id}"');
+    expect(forumResponse.text).toContain('id="postcommentButton-${p.id}"');
+    expect(forumResponse.text).toContain(
+      'id="create-comment-for-post-${p.id}"',
+    );
     expect(post.id).toBeGreaterThan(0);
   });
 

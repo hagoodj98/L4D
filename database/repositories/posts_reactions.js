@@ -1,6 +1,6 @@
 import db from "../databaseConnection.js";
 
-export const existing = async (postId, userId) => {
+export const sameReaction = async (postId, userId) => {
   const result = await db.query(
     "SELECT reaction_type FROM posts_reactions WHERE post_id = $1 AND user_id = $2",
     [postId, userId],
@@ -8,13 +8,13 @@ export const existing = async (postId, userId) => {
   return result.rows[0];
 };
 
-export const addReaction = async (postId, userId, reactionType) => {
+export const addReaction = async (postId, userId, reactionType, createdAt) => {
   const result = await db.query(
-    `INSERT INTO posts_reactions (post_id, user_id, reaction_type)
-         VALUES ($1, $2, $3)
+    `INSERT INTO posts_reactions (post_id, user_id, reaction_type, created_at)
+         VALUES ($1, $2, $3, $4)
          ON CONFLICT (user_id, post_id)
          DO UPDATE SET reaction_type = EXCLUDED.reaction_type RETURNING reaction_type`,
-    [postId, userId, reactionType],
+    [postId, userId, reactionType, createdAt],
   );
   return result.rows[0];
 };

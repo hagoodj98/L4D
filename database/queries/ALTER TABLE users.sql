@@ -1,0 +1,2 @@
+ALTER TABLE users
+ADD COLUMN notifications_read BOOLEAN DEFAULT FALSE;
