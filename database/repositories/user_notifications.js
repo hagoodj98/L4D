@@ -42,7 +42,8 @@ export const getAllCommentsNotificationsDown = async (userId) => {
                     'notification_type', 'comments_down',
                     'created_at', comments_reactions.created_at,
                     'comment_id', comment_id,
-                    'comment_post', comments.comment_post
+                    'comment_post', comments.comment_post,
+                    'source_post', comments.comment_post
                 )
             ) AS reaction FROM comments_reactions
             LEFT JOIN users ON comments_reactions.user_id = users.id
@@ -59,7 +60,8 @@ export const getAllCommentsNotificationsDown = async (userId) => {
                     'notification_type', 'comments_down',
                     'created_at', replies_reactions.created_at,
                     'reply_id', reply_id,
-                    'reply_post', replies.reply_post
+                    'reply_post', replies.reply_post,
+                    'source_post', replies.reply_post
                 )
             ) AS reaction_to_replies  FROM replies_reactions
             LEFT JOIN users ON replies_reactions.user_id = users.id
@@ -77,9 +79,9 @@ export const getAllCommentsNotificationsDown = async (userId) => {
                     'user_name', users.display_name,
                     'created_at', replies.created_at,
                     'comment_id', replies.comment_id,
-                    'comment_post', comments.comment_post,
                     'reply_post', replies.reply_post,
-                    'notification_type', 'comments_down'
+                    'notification_type', 'comments_down',
+                    'source_post', comments.comment_post
                 )
             ) AS replies FROM replies
             LEFT JOIN users ON replies.user_id = users.id
@@ -121,6 +123,7 @@ export const getAllPostNotificationsDown = async (userId) => {
                     'created_at', created_at,
                     'post_id', post_id,
                     'post', posts.post,
+                    'source_post', posts.post,
                     'notification_type', 'posts_down'
                 )
             ) AS reaction_to_post FROM posts_reactions
@@ -138,6 +141,7 @@ export const getAllPostNotificationsDown = async (userId) => {
                     'created_at', comments_reactions.created_at,
                     'comment_id', comments.id,
                     'comment_post', comments.comment_post,
+                    'source_post', comments.comment_post,
                     'notification_type', 'posts_down'
                 )
             ) AS reaction_to_comment FROM comments_reactions
@@ -158,6 +162,7 @@ export const getAllPostNotificationsDown = async (userId) => {
                     'created_at', replies_reactions.created_at,
                     'reply_id', replies_reactions.reply_id,
                     'reply_post', replies.reply_post,
+                    'source_post', replies.reply_post,
                     'notification_type', 'posts_down'
                 )
             ) AS reaction_to_replies FROM replies_reactions
@@ -179,8 +184,8 @@ export const getAllPostNotificationsDown = async (userId) => {
                     'comment_post', comment_post,
                     'created_at', created_at,
                     'post_id', post_id,
-                    'notification_type', 'posts_down',
-                    'post', posts.post
+                    'source_post', posts.post,
+                    'notification_type', 'posts_down'
                 )
             ) AS comments FROM comments
             LEFT JOIN users ON comments.user_id = users.id
@@ -195,11 +200,13 @@ export const getAllPostNotificationsDown = async (userId) => {
                     'user_name', users.display_name,
                     'reply_post', replies.reply_post,
                     'created_at', replies.created_at,
+                    'source_post', comments.comment_post,
                     'comment_id', replies.comment_id,
                     'notification_type', 'posts_down'
                 )
             ) AS other_replies FROM replies
             LEFT JOIN users ON replies.user_id = users.id
+            LEFT JOIN comments ON replies.comment_id = comments.id
             WHERE replies.user_id != $1 AND replies.comment_id IN (
                 SELECT id FROM comments WHERE comments.user_id = $1 AND comments.post_id = posts.id
             )
@@ -235,6 +242,7 @@ LEFT JOIN LATERAL (
                 'reaction_type', replies_reactions.reaction_type,
                 'created_at', replies_reactions.created_at,
                 'reply_id', replies_reactions.reply_id,
+                'source_post', replies.reply_post,
                 'reply_post', replies.reply_post,
                 'notification_type', 'replies_down'
             )

@@ -14,6 +14,14 @@
   background-color: #6e9731; /* Initial color */
   transition: background-color 4s ease; /* Handles the fade effect */
 }
+.notification-source-post-container {
+  background-color: #6e973183;
+  padding: 2px;
+}
+.notification-source-post {
+  font-size: small;
+  color: rgba(255, 255, 255, 0.46);
+}
 .new-sub-reply {
   background-color: #8f1f1f; /* Initial color */
   transition: background-color 4s ease; /* Handles the fade effect */
@@ -1025,14 +1033,20 @@ h3 {
   }
   .profile-post {
     display: flex;
-    align-items: center;
+  }
+  .bi-person-circle {
+    width: 50%;
   }
   .profile-icon {
-    width: 80px;
+    display: flex;
+    flex: 1;
+    justify-content: center;
     padding: 10px;
   }
   .notification-message {
     font-size: 14px;
+    padding: 5px;
+    flex: 2;
   }
   .notification-time {
     font-size: 12px;

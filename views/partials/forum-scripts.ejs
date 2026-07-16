@@ -894,8 +894,6 @@
 
           handleReactionIntent(reactionIntent, reactionButton, postType, postId, commentId, finalReplyId);
 
-
-
         } catch (err) {
           console.error("Error handling reaction:", err);
         }
@@ -945,7 +943,6 @@
           const { likeComment, commentPost, replyPost, likePost, likeReply } = createTextForNotificationType(item);
           createNotificationElement(item, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection, false);
         });
-        return;
       }
       if (notificationRead.length !== 0) {
         //We don't need to show the notification count for read notifications
@@ -954,7 +951,6 @@
           const { likeComment, commentPost, replyPost, likePost, likeReply } = createTextForNotificationType(item);
           createNotificationElement(item, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection, true);
         });
-        return;
       }
     }
   });
@@ -1003,17 +999,25 @@
     const unreadIndicator = document.createElement("figure");
     const timeAgoContainer = document.createElement("div");
     const notificationTime = document.createElement("p");
+    const notificationSourcePostContainer = document.createElement("div");
+    const notififcationSourcePost = document.createElement("p");
     notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
     //notificationLink.href = `/forum/${n.id}`;
     notificationLink.className = 'nav-link';
     notificationTime.className = 'notification-time';
     notificationMessage.className = 'notification-message';
     profileIcon.className = 'profile-icon';
+    notificationSourcePostContainer.className = 'notification-source-post-container';
+    notififcationSourcePost.className = 'notification-source-post';
     profilePost.className = 'profile-post';
     profileIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg"  fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10.5 8 10.5s4.757.726 5.468-2.13A7 7 0 0 0 8 1z"/></svg>`;
     // Append the notification elements to the DOM
+    const convertStringToArray = notification.source_post.split("");
+    const partOfSourcePost = convertStringToArray.splice(0, 20);
+    notififcationSourcePost.innerText = `"${partOfSourcePost.join("")}..."`;
     profilePost.appendChild(profileIcon)
-    profilePost.appendChild(notificationMessage)
+    profilePost.appendChild(notificationMessage).appendChild(notificationSourcePostContainer).appendChild(notififcationSourcePost);;
+
     getNotificationsSection.appendChild(notificationListItem).appendChild(notificationLink).appendChild(profilePost)
     notificationLink.appendChild(timeAgoContainer).appendChild(notificationTime)
   }

@@ -8,6 +8,7 @@ export const dbState = {
   postReactions: [],
   commentReactions: [],
   finalReplyReactions: [],
+  pendingNotificationState: [],
   nextUserId: 1,
   nextPostId: 1,
   nextReplyId: 1,
@@ -22,6 +23,7 @@ export function resetDbState() {
   dbState.postReactions = [];
   dbState.commentReactions = [];
   dbState.finalReplyReactions = [];
+  dbState.pendingNotificationState = [];
   dbState.nextUserId = 1;
   dbState.nextPostId = 1;
   dbState.nextReplyId = 1;
@@ -193,9 +195,74 @@ export function setupPgMock() {
             display_name: params[0],
             email: params[1],
             password: params[2],
+            notification_state: {
+              notifications: [...dbState.pendingNotificationState],
+            },
           };
           dbState.users.push(user);
           return { rows: [user] };
+        }
+
+        if (
+          sql.includes("'posts_down' AS notification_type") &&
+          sql.includes("other_comments_to_posts") &&
+          sql.includes("other_replies_to_comments")
+        ) {
+          return { rows: [] };
+        }
+
+        if (
+          sql.includes("'comments_down' AS notification_type") &&
+          sql.includes("likes_to_comments") &&
+          sql.includes("other_replies_to_comments")
+        ) {
+          return { rows: [] };
+        }
+
+        if (
+          sql.includes("'replies_down' AS notification_type") &&
+          sql.includes("likes_to_replies")
+        ) {
+          return { rows: [] };
+        }
+
+        if (
+          sql.includes("SELECT notification_state FROM users WHERE id = $1")
+        ) {
+          const user = dbState.users.find(
+            (item) => item.id === Number(params[0]),
+          );
+          return {
+            rows: user
+              ? [
+                  {
+                    notification_state: user.notification_state ?? {
+                      notifications: [],
+                    },
+                  },
+                ]
+              : [],
+          };
+        }
+
+        if (
+          sql.includes("UPDATE users") &&
+          sql.includes("SET notification_state=jsonb_set")
+        ) {
+          const userId = Number(params[0]);
+          const notifications = JSON.parse(params[1]);
+          const user = dbState.users.find((item) => item.id === userId);
+
+          if (user) {
+            user.notification_state = {
+              ...(user.notification_state ?? {}),
+              notifications,
+            };
+          }
+
+          return {
+            rows: user ? [{ notification_state: user.notification_state }] : [],
+          };
         }
 
         if (sql.includes("SELECT * FROM users WHERE display_name = $1")) {
@@ -246,7 +313,7 @@ export function setupPgMock() {
 
         if (
           sql.includes(
-            "INSERT INTO replies (comment_post, user_id, post_id, created_at) VALUES ($1, $2, $3, $4)",
+            "INSERT INTO comments (comment_post, user_id, post_id, created_at) VALUES ($1, $2, $3, $4) RETURNING *",
           )
         ) {
           const reply = {
@@ -262,11 +329,12 @@ export function setupPgMock() {
 
         if (
           sql.includes(
-            "INSERT INTO replies_final_tier (comment_post, user_id, reply_id, created_at) VALUES ($1, $2, $3, $4)",
+            "INSERT INTO replies (reply_post, user_id, comment_id, created_at) VALUES ($1, $2, $3, $4) RETURNING *",
           )
         ) {
           const finalReply = {
             id: dbState.nextFinalReplyId++,
+            reply_post: params[0],
             comment_post: params[0],
             user_id: params[1],
             reply_id: Number(params[2]),
@@ -278,10 +346,12 @@ export function setupPgMock() {
 
         if (
           sql.includes("FROM posts") &&
-          sql.includes("COALESCE(replies, '[]'::json) AS replies")
+          sql.includes(
+            "COALESCE(all_comment_data.one_comment_data, '[]'::json) AS comments",
+          )
         ) {
           const currentUserId = params[0];
-          const isAscSort = sql.includes("ORDER BY p.created_at ASC");
+          const isAscSort = sql.includes("ORDER BY posts.created_at ASC");
           const limit = Number(params[1]);
           const offset = Number(params[2]);
           const allRows = buildForumRows(currentUserId, isAscSort);
@@ -294,7 +364,7 @@ export function setupPgMock() {
           };
         }
 
-        if (sql.includes("SELECT COUNT(*)") && sql.includes("FROM posts")) {
+        if (sql.includes("SELECT COUNT(*) FROM posts")) {
           return {
             rows: [
               {
@@ -302,22 +372,6 @@ export function setupPgMock() {
                 total_posts: dbState.posts.length,
               },
             ],
-          };
-        }
-
-        if (
-          sql.includes(
-            "SELECT reaction_type FROM reactions_comments WHERE comment_id = $1 AND user_id = $2",
-          )
-        ) {
-          return {
-            rows: dbState.commentReactions
-              .filter(
-                (item) =>
-                  item.comment_id === Number(params[0]) &&
-                  item.user_id === Number(params[1]),
-              )
-              .map((item) => ({ reaction_type: item.reaction_type })),
           };
         }
 
@@ -334,32 +388,6 @@ export function setupPgMock() {
               ),
           );
           return { rows: [] };
-        }
-
-        if (
-          sql.includes(
-            "INSERT INTO reactions_comments (comment_id, user_id, reaction_type)",
-          )
-        ) {
-          const commentId = Number(params[0]);
-          const userId = Number(params[1]);
-          const reactionType = params[2];
-          const existingIndex = dbState.commentReactions.findIndex(
-            (item) => item.comment_id === commentId && item.user_id === userId,
-          );
-
-          if (existingIndex >= 0) {
-            dbState.commentReactions[existingIndex].reaction_type =
-              reactionType;
-          } else {
-            dbState.commentReactions.push({
-              comment_id: commentId,
-              user_id: userId,
-              reaction_type: reactionType,
-            });
-          }
-
-          return { rows: [{ reaction_type: reactionType }] };
         }
 
         if (
@@ -453,6 +481,145 @@ export function setupPgMock() {
         if (
           sql.includes(
             "INSERT INTO posts_reactions (post_id, user_id, reaction_type)",
+          )
+        ) {
+          const postId = Number(params[0]);
+          const userId = Number(params[1]);
+          const reactionType = params[2];
+          const existingIndex = dbState.postReactions.findIndex(
+            (item) => item.post_id === postId && item.user_id === userId,
+          );
+
+          if (existingIndex >= 0) {
+            dbState.postReactions[existingIndex].reaction_type = reactionType;
+          } else {
+            dbState.postReactions.push({
+              post_id: postId,
+              user_id: userId,
+              reaction_type: reactionType,
+            });
+          }
+
+          return { rows: [{ reaction_type: reactionType }] };
+        }
+
+        if (
+          sql.includes(
+            "SELECT reaction_type FROM comments_reactions WHERE comment_id = $1 AND user_id = $2",
+          )
+        ) {
+          return {
+            rows: dbState.commentReactions
+              .filter(
+                (item) =>
+                  item.comment_id === Number(params[0]) &&
+                  item.user_id === Number(params[1]),
+              )
+              .map((item) => ({ reaction_type: item.reaction_type })),
+          };
+        }
+
+        if (
+          sql.includes(
+            "INSERT INTO comments_reactions (comment_id, user_id, reaction_type, created_at)",
+          )
+        ) {
+          const commentId = Number(params[0]);
+          const userId = Number(params[1]);
+          const reactionType = params[2];
+          const existingIndex = dbState.commentReactions.findIndex(
+            (item) => item.comment_id === commentId && item.user_id === userId,
+          );
+
+          if (existingIndex >= 0) {
+            dbState.commentReactions[existingIndex].reaction_type =
+              reactionType;
+          } else {
+            dbState.commentReactions.push({
+              comment_id: commentId,
+              user_id: userId,
+              reaction_type: reactionType,
+            });
+          }
+
+          return { rows: [{ reaction_type: reactionType }] };
+        }
+
+        if (
+          sql.includes(
+            "DELETE FROM comments_reactions WHERE comment_id = $1 AND user_id = $2",
+          )
+        ) {
+          dbState.commentReactions = dbState.commentReactions.filter(
+            (item) =>
+              !(
+                item.comment_id === Number(params[0]) &&
+                item.user_id === Number(params[1])
+              ),
+          );
+          return { rows: [] };
+        }
+
+        if (
+          sql.includes(
+            "SELECT reaction_type FROM replies_reactions WHERE reply_id = $1 AND user_id = $2",
+          )
+        ) {
+          return {
+            rows: dbState.finalReplyReactions
+              .filter(
+                (item) =>
+                  item.reply_id === Number(params[0]) &&
+                  item.user_id === Number(params[1]),
+              )
+              .map((item) => ({ reaction_type: item.reaction_type })),
+          };
+        }
+
+        if (
+          sql.includes(
+            "INSERT INTO replies_reactions (reply_id, user_id, reaction_type, created_at)",
+          )
+        ) {
+          const replyId = Number(params[0]);
+          const userId = Number(params[1]);
+          const reactionType = params[2];
+          const existingIndex = dbState.finalReplyReactions.findIndex(
+            (item) => item.reply_id === replyId && item.user_id === userId,
+          );
+
+          if (existingIndex >= 0) {
+            dbState.finalReplyReactions[existingIndex].reaction_type =
+              reactionType;
+          } else {
+            dbState.finalReplyReactions.push({
+              reply_id: replyId,
+              user_id: userId,
+              reaction_type: reactionType,
+            });
+          }
+
+          return { rows: [{ reaction_type: reactionType }] };
+        }
+
+        if (
+          sql.includes(
+            "DELETE FROM replies_reactions WHERE reply_id = $1 AND user_id = $2",
+          )
+        ) {
+          dbState.finalReplyReactions = dbState.finalReplyReactions.filter(
+            (item) =>
+              !(
+                item.reply_id === Number(params[0]) &&
+                item.user_id === Number(params[1])
+              ),
+          );
+          return { rows: [] };
+        }
+
+        if (
+          sql.includes(
+            "INSERT INTO posts_reactions (post_id, user_id, reaction_type, created_at)",
           )
         ) {
           const postId = Number(params[0]);

@@ -34,7 +34,9 @@ describe("Reaction flows", () => {
       });
 
     expect(reactResponse.status).toBe(200);
-    expect(reactResponse.body.reaction_type).toBe("like");
+    expect(reactResponse.body.reaction_intent).toBe("add");
+    expect(reactResponse.body.reactionButton).toBe("likeButton");
+    expect(reactResponse.body.postType).toBe("post");
     expect(dbState.postReactions).toHaveLength(1);
     expect(dbState.postReactions[0].reaction_type).toBe("like");
   });
@@ -57,7 +59,9 @@ describe("Reaction flows", () => {
       });
 
     expect(reactResponse.status).toBe(200);
-    expect(reactResponse.body.reaction_type).toBe("dislike_comment");
+    expect(reactResponse.body.reaction_intent).toBe("add");
+    expect(reactResponse.body.reactionButton).toBe("dislikeButton");
+    expect(reactResponse.body.postType).toBe("comment");
     expect(dbState.commentReactions).toHaveLength(1);
     expect(dbState.commentReactions[0].reaction_type).toBe("dislike");
   });
@@ -89,7 +93,9 @@ describe("Reaction flows", () => {
       });
 
     expect(secondResponse.status).toBe(200);
-    expect(secondResponse.body.reaction_type).toBe("like_removed");
+    expect(secondResponse.body.reaction_intent).toBe("remove");
+    expect(secondResponse.body.reactionButton).toBe("likeButton");
+    expect(secondResponse.body.postType).toBe("post");
     expect(dbState.postReactions).toHaveLength(0);
   });
 
@@ -126,7 +132,9 @@ describe("Reaction flows", () => {
       });
 
     expect(secondResponse.status).toBe(200);
-    expect(secondResponse.body.reaction_type).toBe("dislike_removed_comment");
+    expect(secondResponse.body.reaction_intent).toBe("remove");
+    expect(secondResponse.body.reactionButton).toBe("dislikeButton");
+    expect(secondResponse.body.postType).toBe("comment");
     expect(dbState.commentReactions).toHaveLength(0);
   });
 
@@ -154,7 +162,9 @@ describe("Reaction flows", () => {
       });
 
     expect(reactResponse.status).toBe(200);
-    expect(reactResponse.body.reaction_type).toBe("like_final_reply");
+    expect(reactResponse.body.reaction_intent).toBe("add");
+    expect(reactResponse.body.reactionButton).toBe("likeButton");
+    expect(reactResponse.body.postType).toBe("reply");
     expect(dbState.finalReplyReactions).toHaveLength(1);
     expect(dbState.finalReplyReactions[0].reaction_type).toBe("like");
 
@@ -167,7 +177,9 @@ describe("Reaction flows", () => {
       });
 
     expect(secondResponse.status).toBe(200);
-    expect(secondResponse.body.reaction_type).toBe("like_removed_final_reply");
+    expect(secondResponse.body.reaction_intent).toBe("remove");
+    expect(secondResponse.body.reactionButton).toBe("likeButton");
+    expect(secondResponse.body.postType).toBe("reply");
     expect(dbState.finalReplyReactions).toHaveLength(0);
   });
 });
