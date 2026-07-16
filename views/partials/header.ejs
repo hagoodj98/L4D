@@ -43,24 +43,24 @@
           class="navbar-toggler"
           type="button"
           data-bs-toggle="offcanvas"
-          data-bs-target="#offcanvasNavbar"
-          aria-controls="offcanvasNavbar"
+          data-bs-target="#offcanvasTop"
+          aria-controls="offcanvasTop"
           aria-label="Toggle navigation"
         >
           <span class="navbar-toggler-icon"></span>
         </button>
         <div
-          class="offcanvas offcanvas-end site-offcanvas"
-          style="background-color: #0d0d0d"
+          class="offcanvas offcanvas-top site-offcanvas"
+          style="background-color: #0d0d0d; height: 100vh;"
           tabindex="-1"
-          id="offcanvasNavbar"
-          aria-labelledby="offcanvasNavbarLabel"
+          id="offcanvasTop"
+          aria-labelledby="offcanvasTopLabel"
         >
           <div class="offcanvas-header">
             <h5
               class="offcanvas-title bungee-regular"
               style="color: white"
-              id="offcanvasNavbarLabel"
+              id="offcanvasTopLabel"
             >
               ZombieSlayers
             </h5>
@@ -115,7 +115,7 @@
                 </button>
               
                 <ul id="notificationsDropdown" class="dropdown-menu dropdown-menu-end site-dropdown-menu">
-                  <h5 style="color: white; padding: 8px;">Notifications</h5>
+                  <li class="dropdown-header notifications-dropdown-title">Notifications</li>
                 </ul>
               </li>
               <li class="nav-item dropdown">
