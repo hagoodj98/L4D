@@ -20,6 +20,9 @@ ALTER TABLE users
   ADD COLUMN IF NOT EXISTS provider VARCHAR(20) NOT NULL DEFAULT 'local';
 
 ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS notification_state JSONB NOT NULL DEFAULT '{"notifications": []}'::jsonb;
+
+ALTER TABLE users
   ALTER COLUMN password DROP NOT NULL;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id_unique
