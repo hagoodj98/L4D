@@ -5,18 +5,18 @@ export const getAllSourcedNotifications = async (
 ) => {
   let getAllOtherUsersNotifications: NotificationType[] = [];
 
-  const notificationTypeOf = (item: NotificationSource) =>
-    item.notificationType ?? item.notificationType;
-  const reactionsToPostsOf = (item: NotificationSource) =>
-    item.reactionsToPosts ?? item.reactionsToPosts;
-  const otherCommentsOf = (item: NotificationSource) =>
-    item.otherComments ?? item.otherComments;
-  const reactionsToCommentsOf = (item: NotificationSource) =>
-    item.reactionsToComments ?? item.reactionsToComments;
-  const repliesToCommentsOf = (item: NotificationSource) =>
-    item.repliesToComments ?? item.repliesToComments;
-  const reactionsToRepliesOf = (item: NotificationSource) =>
-    item.reactionsToReplies ?? item.reactionsToReplies;
+  const notificationTypeOf = (item: NotificationSource & any) =>
+    item.notificationType ?? item.notification_type;
+  const reactionsToPostsOf = (item: NotificationSource & any) =>
+    item.reactionsToPosts ?? item.reactions_to_posts;
+  const otherCommentsOf = (item: NotificationSource & any) =>
+    item.otherComments ?? item.other_comments;
+  const reactionsToCommentsOf = (item: NotificationSource & any) =>
+    item.reactionsToComments ?? item.reactions_to_comments;
+  const repliesToCommentsOf = (item: NotificationSource & any) =>
+    item.repliesToComments ?? item.replies_to_comments;
+  const reactionsToRepliesOf = (item: NotificationSource & any) =>
+    item.reactionsToReplies ?? item.reactions_to_replies;
 
   // If there are notifications, filter them by type and send them to the client.
   if (sourcedNotifications.length > 0) {
