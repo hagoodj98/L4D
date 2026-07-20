@@ -73,7 +73,8 @@ jobs:
         run: npm run lint
       - name: Run tests
         run: npm test
-
+      - name: Build project
+        run: npm run build
       - name: Initialize database schema
         run: npm run db:init
         env:
