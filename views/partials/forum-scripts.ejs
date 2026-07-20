@@ -9,7 +9,7 @@
     async function handlePagination(page) {
       const offset = (Number(page) - 1) * 4; // Assuming 4 posts per page
       try {
-        const response = await fetch(`http://localhost:3000/forumpagination?page=${page}&offset=${offset}`);
+        const response = await fetch(`/forumpagination?page=${page}&offset=${offset}`);
         const data = await response.json();
         // Update the active page button styling
         document.querySelectorAll(".unstyledPaginationButtons").forEach((button) => {
@@ -28,7 +28,7 @@
       if (!postContent) return;
 
       try {
-        const response = await fetch("http://localhost:3000/add-post", {
+        const response = await fetch("/add-post", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ newPost: postContent }),
@@ -230,27 +230,37 @@
         }
     }
       async function handleReplySubmit(commentID, userName){
-        let reply = document.querySelector(`#create-reply-for-comment-${commentID} textarea`);
+        const replyInput = document.querySelector(`#create-reply-for-comment-${commentID} textarea`);
+        const replySection = document.getElementById(`replies-${commentID}`);
+        const replyCountElement = document.getElementById(`replyCount-for-comment-${commentID}`);
+
         try {
-          if (!reply.value.trim()) return;
-          const replyValue = reply.value;
-          const response = await fetch("http://localhost:3000/add-reply", {
+          if (!replyInput || !replyInput.value.trim()) return;
+
+          const replyValue = replyInput.value.trim();
+          const response = await fetch("/add-reply", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ comment_id: commentID, reply_post: replyValue }),
           });
 
           await handleRedirect(response);
-
           const data = await response.json();
-          const replyMeta = data.replyMeta;
-          const { day, month, year, time, timeZone } = formatTime(replyMeta.createdAt);
+          if (!data.success || !data.reply) return;
+
+          const newReply = data.reply;
+          const { day, month, year, time, timeZone } = formatTime(newReply.created_at);
+
+          if (replySection && replySection.style.display !== "block") {
+            replySection.style.display = "block";
+          }
+
           const newReplyHTMLContainer = /*html*/`
               <div
                   class="p-2 forum-reply-card-finalreply new-sub-reply"
                   style="border-top: 1px solid white; margin-left: 20px"
                 >
-                  <p style="color: white"> ${replyMeta.replyPost} </p>
+                  <p style="color: white"> ${newReply.comment_post ?? newReply.reply_post} </p>
                   <p style="color: white">
                     Posted By:
                     <span style="color: #6e9731">  <%= user %> </span>
@@ -264,16 +274,16 @@
                   style=" margin-left: 20px "
                 >
                 <div style="display: flex; align-items: center">
-                  <form onsubmit="handleReaction('like', 'reply${replyMeta.id}'); return false;">
+                  <form onsubmit="handleReaction('like', 'reply', ${newReply.id}); return false;">
                     <input
                       type="hidden"
                       name="comment_post_id"
-                      value="${replyMeta.id}"
+                      value="${newReply.id}"
                     />
                     <input type="hidden" name="reaction_type" value="like" />
                     <button
-                      id="replyLikeButton-${replyMeta.id}"
-                      class="postButton ${replyMeta.current_user_reaction === "like" ? "reaction-color" : ""} "
+                      id="replyLikeButton-${newReply.id}"
+                      class="postButton"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -287,13 +297,13 @@
                         ></path>
                       </svg>
                     </button>
-                    <span id="replyLikeCount-${replyMeta.id}" style="color: white"> 0 </span>
+                    <span id="replyLikeCount-${newReply.id}" style="color: white"> 0 </span>
                   </form>
-                  <form onsubmit="handleReaction('dislike', 'reply${replyMeta.id}'); return false;">
+                  <form onsubmit="handleReaction('dislike', 'reply', ${newReply.id}); return false;">
                     <input
                       type="hidden"
                       name="comment_post_id"
-                      value="${replyMeta.id}"
+                      value="${newReply.id}"
                     />
                     <input
                       type="hidden"
@@ -301,8 +311,8 @@
                       value="dislike"
                     />
                     <button
-                      id="replyDislikeButton-${replyMeta.id}"
-                      class="postButton  ${replyMeta.current_user_reaction === "dislike" ? "reaction-color" : ""} "
+                      id="replyDislikeButton-${newReply.id}"
+                      class="postButton"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -316,76 +326,59 @@
                         ></path>
                       </svg>
                     </button>
-                    <span id="replyDislikeCount-${replyMeta.id}" style="color: white"> 0 </span>
+                    <span id="replyDislikeCount-${newReply.id}" style="color: white"> 0 </span>
                   </form>
                   </div>
                 </div>`;
-                   refreshedReplySectionId.insertAdjacentHTML('afterbegin', newReplyHTMLContainer);
-                  const insertedPost = refreshedReplySectionId.querySelector(".new-sub-reply");
-                  if (insertedPost) {
-                    requestAnimationFrame(() => {
-                      insertedPost.classList.add("fade-bg");
-                    });
-                  }
-                  const newReplyCount = Number(updateReplyCountElementId.textContent) + 1;
-                  updateReplyCountElementId.textContent = newReplyCount;
-        } catch (error) {
 
+          if (replySection) {
+            replySection.insertAdjacentHTML('afterbegin', newReplyHTMLContainer);
+            const insertedReply = replySection.querySelector(".new-sub-reply");
+            if (insertedReply) {
+              requestAnimationFrame(() => {
+                insertedReply.classList.add("fade-bg");
+              });
+            }
+          }
+
+          if (replyCountElement) {
+            const newReplyCount = Number(replyCountElement.textContent || "0") + 1;
+            replyCountElement.textContent = String(newReplyCount);
+          }
+
+          replyInput.value = "";
+        } catch (error) {
+          console.error("Error submitting nested reply:", error);
         }
       }
+
       async function handleCommentSubmit(postId, username) {
+        const commentInput = document.querySelector(`#create-comment-for-post-${postId} textarea`);
+        const commentsSection = document.getElementById(`comments-${postId}`);
+        const commentCountElement = document.getElementById(`commentCount-for-post-${postId}`);
 
-        let comment = document.querySelector(`#create-comment-for-post-${postId} textarea`);
+        try {
+          if (!commentInput || !commentInput.value.trim()) return;
 
-          try {
-            if (!comment.value.trim()) return;
-            const commentValue = comment.value;
-            const response = await fetch("http://localhost:3000/add-comment", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({post_id: postId, comment_post: commentValue}),
-            });
-            handleRedirect(response);
-            const data = await response.json();
-            if (data.success) {
-              const replied = true;
+          const commentValue = commentInput.value.trim();
+          const response = await fetch("/add-comment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ post_id: postId, comment_post: commentValue }),
+          });
 
-              let updateReplyCountElementId;
-              let refreshedReplySectionId;
+          await handleRedirect(response);
+          const data = await response.json();
+          if (!data.success || !data.comment) return;
 
-              if (commentID && !postId) {
-                refreshedReplySectionId = document.getElementById(`create-reply-for-comment-${commentID}`);
-                updateReplyCountElementId = document.getElementById(`replyCount-for-comment-${commentID}`);
-              } else if (postId && !commentID) {
-                refreshedReplySectionId = document.getElementById(`create-comment-for-post-${postId}`);
-                updateReplyCountElementId = document.getElementById(`commentCount-for-post-${postId}`);
-              }
-              reply.value = "";
-              const isPanelOpen = refreshedReplySectionId.style.display === "block";
+          const newComment = data.comment;
+          const { day, month, year, time, timeZone } = formatTime(newComment.created_at);
 
-              toggleReplyBox(data.subReply ? commentID : postId, replied, data.subReply ? 'secondTier' : 'firstTier');
+          if (commentsSection && commentsSection.style.display !== "block") {
+            commentsSection.style.display = "block";
+          }
 
-              const isReply = Boolean(commentID) && !postId;
-              const isComment = Boolean(postId) && !commentID;
-
-              if (!isPanelOpen) {
-                showAllReplies(data.subReply ? commentID : postId, isReply, isComment, replied); // Show all replies after submitting
-              }
-
-              const created = new Date(data.reply.created_at);
-              const day = created.getDate().toString().padStart(2, "0");
-              const month = created.toLocaleString("default", { month: "short" }); // e.g. 'Mar'
-              const year = created.getFullYear();
-              const timeZone = created
-                .toLocaleTimeString("default", { timeZoneName: "short" })
-                .split(" ")[2]; // e.g. 'PST'
-              const time = created.toLocaleTimeString("default", {
-                hour: "2-digit",
-                minute: "2-digit",
-              });
-
-            const newComment = data.comentMetaData;
-            const newHTML = /*html*/`
+          const newHTML = /*html*/`
                 <div
                   class="new-reply p-2 forum-reply-card"
                   style="border-top: 1px solid white; margin-left: 20px"
@@ -404,7 +397,7 @@
                   style=" margin-left: 20px"
                 >
                 <div style="display: flex; align-items: center">
-                  <form onsubmit="handleReaction('like', 'comment${newComment.id}'); return false;">
+                  <form onsubmit="handleReaction('like', 'comment', ${newComment.id}); return false;">
                     <input
                       type="hidden"
                       name="comment_post_id"
@@ -429,7 +422,7 @@
                     </button>
                     <span id="commentLikeCount-${newComment.id}" style="color: white"> 0 </span>
                   </form>
-                  <form onsubmit="handleReaction('dislike', 'comment${newComment.id}'); return false;">
+                  <form onsubmit="handleReaction('dislike', 'comment', ${newComment.id}); return false;">
                     <input
                       type="hidden"
                       name="comment_post_id"
@@ -478,7 +471,7 @@
                   style="display: none"
                   class="forum-reply-editor-wrap"
                 >
-                  <form onsubmit="handleReplySubmit(null, ${newComment.id}, '${newComment.display_name}'); return false;">
+                  <form onsubmit="handleReplySubmit(${newComment.id}, '${newComment.display_name}'); return false;">
                     <input type="hidden" name="post_id" value="${newComment.id}" />
                     <div
                       style="display: flex; flex-direction: column"
@@ -503,23 +496,28 @@
                 </div>
               </div>
               `;
-              refreshedReplySectionId.insertAdjacentHTML('afterbegin', newHTML);
-              const insertedPost = refreshedReplySectionId.querySelector(".new-reply");
+              if (commentsSection) {
+                commentsSection.insertAdjacentHTML('afterbegin', newHTML);
+              }
+              const insertedPost = commentsSection?.querySelector(".new-reply");
               if (insertedPost) {
                 requestAnimationFrame(() => {
                   insertedPost.classList.add("fade-bg");
                 });
               }
-              const newReplyCount = Number( updateReplyCountElementId.textContent) + 1;
-              updateReplyCountElementId.textContent = newReplyCount;
-          }
+              if (commentCountElement) {
+                const newReplyCount = Number(commentCountElement.textContent || "0") + 1;
+                commentCountElement.textContent = String(newReplyCount);
+              }
+
+              commentInput.value = "";
           } catch (err) {
             console.error("Error submitting reply:", err);
           }
       }
           async function ascendForum() {
         try {
-          const response = await fetch("http://localhost:3000/ascend");
+          const response = await fetch("/ascend");
           const redirect = await response.redirected ? { url: response.url } : null;
 
           if (redirect) {
@@ -534,7 +532,7 @@
       }
       async function descendForum() {
         try {
-          const response = await fetch("http://localhost:3000/descend");
+          const response = await fetch("/descend");
           const redirect = await response.redirected ? { url: response.url } : null;
 
           if (redirect) {
@@ -772,7 +770,7 @@
                             style="display: none"
                             class="forum-reply-editor-wrap"
                           >
-                            <form onsubmit="handleReplySubmit(null, ${comment.id}, '${comment.display_name}'); return false;">
+                            <form onsubmit="handleReplySubmit(${comment.id}, '${comment.display_name}'); return false;">
                               <input type="hidden" name="post_id" value="${comment.id}" />
                               <div
                                 style="display: flex; flex-direction: column"
@@ -901,9 +899,9 @@
     //Prevent reference error by ensuring postType is defined
     let postTypes = postType;
       try {
-        const postEndpoint = postTypes === 'post' ? 'http://localhost:3000/post-reaction' : null
-        const commentEndpoint = postTypes === 'comment' ? 'http://localhost:3000/comment-reaction' : null;
-        const replyEndpoint = postTypes === 'reply' ? 'http://localhost:3000/reply-reaction' : null;
+        const postEndpoint = postTypes === 'post' ? '/post-reaction' : null
+        const commentEndpoint = postTypes === 'comment' ? '/comment-reaction' : null;
+        const replyEndpoint = postTypes === 'reply' ? '/reply-reaction' : null;
 
         const response = await fetch(postEndpoint ?? commentEndpoint ?? replyEndpoint, {
           method: "POST",
@@ -940,7 +938,7 @@
         NotificationListItems.forEach(item => item.classList.remove("unread-indicator"));
       };
 
-      const response = await fetch("http://localhost:3000/read-notifications", {
+      const response = await fetch("/read-notifications", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -955,7 +953,7 @@
     const list = <%- JSON.stringify(listAllContent) %>;
     if (!Array.isArray(list) || list.length === 0) return;
     listPosts(list);
-    const response = await fetch("http://localhost:3000/load-notifications", {
+    const response = await fetch("/load-notifications", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
