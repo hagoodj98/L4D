@@ -5,28 +5,38 @@ export const getAllSourcedNotifications = async (
 ) => {
   let getAllOtherUsersNotifications: NotificationType[] = [];
 
-  const notificationTypeOf = (item: any) =>
-    item.notificationType ?? item.notification_type;
-  const reactionsToPostsOf = (item: any) =>
-    item.reactionsToPosts ?? item.reactions_to_posts;
-  const otherCommentsOf = (item: any) => item.otherComments ?? item.other_comments;
-  const reactionsToCommentsOf = (item: any) =>
-    item.reactionsToComments ?? item.reactions_to_comments;
-  const repliesToCommentsOf = (item: any) =>
-    item.repliesToComments ?? item.replies_to_comments;
-  const reactionsToRepliesOf = (item: any) =>
-    item.reactionsToReplies ?? item.reactions_to_replies;
+  const notificationTypeOf = (
+    item: NotificationSource & { notification_type?: string },
+  ) => item.notificationType ?? item.notification_type;
+  const reactionsToPostsOf = (
+    item: NotificationSource & { reactions_to_posts?: NotificationType[] },
+  ) => item.reactionsToPosts ?? item.reactions_to_posts;
+  const otherCommentsOf = (
+    item: NotificationSource & { other_comments?: NotificationType[] },
+  ) => item.otherComments ?? item.other_comments;
+  const reactionsToCommentsOf = (
+    item: NotificationSource & { reactions_to_comments?: NotificationType[] },
+  ) => item.reactionsToComments ?? item.reactions_to_comments;
+  const repliesToCommentsOf = (
+    item: NotificationSource & { replies_to_comments?: NotificationType[] },
+  ) => item.repliesToComments ?? item.replies_to_comments;
+  const reactionsToRepliesOf = (
+    item: NotificationSource & { reactions_to_replies?: NotificationType[] },
+  ) => item.reactionsToReplies ?? item.reactions_to_replies;
 
   // If there are notifications, filter them by type and send them to the client.
   if (sourcedNotifications.length > 0) {
     const posts = sourcedNotifications.filter(
-      (otherUser: any) => notificationTypeOf(otherUser) === "posts_down",
+      (otherUser: NotificationSource) =>
+        notificationTypeOf(otherUser) === "posts_down",
     );
     const comments = sourcedNotifications.filter(
-      (otherUser: any) => notificationTypeOf(otherUser) === "comments_down",
+      (otherUser: NotificationSource) =>
+        notificationTypeOf(otherUser) === "comments_down",
     );
     const replies = sourcedNotifications.filter(
-      (otherUser: any) => notificationTypeOf(otherUser) === "replies_down",
+      (otherUser: NotificationSource) =>
+        notificationTypeOf(otherUser) === "replies_down",
     );
     if (posts.length > 0) {
       posts.forEach((notification) => {
