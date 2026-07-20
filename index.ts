@@ -15,12 +15,12 @@ import {
 import {
   getAllForumData,
   totalPostsResult,
-  createPost,
 } from "./database/repositories/forumcontent.js";
 import {
   checkingIfExisting,
   createUser,
 } from "./database/repositories/users.js";
+import { createPost } from "./database/repositories/posts.js";
 import {
   addReaction,
   removeReaction,
@@ -48,12 +48,19 @@ import {
   getNotificationState,
   saveNotificationState,
 } from "./database/repositories/user_notifications.js";
+import {
+  NotificationType,
+  NotificationState,
+  CacheNotificationState,
+  NotificationSource,
+  ReplyMetaDataType,
+} from "./types/types.js";
 
 const app = express();
 
 const port = 3000;
 
-const cachedUserNotificationState = new Map(); // Map to store notification states for each user
+const cachedUserNotificationState: CacheNotificationState = new Map(); // Map to store notification states for each user
 
 const saltRounds = 10;
 const isProduction = process.env.NODE_ENV === "production";
@@ -85,13 +92,14 @@ app.use(async (req, res, next) => {
   res.locals.user = req.user ? req.user.display_name : null;
   if (req.user) {
     // Check if the user's notification state is already cached. If not, fetch it from the database and cache it.
+
     if (!cachedUserNotificationState.has(req.user.id)) {
-      const cachedNotificationsState = await getNotificationState(req.user.id);
-      if (cachedNotificationsState?.notification_state?.notifications) {
-        cachedUserNotificationState.set(
-          req.user.id,
-          cachedNotificationsState.notification_state.notifications,
-        );
+      const cachedNotificationsState: NotificationState =
+        await getNotificationState(req.user.id);
+      const cachedNotifications: NotificationType[] =
+        cachedNotificationsState?.notification_state?.notifications;
+      if (cachedNotifications && cachedNotifications.length > 0) {
+        cachedUserNotificationState.set(req.user.id, cachedNotifications);
       }
     }
     // Retrieve the cached notification state for the authenticated user, if available.
@@ -118,11 +126,10 @@ app.use(async (req, res, next) => {
     // Process and merge all sourced notifications with the cached notifications.
     const IndividualNotifications = await mergeAllSourcedNotifications(
       allSourcedNotifications,
-      cachedNotifications,
     );
     // Mark all individual notifications as unread before saving to the database.
     const notificationMarkedUnread = IndividualNotifications.map(
-      (notification) => ({
+      (notification: Omit<NotificationType, "id" | "wasRead">) => ({
         id: crypto.randomUUID(),
         ...notification,
         wasRead: false,
@@ -135,7 +142,7 @@ app.use(async (req, res, next) => {
     );
     // Retrieve the updated notification state from the database response.
     const notifications =
-      getNotificationsState[0].notification_state.notifications;
+      getNotificationsState.notification_state.notifications;
     cachedUserNotificationState.set(req.user.id, notifications);
     // Cache the updated notification state for the authenticated user.
     console.log(`Authenticated user: ${req.user.display_name}`);
@@ -145,7 +152,11 @@ app.use(async (req, res, next) => {
   res.locals.currentPath = req.path;
   next();
 });
-const isUserAuthenticated = (req, res, page) => {
+const isUserAuthenticated = (
+  req: Express.Request,
+  res: Express.Response & { render: (view: string, options?: any) => void },
+  page: string,
+) => {
   if (!req.isAuthenticated()) return res.render(`${page}.ejs`);
   res.render(`${page}.ejs`, {
     currentUser: req.user.display_name,
@@ -202,14 +213,28 @@ app.get("/login", (req, res) => {
   if (req.isAuthenticated()) {
     res.redirect("/forum");
   } else {
-    const formErrors = req.session.formErrors || null;
-    req.session.formErrors = null;
+    const formErrors = (req.session as any).formErrors || null;
+    (req.session as any).formErrors = null;
     res.render("login.ejs", {
       error: formErrors,
     });
   }
 });
 
+app.get("/load-notifications", (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.redirect("/login");
+  }
+
+  const userId = req.user.id;
+  const userNotifications = cachedUserNotificationState.get(userId) || [];
+
+  return res.json({
+    notifications: userNotifications,
+  });
+});
+
+// DEPRECATED: Remove this alias after clients and tests migrate to /load-notifications.
 app.get("/check-notifications-reloaded", (req, res) => {
   if (!req.isAuthenticated()) {
     return res.redirect("/login");
@@ -220,7 +245,6 @@ app.get("/check-notifications-reloaded", (req, res) => {
 
   return res.json({
     notifications: userNotifications,
-    wasNotificationRead: userNotifications.wasRead,
   });
 });
 app.post("/read-notifications", async (req, res) => {
@@ -245,7 +269,7 @@ app.post("/read-notifications", async (req, res) => {
   // Update the cached notification state with the latest data from the database
   cachedUserNotificationState.set(
     userId,
-    notificationsRead[0].notification_state.notifications,
+    notificationsRead.notification_state.notifications,
   );
   res.sendStatus(200);
 });
@@ -269,7 +293,7 @@ app.get("/update-notifications", (req, res) => {
       commentsNotificationSource,
       repliesNotificationsSource,
     } = await fetchAllNotifications(userId);
-    let allSourcedNotifications = [
+    let allSourcedNotifications: NotificationSource[] = [
       ...postsNotificationsSource,
       ...commentsNotificationSource,
       ...repliesNotificationsSource,
@@ -279,28 +303,29 @@ app.get("/update-notifications", (req, res) => {
     );
     //at this point, the cache is the only aspect with an id. the individual notifications from the database may not have an id yet. So we need to map the id's from the cache if certain keys match.
     const mapNotificationsById = IndividualNotifications?.map(
-      (notification) => {
+      (notification: Omit<NotificationType, "id" | "wasRead">) => {
+        // Check if the current notification matches any cached notification based on various criteria.
         const cachedNotification = cachedNotifications.find((cacheN) => {
           const notificationTypeMatch =
-            cacheN.notification_type === notification.notification_type;
+            cacheN.notificationType === notification.notificationType;
           const postType = cacheN.post
             ? cacheN.post === notification.post
-            : cacheN.comment_post
-              ? cacheN.comment_post === notification.comment_post
-              : cacheN.reply_post
-                ? cacheN.reply_post === notification.reply_post
+            : cacheN.commentPost
+              ? cacheN.commentPost === notification.commentPost
+              : cacheN.replyPost
+                ? cacheN.replyPost === notification.replyPost
                 : null;
-          const idMatch = cacheN.post_id
-            ? cacheN.post_id === notification.post_id
-            : cacheN.comment_id
-              ? cacheN.comment_id === notification.comment_id
-              : cacheN.reply_id
-                ? cacheN.reply_id === notification.reply_id
+          const idMatch = cacheN.postID
+            ? cacheN.postID === notification.postID
+            : cacheN.commentID
+              ? cacheN.commentID === notification.commentID
+              : cacheN.replyID
+                ? cacheN.replyID === notification.replyID
                 : null;
           const reactionTypeMatch =
-            cacheN.reaction_type === notification.reaction_type;
-          const createdAtMatch = cacheN.created_at === notification.created_at;
-          const userMatch = cacheN.user_name === notification.user_name;
+            cacheN.reactionType === notification.reactionType;
+          const createdAtMatch = cacheN.createdAt === notification.createdAt;
+          const userMatch = cacheN.userName === notification.userName;
           // Check if the cached notification matches the current notification based on various criteria.
           if (
             idMatch &&
@@ -377,9 +402,9 @@ app.get("/update-notifications", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const formErrors = req.session.formErrors || null;
+  const formErrors = (req.session as any).formErrors || null;
 
-  req.session.formErrors = null;
+  (req.session as any).formErrors = null;
   res.render("register.ejs", {
     error: formErrors,
   });
@@ -399,43 +424,68 @@ app.get("/forum", async (req, res, next) => {
   if (!validation.success) {
     return res.status(400).send("Invalid sort direction");
   }
-  const limit = req.query.limit ? parseInt(req.query.limit) : 4;
-  const offset = req.query.page ? (parseInt(req.query.page) - 1) * limit : 0;
+  const limit = req.query.limit ? parseInt(req.query.limit as string) : 4;
+  const offset = req.query.page
+    ? (parseInt(req.query.page as string) - 1) * limit
+    : 0;
   try {
-    const result = await getAllForumData(
+    const content: NotificationSource[] = await getAllForumData(
       req.user ? req.user.id : null,
       "DESC",
       limit,
       offset,
     );
-
-    const getTotalPosts = await totalPostsResult();
-    const totalPosts = getTotalPosts.rows[0].count;
+    const totalPosts: string = await totalPostsResult();
     return res.render("forum.ejs", {
       currentUser: req.user ? req.user.display_name : "Guest",
       isAuthenticated: req.isAuthenticated(),
-      listAllContent: result.rows,
+      listAllContent: content,
       totalPosts,
     });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
   }
 });
-app.get("/forumpagination", async (req, res, next) => {
+app.get("/forum-pagination", async (req, res, next) => {
   const validation = sortSchema.safeParse({ sortDirection: "DESC" });
   if (!validation.success) {
     return res.status(400).send("Invalid sort direction");
   }
-  const limit = req.query.limit ? parseInt(req.query.limit) : 4;
-  const offset = req.query.page ? (parseInt(req.query.page) - 1) * limit : 0;
+  const limit = req.query.limit ? parseInt(req.query.limit as string) : 4;
+  const offset = req.query.page
+    ? (parseInt(req.query.page as string) - 1) * limit
+    : 0;
   try {
-    const result = await getAllForumData(
+    const result: NotificationSource[] = await getAllForumData(
       req.user ? req.user.id : null,
       "DESC",
       limit,
       offset,
     );
-    return res.json({ listAllContent: result.rows });
+    return res.json({ listAllContent: result });
+  } catch (err) {
+    return next(new ErrorHandler(500, "Internal Server Error", err));
+  }
+});
+
+// DEPRECATED: Remove this alias after clients and tests migrate to /forum-pagination.
+app.get("/forumpagination", async (req, res, next) => {
+  const validation = sortSchema.safeParse({ sortDirection: "DESC" });
+  if (!validation.success) {
+    return res.status(400).send("Invalid sort direction");
+  }
+  const limit = req.query.limit ? parseInt(req.query.limit as string) : 4;
+  const offset = req.query.page
+    ? (parseInt(req.query.page as string) - 1) * limit
+    : 0;
+  try {
+    const result: NotificationSource[] = await getAllForumData(
+      req.user ? req.user.id : null,
+      "DESC",
+      limit,
+      offset,
+    );
+    return res.json({ listAllContent: result });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
   }
@@ -444,48 +494,52 @@ app.get("/forumpagination", async (req, res, next) => {
 app.post("/login", async (req, res, next) => {
   // Keep local auth result handling in this route so form-specific errors
   // can be normalized into the central error middleware.
-  passport.authenticate("local", function (err, user, info) {
-    const validation = loginSchema.safeParse({
-      username: req.body.username,
-      password: req.body.password,
-    });
+  passport.authenticate(
+    "local",
+    function (
+      err: Error | null,
+      user: Express.User | false,
+      info: { message?: string } | undefined,
+    ) {
+      const validation = loginSchema.safeParse({
+        username: req.body.username,
+        password: req.body.password,
+      });
 
-    if (!validation.success) {
-      return next(
-        new ErrorHandler(400, "Validation failed", {
-          username: validation.error.issues.find(
-            (err) => err.path[0] === "username",
-          )
-            ? validation.error.issues.find((err) => err.path[0] === "username")
-                .message
-            : null,
-          password: validation.error.issues.find(
-            (err) => err.path[0] === "password",
-          )
-            ? validation.error.issues.find((err) => err.path[0] === "password")
-                .message
-            : null,
-        }),
-      );
-    }
-    if (err) {
-      return next(err);
-    }
-    if (!user) {
-      if (info && info.message === "User not found") {
-        return next(new ErrorHandler(401, "User not found", info));
+      if (!validation.success) {
+        const usernameError = validation.error.issues.find(
+          (err) => err.path[0] === "username",
+        );
+        const passwordError = validation.error.issues.find(
+          (err) => err.path[0] === "password",
+        );
+        //
+        return next(
+          new ErrorHandler(400, "Validation failed", {
+            username: usernameError?.message ?? null,
+            password: passwordError?.message ?? null,
+          }),
+        );
       }
-
-      return next(new ErrorHandler(401, "Invalid credentials", info));
-      // return res.redirect("/login-error");
-    }
-    req.logIn(user, function (err) {
       if (err) {
         return next(err);
       }
-      return res.redirect("/forum");
-    });
-  })(req, res, next);
+      if (!user) {
+        if (info && info.message === "User not found") {
+          return next(new ErrorHandler(401, "User not found", info));
+        }
+
+        return next(new ErrorHandler(401, "Invalid credentials", info));
+        // return res.redirect("/login-error");
+      }
+      req.logIn(user, function (err) {
+        if (err) {
+          return next(err);
+        }
+        return res.redirect("/forum");
+      });
+    },
+  )(req, res, next);
 });
 
 app.post("/register", async (req, res, next) => {
@@ -493,9 +547,9 @@ app.post("/register", async (req, res, next) => {
     return res.redirect("/forum");
   }
 
-  const username = req.body.username;
-  const email = req.body.email;
-  const password = req.body.password;
+  const username: string = req.body.username;
+  const email: string = req.body.email;
+  const password: string = req.body.password;
   const validation = registrationSchema.safeParse({
     username,
     email,
@@ -505,22 +559,15 @@ app.post("/register", async (req, res, next) => {
   if (!validation.success) {
     return next(
       new ErrorHandler(400, "Registration failed", {
-        username: validation.error.issues.find(
-          (err) => err.path[0] === "username",
-        )
-          ? validation.error.issues.find((err) => err.path[0] === "username")
-              .message
-          : null,
-        email: validation.error.issues.find((err) => err.path[0] === "email")
-          ? validation.error.issues.find((err) => err.path[0] === "email")
-              .message
-          : null,
-        password: validation.error.issues.find(
-          (err) => err.path[0] === "password",
-        )
-          ? validation.error.issues.find((err) => err.path[0] === "password")
-              .message
-          : null,
+        username:
+          validation.error.issues.find((err) => err.path[0] === "username")
+            ?.message ?? null,
+        email:
+          validation.error.issues.find((err) => err.path[0] === "email")
+            ?.message ?? null,
+        password:
+          validation.error.issues.find((err) => err.path[0] === "password")
+            ?.message ?? null,
       }),
     );
   }
@@ -565,10 +612,9 @@ app.get("/ascend", async (req, res, next) => {
   }
   const result = await getAllForumData(req.user.id, "DESC");
   const getTotalPosts = await totalPostsResult();
-  const totalPosts = getTotalPosts.rows[0].count;
   return res.json({
-    listAllContent: result.rows,
-    totalPosts,
+    listAllContent: result,
+    totalPosts: getTotalPosts,
   });
 });
 app.get("/descend", async (req, res, next) => {
@@ -579,28 +625,25 @@ app.get("/descend", async (req, res, next) => {
       new ErrorHandler(400, "Invalid sort direction", validation.error.issues),
     );
   }
-  const result = await getAllForumData(req.user.id, "ASC");
-  const getTotalPosts = await totalPostsResult();
-  const totalPosts = getTotalPosts.rows[0].count;
+  const content = await getAllForumData(req.user.id, "ASC");
+  const totalPosts = await totalPostsResult();
   return res.json({
-    listAllContent: result.rows,
+    listAllContent: content,
     totalPosts,
   });
 });
-
-app.post("/post-reaction", async (req, res, next) => {
+app.post("/comment-reaction", async (req, res, next) => {
   if (!req.isAuthenticated()) return res.redirect("/login");
 
-  const rawData = await req.body;
-  const { post_id, comment_post_id, reaction_type, final_reply_id } = rawData;
+  const rawData: {
+    comment_id?: number;
+    reaction_type: string;
+  } = await req.body;
+  const { comment_id, reaction_type } = rawData;
 
-  const postId = post_id ? String(post_id) : null;
-  const commentId = comment_post_id ? String(comment_post_id) : null;
-  const finalReplyId = final_reply_id ? String(final_reply_id) : null;
+  const commentId = comment_id ? String(comment_id) : null;
   const validation = reactionSchema.safeParse({
-    post_id: postId,
-    comment_post_id: commentId,
-    final_reply_id: finalReplyId,
+    comment_id: commentId,
     reaction_type: reaction_type,
   });
 
@@ -609,47 +652,136 @@ app.post("/post-reaction", async (req, res, next) => {
       new ErrorHandler(400, "Invalid reaction data", validation.error.issues),
     );
   }
+  // Comment reactions toggle: same reaction removes, different reaction upserts.
+  const existing = await sameCommentReaction(commentId, req.user.id);
 
-  if (finalReplyId) {
-    // Final reply reactions toggle: same reaction removes, different reaction upserts.
-    const existing = await sameReplyReaction(finalReplyId, req.user.id);
+  if (existing && existing.reaction_type === reaction_type) {
+    await removeCommentReaction(commentId, req.user.id);
+    return res.json({
+      reaction_intent: `remove`,
+      reactionButton: `${existing.reaction_type}Button`,
+      postType: `comment`,
+    });
+  } else if (existing && existing.reaction_type !== reaction_type) {
+    const reaction = await updateReactionComment(
+      commentId,
+      req.user.id,
+      reaction_type,
+    );
+    return res.json({
+      reaction_intent: `update`,
+      reactionButton: `${reaction.reaction_type}Button`,
+      postType: `comment`,
+    });
+  } else {
+    const createdAt = new Date().toISOString();
+    const reaction = await addCommentReaction(
+      commentId,
+      req.user.id,
+      reaction_type,
+      createdAt,
+    );
+    return res.json({
+      reaction_intent: `add`,
+      reactionButton: `${reaction.reaction_type}Button`,
+      postType: `comment`,
+    });
+  }
+});
+app.post("/reply-reaction", async (req, res, next) => {
+  if (!req.isAuthenticated()) return res.redirect("/login");
 
-    if (existing && existing.reaction_type === reaction_type) {
-      await removeReplyReaction(finalReplyId, req.user.id);
-      return res.json({
-        reaction_intent: `remove`,
-        reactionButton: `${existing.reaction_type}Button`,
-        postType: `reply`,
-      });
-    } else if (existing && existing.reaction_type !== reaction_type) {
-      const reaction = await updateReplyReaction(
-        finalReplyId,
-        req.user.id,
-        reaction_type,
+  const rawData: {
+    reply_id?: number;
+    reaction_type: string;
+  } = await req.body;
+  const { reply_id, reaction_type } = rawData;
+
+  const replyID = reply_id ? String(reply_id) : null;
+  const validation = reactionSchema.safeParse({
+    reply_id: replyID,
+    reaction_type: reaction_type,
+  });
+
+  if (!validation.success) {
+    return next(
+      new ErrorHandler(400, "Invalid reaction data", validation.error.issues),
+    );
+  }
+  // Final reply reactions toggle: same reaction removes, different reaction upserts.
+  const existing = await sameReplyReaction(replyID, req.user.id);
+  if (existing && existing.reaction_type === reaction_type) {
+    await removeReplyReaction(replyID, req.user.id);
+    return res.json({
+      reaction_intent: `remove`,
+      reactionButton: `${existing.reaction_type}Button`,
+      postType: `reply`,
+    });
+  } else if (existing && existing.reaction_type !== reaction_type) {
+    const reaction = await updateReplyReaction(
+      replyID,
+      req.user.id,
+      reaction_type,
+    );
+    return res.json({
+      reaction_intent: `update`,
+      reactionButton: `${reaction.reaction_type}Button`,
+      postType: `reply`,
+    });
+  } else {
+    const createdAt = new Date().toISOString();
+    const reaction = await addReplyReaction(
+      replyID,
+      req.user.id,
+      reaction_type,
+      createdAt,
+    );
+    return res.json({
+      reaction_intent: `add`,
+      reactionButton: `${reaction.reaction_type}Button`,
+      postType: `reply`,
+    });
+  }
+});
+app.post("/post-reaction", async (req, res, next) => {
+  if (!req.isAuthenticated()) return res.redirect("/login");
+
+  const rawData: {
+    post_id?: number;
+    comment_post_id?: number;
+    final_reply_id?: number;
+    comment_id?: number;
+    reply_id?: number;
+    reaction_type: string;
+  } = await req.body;
+  const {
+    post_id,
+    comment_post_id,
+    final_reply_id,
+    comment_id,
+    reply_id,
+    reaction_type,
+  } = rawData;
+
+  // DEPRECATED: comment_post_id/final_reply_id are legacy keys.
+  // Remove after clients send comment_id/reply_id only.
+  const legacyCommentId = comment_post_id ?? comment_id;
+  const legacyReplyId = final_reply_id ?? reply_id;
+
+  if (legacyCommentId) {
+    const commentId = String(legacyCommentId);
+    const validation = reactionSchema.safeParse({
+      comment_id: commentId,
+      reaction_type: reaction_type,
+    });
+
+    if (!validation.success) {
+      return next(
+        new ErrorHandler(400, "Invalid reaction data", validation.error.issues),
       );
-      return res.json({
-        reaction_intent: `update`,
-        reactionButton: `${reaction.reaction_type}Button`,
-        postType: `reply`,
-      });
-    } else {
-      const createdAt = new Date();
-      const reaction = await addReplyReaction(
-        finalReplyId,
-        req.user.id,
-        reaction_type,
-        createdAt,
-      );
-      return res.json({
-        reaction_intent: `add`,
-        reactionButton: `${reaction.reaction_type}Button`,
-        postType: `reply`,
-      });
     }
-  } else if (commentId) {
-    // Comment reactions toggle: same reaction removes, different reaction upserts.
-    const existing = await sameCommentReaction(commentId, req.user.id);
 
+    const existing = await sameCommentReaction(commentId, req.user.id);
     if (existing && existing.reaction_type === reaction_type) {
       await removeCommentReaction(commentId, req.user.id);
       return res.json({
@@ -669,7 +801,7 @@ app.post("/post-reaction", async (req, res, next) => {
         postType: `comment`,
       });
     } else {
-      const createdAt = new Date();
+      const createdAt = new Date().toISOString();
       const reaction = await addCommentReaction(
         commentId,
         req.user.id,
@@ -682,29 +814,44 @@ app.post("/post-reaction", async (req, res, next) => {
         postType: `comment`,
       });
     }
-  } else {
-    // Post reactions follow the same toggle behavior as reply reactions.
-    const existing = await samePostReaction(postId, req.user.id);
-    // If the same reaction exists, remove it. Otherwise, add or update to the new reaction.
+  }
+
+  if (legacyReplyId) {
+    const replyID = String(legacyReplyId);
+    const validation = reactionSchema.safeParse({
+      reply_id: replyID,
+      reaction_type: reaction_type,
+    });
+
+    if (!validation.success) {
+      return next(
+        new ErrorHandler(400, "Invalid reaction data", validation.error.issues),
+      );
+    }
+
+    const existing = await sameReplyReaction(replyID, req.user.id);
     if (existing && existing.reaction_type === reaction_type) {
-      await removeReaction(postId, req.user.id);
-      // Return the new reaction state to the client for immediate UI update.
+      await removeReplyReaction(replyID, req.user.id);
       return res.json({
         reaction_intent: `remove`,
         reactionButton: `${existing.reaction_type}Button`,
-        postType: `post`,
+        postType: `reply`,
       });
     } else if (existing && existing.reaction_type !== reaction_type) {
-      const reaction = await updateReaction(postId, req.user.id, reaction_type);
+      const reaction = await updateReplyReaction(
+        replyID,
+        req.user.id,
+        reaction_type,
+      );
       return res.json({
         reaction_intent: `update`,
         reactionButton: `${reaction.reaction_type}Button`,
-        postType: `post`,
+        postType: `reply`,
       });
     } else {
-      const createdAt = new Date();
-      const reaction = await addReaction(
-        postId,
+      const createdAt = new Date().toISOString();
+      const reaction = await addReplyReaction(
+        replyID,
         req.user.id,
         reaction_type,
         createdAt,
@@ -712,9 +859,55 @@ app.post("/post-reaction", async (req, res, next) => {
       return res.json({
         reaction_intent: `add`,
         reactionButton: `${reaction.reaction_type}Button`,
-        postType: `post`,
+        postType: `reply`,
       });
     }
+  }
+
+  const postId = post_id ? String(post_id) : null;
+
+  const validation = reactionSchema.safeParse({
+    post_id: postId,
+    reaction_type: reaction_type,
+  });
+
+  if (!validation.success) {
+    return next(
+      new ErrorHandler(400, "Invalid reaction data", validation.error.issues),
+    );
+  }
+
+  // Post reactions follow the same toggle behavior as reply reactions.
+  const existing = await samePostReaction(postId, req.user.id);
+  // If the same reaction exists, remove it. Otherwise, add or update to the new reaction.
+  if (existing && existing.reaction_type === reaction_type) {
+    await removeReaction(postId, req.user.id);
+    // Return the new reaction state to the client for immediate UI update.
+    return res.json({
+      reaction_intent: `remove`,
+      reactionButton: `${existing.reaction_type}Button`,
+      postType: `post`,
+    });
+  } else if (existing && existing.reaction_type !== reaction_type) {
+    const reaction = await updateReaction(postId, req.user.id, reaction_type);
+    return res.json({
+      reaction_intent: `update`,
+      reactionButton: `${reaction.reaction_type}Button`,
+      postType: `post`,
+    });
+  } else {
+    const createdAt = new Date().toISOString();
+    const reaction = await addReaction(
+      postId,
+      req.user.id,
+      reaction_type,
+      createdAt,
+    );
+    return res.json({
+      reaction_intent: `add`,
+      reactionButton: `${reaction.reaction_type}Button`,
+      postType: `post`,
+    });
   }
 });
 
@@ -731,8 +924,39 @@ app.post("/add-post", async (req, res, next) => {
   }
 
   try {
-    const result = await createPost(post, req.user.id);
+    const createdAt = new Date().toISOString();
+    const result = await createPost(post, req.user.id, createdAt);
     return res.json({ success: true, post: result });
+  } catch (err) {
+    return next(new ErrorHandler(500, "Internal Server Error", err));
+  }
+});
+app.post("/add-comment", async (req, res, next) => {
+  if (!req.isAuthenticated()) return res.redirect("/login");
+
+  const postId = req.body.post_id ? String(req.body.post_id) : null;
+  const commentPost = req.body.comment_post
+    ? String(req.body.comment_post)
+    : null;
+  const validation = replySchema.safeParse({
+    reply: commentPost,
+    post_id: postId,
+  });
+  if (!validation.success) {
+    return next(
+      new ErrorHandler(400, "Invalid comment data", validation.error.issues),
+    );
+  }
+
+  try {
+    const creationTime = new Date().toISOString();
+    const result = await createComment(
+      commentPost,
+      req.user.id,
+      postId,
+      creationTime,
+    );
+    return res.json({ success: true, comment: result });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
   }
@@ -740,35 +964,84 @@ app.post("/add-post", async (req, res, next) => {
 app.post("/add-reply", async (req, res, next) => {
   if (!req.isAuthenticated()) return res.redirect("/login");
 
-  const postId = req.body.post_id ? String(req.body.post_id) : null;
-  const replyId = req.body.reply_id ? String(req.body.reply_id) : null;
-  const comment_post = req.body.comment_post
-    ? String(req.body.comment_post)
-    : null;
+  // DEPRECATED payload support:
+  // - comment on post: { post_id, comment_post }
+  // - nested reply: { reply_id, comment_post }
+  // Current payload support:
+  // - nested reply: { comment_id, reply_post }
+  const isLegacyCommentPayload =
+    req.body.post_id !== undefined && req.body.comment_post !== undefined;
+  const isLegacyNestedReplyPayload =
+    req.body.reply_id !== undefined && req.body.comment_post !== undefined;
+
+  if (isLegacyCommentPayload) {
+    const postId = String(req.body.post_id);
+    const commentPost = String(req.body.comment_post);
+    const validation = replySchema.safeParse({
+      reply: commentPost,
+      post_id: postId,
+    });
+
+    if (!validation.success) {
+      return next(
+        new ErrorHandler(400, "Invalid reply data", validation.error.issues),
+      );
+    }
+
+    try {
+      const createdAt = new Date().toISOString();
+      const result = await createComment(
+        commentPost,
+        req.user.id,
+        postId,
+        createdAt,
+      );
+      return res.json({ success: true, reply: result });
+    } catch (err) {
+      return next(new ErrorHandler(500, "Internal Server Error", err));
+    }
+  }
+
+  const commentID = String(req.body.comment_id ?? req.body.reply_id);
+  const replyPost = String(req.body.reply_post ?? req.body.comment_post);
   const validation = replySchema.safeParse({
-    reply: comment_post,
-    post_id: postId,
-    reply_id: replyId,
+    reply: replyPost,
+    comment_id: commentID,
   });
   if (!validation.success) {
     return next(
       new ErrorHandler(400, "Invalid reply data", validation.error.issues),
     );
   }
-
   try {
-    if (!replyId) {
-      const result = await createComment(comment_post, req.user.id, postId);
-      return res.json({ success: true, reply: result });
-    }
-    const result = await createReply(comment_post, req.user.id, replyId);
-    return res.json({ success: true, reply: result, subReply: true });
+    const createdAt = new Date().toISOString();
+    const result = await createReply(
+      replyPost,
+      req.user.id,
+      commentID,
+      createdAt,
+    );
+    const replyMetadata: ReplyMetaDataType = {
+      id: result.id,
+      commentID: commentID,
+      replyPost: replyPost,
+      createdAt: createdAt,
+    };
+    return res.json({
+      success: true,
+      reply: {
+        ...result,
+        comment_post: result.reply_post,
+      },
+      replyMeta: replyMetadata,
+      subReply: true,
+    });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
   }
 });
 
-app.use((err, req, res, _next) => {
+app.use((err: unknown, req: any, res: any, _next: any) => {
   // Convert structured domain errors into user-facing redirects/messages.
   if (err instanceof ErrorHandler) {
     if (err.message === "Validation failed") {

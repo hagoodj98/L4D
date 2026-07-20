@@ -1,13 +1,13 @@
+import { NotificationSource } from "../../types/types.js";
 import db from "../databaseConnection.js";
 
 export const getAllForumData = async (
-  userId = null,
+  userId: number | null,
   sortDirection = "DESC",
   limit = 4,
   offset = 0,
-) => {
+): Promise<NotificationSource[]> => {
   const safeSortDirection = sortDirection === "ASC" ? "ASC" : "DESC";
-
   // Using String.raw to construct the SQL query with dynamic sort direction
   const sql = String.raw;
 
@@ -112,17 +112,11 @@ export const getAllForumData = async (
     ORDER BY posts.created_at ${safeSortDirection}
     LIMIT $2 OFFSET $3 
     `;
-
-  return db.query(forumPostQuery, [userId, limit, offset]);
+  const result = await db.query(forumPostQuery, [userId, limit, offset]);
+  return result.rows;
 };
 
-export const totalPostsResult = async () =>
-  await db.query("SELECT COUNT(*) FROM posts");
-
-export const createPost = async (postContent, userId) => {
-  const result = await db.query(
-    "INSERT INTO posts (post, user_id, created_at) VALUES ($1, $2, $3) RETURNING *",
-    [postContent, userId, new Date()],
-  );
-  return result.rows[0];
+export const totalPostsResult = async (): Promise<string> => {
+  const result = await db.query("SELECT COUNT(*) FROM posts");
+  return result.rows[0].count;
 };

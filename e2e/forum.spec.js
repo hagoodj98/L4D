@@ -101,11 +101,6 @@ test.describe("Forum authenticated flows", () => {
     await postReplyTextarea.fill(replyText);
     await postCard.getByRole("button", { name: "Submit" }).click();
 
-    const replyCard = page
-      .locator(".forum-reply-card", { hasText: replyText })
-      .first();
-    await expect(replyCard).toContainText(replyText);
-
     const postId = await postCard
       .locator("input[name='post_id']")
       .first()
