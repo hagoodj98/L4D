@@ -175,7 +175,9 @@ export function setupPgMock() {
 
         if (
           normalizedSql.includes("SELECT EXISTS (") &&
-          normalizedSql.includes("FROM users WHERE email = $1 OR display_name = $2") &&
+          normalizedSql.includes(
+            "FROM users WHERE email = $1 OR display_name = $2",
+          ) &&
           normalizedSql.includes(") AS user_exists")
         ) {
           const foundUser = dbState.users.some(
@@ -188,7 +190,9 @@ export function setupPgMock() {
         }
 
         if (
-          normalizedSql.includes("INSERT INTO users (display_name, email, password)") &&
+          normalizedSql.includes(
+            "INSERT INTO users (display_name, email, password)",
+          ) &&
           normalizedSql.includes("VALUES ($1, $2, $3)") &&
           normalizedSql.includes("RETURNING *")
         ) {
@@ -229,7 +233,9 @@ export function setupPgMock() {
         }
 
         if (
-          normalizedSql.includes("SELECT notification_state FROM users WHERE id = $1")
+          normalizedSql.includes(
+            "SELECT notification_state FROM users WHERE id = $1",
+          )
         ) {
           const user = dbState.users.find(
             (item) => item.id === Number(params[0]),
@@ -267,7 +273,9 @@ export function setupPgMock() {
           };
         }
 
-        if (normalizedSql.includes("SELECT * FROM users WHERE display_name = $1")) {
+        if (
+          normalizedSql.includes("SELECT * FROM users WHERE display_name = $1")
+        ) {
           return {
             rows: dbState.users.filter(
               (user) => user.display_name === params[0],
@@ -299,7 +307,9 @@ export function setupPgMock() {
         }
 
         if (
-          normalizedSql.includes("INSERT INTO posts (post, user_id, created_at)") &&
+          normalizedSql.includes(
+            "INSERT INTO posts (post, user_id, created_at)",
+          ) &&
           normalizedSql.includes("VALUES ($1, $2, $3)") &&
           normalizedSql.includes("RETURNING")
         ) {
@@ -357,7 +367,9 @@ export function setupPgMock() {
           )
         ) {
           const currentUserId = params[0];
-          const isAscSort = normalizedSql.includes("ORDER BY posts.created_at ASC");
+          const isAscSort = normalizedSql.includes(
+            "ORDER BY posts.created_at ASC",
+          );
           const limit = Number(params[1]);
           const offset = Number(params[2]);
           const allRows = buildForumRows(currentUserId, isAscSort);
