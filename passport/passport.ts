@@ -1,6 +1,7 @@
 import passport from "passport";
 import { Strategy } from "passport-local";
-import GoogleStrategy from "passport-google-oauth2";
+//the import had no GoogleStrategy constructor, so I added it to the import statement
+import { Strategy as GoogleStrategy } from "passport-google-oauth2";
 import Twitch from "passport-twitch-strategy";
 import DiscordStrategy from "passport-discord";
 import bcrypt from "bcrypt";
@@ -59,9 +60,15 @@ passport.use(
       clientID: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
       callbackURL: "http://localhost:3000/auth/google/forum",
-      userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
+
+      //userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
     },
-    async function verify(accessToken, refreshToken, profile, cb) {
+    async function verify(
+      accessToken: unknown,
+      refreshToken: unknown,
+      profile,
+      cb,
+    ) {
       try {
         // Fast path: provider account already linked to a local user.
         const existingGoogleUser =
@@ -112,11 +119,17 @@ passport.use(
   "twitch",
   new TwitchStrategy(
     {
+      scope: "user:read:email", // Request email access from Twitch
       clientID: TWITCH_CLIENT_ID,
       clientSecret: TWITCH_CLIENT_SECRET,
       callbackURL: "http://localhost:3000/auth/twitch/forum",
     },
-    async function verify(accessToken, refreshToken, profile, cb) {
+    async function verify(
+      accessToken: unknown,
+      refreshToken: unknown,
+      profile: { id?: string; email?: string },
+      cb: (arg0: Error | null, arg1?: any) => void,
+    ) {
       try {
         // Fast path: provider account already linked to a local user.
         const existingTwitchUser =
@@ -158,7 +171,9 @@ passport.use(
 
         return cb(null, newUser);
       } catch (err) {
-        return cb(err);
+        // Handle the error appropriately
+        if (err instanceof Error) return cb(err);
+        return cb(new Error("Unknown error"));
       }
     },
   ),
@@ -172,7 +187,12 @@ passport.use(
       callbackURL: "http://localhost:3000/auth/discord/forum",
       scope: ["identify", "email"],
     },
-    async function verify(accessToken, refreshToken, profile, cb) {
+    async function verify(
+      accessToken: unknown,
+      refreshToken: unknown,
+      profile: { id?: string; email?: string },
+      cb: (arg0: Error | null, arg1?: any) => void,
+    ) {
       try {
         // Fast path: provider account already linked to a local user.
         const existingDiscordUser =
@@ -214,15 +234,16 @@ passport.use(
 
         return cb(null, newUser);
       } catch (err) {
-        return cb(err);
+        if (err instanceof Error) return cb(err);
+        return cb(new Error("Unknown error"));
       }
     },
   ),
 );
-passport.serializeUser((user, cb) => {
+passport.serializeUser((user: Express.User, cb) => {
   cb(null, user);
 });
-passport.deserializeUser((user, cb) => {
+passport.deserializeUser((user: Express.User, cb) => {
   cb(null, user);
 });
 

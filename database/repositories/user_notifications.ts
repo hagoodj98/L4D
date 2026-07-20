@@ -1,14 +1,24 @@
+import {
+  NotificationSource,
+  NotificationState,
+  NotificationType,
+} from "../../types/types.js";
 import db from "../databaseConnection.js";
-
-export const getNotificationState = async (userId) => {
+export const getNotificationState = async (
+  userId: number,
+): Promise<NotificationState> => {
   const sql = String.raw;
   const getNotificationsReadStatusQuery = sql`
     SELECT notification_state FROM users WHERE id = $1;
   `;
   const result = await db.query(getNotificationsReadStatusQuery, [userId]);
+
   return result.rows[0];
 };
-export const saveNotificationState = async (userId, notifications) => {
+export const saveNotificationState = async (
+  userId: number,
+  notifications: NotificationType[],
+): Promise<NotificationState> => {
   const sql = String.raw;
   const saveNotifcationStateQuery = sql`
       UPDATE users
@@ -19,10 +29,12 @@ export const saveNotificationState = async (userId, notifications) => {
     userId,
     JSON.stringify(notifications),
   ]);
-  return result.rows;
+  return result.rows[0];
 };
 
-export const commentsRepliesNotifications = async (userId) => {
+export const commentsRepliesNotifications = async (
+  userId: number,
+): Promise<NotificationSource[]> => {
   const sql = String.raw;
   const commentNotificationsQuery = sql`
     SELECT
@@ -75,7 +87,9 @@ export const commentsRepliesNotifications = async (userId) => {
   const result = await db.query(commentNotificationsQuery, [userId]);
   return result.rows;
 };
-export const postsCommentsNotifications = async (userId) => {
+export const postsCommentsNotifications = async (
+  userId: number,
+): Promise<NotificationSource[]> => {
   const sql = String.raw;
   const postsCommentsNotificationsQuery = sql`
     SELECT
@@ -128,7 +142,9 @@ export const postsCommentsNotifications = async (userId) => {
   const result = await db.query(postsCommentsNotificationsQuery, [userId]);
   return result.rows;
 };
-export const repliesNotifications = async (userId) => {
+export const repliesNotifications = async (
+  userId: number,
+): Promise<NotificationSource[]> => {
   const sql = String.raw;
   const allRepliesNotificationsDownQuery = sql`
   SELECT
@@ -165,10 +181,13 @@ WHERE replies.user_id = $1 AND (
   return result.rows;
 };
 
-export const fetchAllNotifications = async (userId) => {
-  const postsNotificationsSource = await postsCommentsNotifications(userId);
-  const commentsNotificationSource = await commentsRepliesNotifications(userId);
-  const repliesNotificationsSource = await repliesNotifications(userId);
+export const fetchAllNotifications = async (userId: number) => {
+  const postsNotificationsSource: NotificationSource[] =
+    await postsCommentsNotifications(userId);
+  const commentsNotificationSource: NotificationSource[] =
+    await commentsRepliesNotifications(userId);
+  const repliesNotificationsSource: NotificationSource[] =
+    await repliesNotifications(userId);
   return {
     postsNotificationsSource,
     commentsNotificationSource,

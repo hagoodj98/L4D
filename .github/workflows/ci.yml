@@ -62,10 +62,10 @@ jobs:
 
       - name: Syntax check
         run: node --check index.js
-
+      - name: Type check
+        run: npm run typecheck
       - name: Run lint
         run: npm run lint
-
       - name: Run tests
         run: npm test
 
