@@ -233,6 +233,20 @@ app.get("/load-notifications", (req, res) => {
     notifications: userNotifications,
   });
 });
+
+// DEPRECATED: Remove this alias after clients and tests migrate to /load-notifications.
+app.get("/check-notifications-reloaded", (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.redirect("/login");
+  }
+
+  const userId = req.user.id;
+  const userNotifications = cachedUserNotificationState.get(userId) || [];
+
+  return res.json({
+    notifications: userNotifications,
+  });
+});
 app.post("/read-notifications", async (req, res) => {
   if (!req.isAuthenticated()) {
     return res.redirect("/login");
@@ -433,6 +447,29 @@ app.get("/forum", async (req, res, next) => {
   }
 });
 app.get("/forum-pagination", async (req, res, next) => {
+  const validation = sortSchema.safeParse({ sortDirection: "DESC" });
+  if (!validation.success) {
+    return res.status(400).send("Invalid sort direction");
+  }
+  const limit = req.query.limit ? parseInt(req.query.limit as string) : 4;
+  const offset = req.query.page
+    ? (parseInt(req.query.page as string) - 1) * limit
+    : 0;
+  try {
+    const result: NotificationSource[] = await getAllForumData(
+      req.user ? req.user.id : null,
+      "DESC",
+      limit,
+      offset,
+    );
+    return res.json({ listAllContent: result });
+  } catch (err) {
+    return next(new ErrorHandler(500, "Internal Server Error", err));
+  }
+});
+
+// DEPRECATED: Remove this alias after clients and tests migrate to /forum-pagination.
+app.get("/forumpagination", async (req, res, next) => {
   const validation = sortSchema.safeParse({ sortDirection: "DESC" });
   if (!validation.success) {
     return res.status(400).send("Invalid sort direction");
@@ -711,9 +748,121 @@ app.post("/post-reaction", async (req, res, next) => {
 
   const rawData: {
     post_id?: number;
+    comment_post_id?: number;
+    final_reply_id?: number;
+    comment_id?: number;
+    reply_id?: number;
     reaction_type: string;
   } = await req.body;
-  const { post_id, reaction_type } = rawData;
+  const {
+    post_id,
+    comment_post_id,
+    final_reply_id,
+    comment_id,
+    reply_id,
+    reaction_type,
+  } = rawData;
+
+  // DEPRECATED: comment_post_id/final_reply_id are legacy keys.
+  // Remove after clients send comment_id/reply_id only.
+  const legacyCommentId = comment_post_id ?? comment_id;
+  const legacyReplyId = final_reply_id ?? reply_id;
+
+  if (legacyCommentId) {
+    const commentId = String(legacyCommentId);
+    const validation = reactionSchema.safeParse({
+      comment_id: commentId,
+      reaction_type: reaction_type,
+    });
+
+    if (!validation.success) {
+      return next(
+        new ErrorHandler(400, "Invalid reaction data", validation.error.issues),
+      );
+    }
+
+    const existing = await sameCommentReaction(commentId, req.user.id);
+    if (existing && existing.reaction_type === reaction_type) {
+      await removeCommentReaction(commentId, req.user.id);
+      return res.json({
+        reaction_intent: `remove`,
+        reactionButton: `${existing.reaction_type}Button`,
+        postType: `comment`,
+      });
+    } else if (existing && existing.reaction_type !== reaction_type) {
+      const reaction = await updateReactionComment(
+        commentId,
+        req.user.id,
+        reaction_type,
+      );
+      return res.json({
+        reaction_intent: `update`,
+        reactionButton: `${reaction.reaction_type}Button`,
+        postType: `comment`,
+      });
+    } else {
+      const createdAt = new Date().toISOString();
+      const reaction = await addCommentReaction(
+        commentId,
+        req.user.id,
+        reaction_type,
+        createdAt,
+      );
+      return res.json({
+        reaction_intent: `add`,
+        reactionButton: `${reaction.reaction_type}Button`,
+        postType: `comment`,
+      });
+    }
+  }
+
+  if (legacyReplyId) {
+    const replyID = String(legacyReplyId);
+    const validation = reactionSchema.safeParse({
+      reply_id: replyID,
+      reaction_type: reaction_type,
+    });
+
+    if (!validation.success) {
+      return next(
+        new ErrorHandler(400, "Invalid reaction data", validation.error.issues),
+      );
+    }
+
+    const existing = await sameReplyReaction(replyID, req.user.id);
+    if (existing && existing.reaction_type === reaction_type) {
+      await removeReplyReaction(replyID, req.user.id);
+      return res.json({
+        reaction_intent: `remove`,
+        reactionButton: `${existing.reaction_type}Button`,
+        postType: `reply`,
+      });
+    } else if (existing && existing.reaction_type !== reaction_type) {
+      const reaction = await updateReplyReaction(
+        replyID,
+        req.user.id,
+        reaction_type,
+      );
+      return res.json({
+        reaction_intent: `update`,
+        reactionButton: `${reaction.reaction_type}Button`,
+        postType: `reply`,
+      });
+    } else {
+      const createdAt = new Date().toISOString();
+      const reaction = await addReplyReaction(
+        replyID,
+        req.user.id,
+        reaction_type,
+        createdAt,
+      );
+      return res.json({
+        reaction_intent: `add`,
+        reactionButton: `${reaction.reaction_type}Button`,
+        postType: `reply`,
+      });
+    }
+  }
 
   const postId = post_id ? String(post_id) : null;
 
@@ -815,8 +964,46 @@ app.post("/add-comment", async (req, res, next) => {
 app.post("/add-reply", async (req, res, next) => {
   if (!req.isAuthenticated()) return res.redirect("/login");
 
-  const commentID = String(req.body.comment_id);
-  const replyPost = String(req.body.reply_post);
+  // DEPRECATED payload support:
+  // - comment on post: { post_id, comment_post }
+  // - nested reply: { reply_id, comment_post }
+  // Current payload support:
+  // - nested reply: { comment_id, reply_post }
+  const isLegacyCommentPayload =
+    req.body.post_id !== undefined && req.body.comment_post !== undefined;
+  const isLegacyNestedReplyPayload =
+    req.body.reply_id !== undefined && req.body.comment_post !== undefined;
+
+  if (isLegacyCommentPayload) {
+    const postId = String(req.body.post_id);
+    const commentPost = String(req.body.comment_post);
+    const validation = replySchema.safeParse({
+      reply: commentPost,
+      post_id: postId,
+    });
+
+    if (!validation.success) {
+      return next(
+        new ErrorHandler(400, "Invalid reply data", validation.error.issues),
+      );
+    }
+
+    try {
+      const createdAt = new Date().toISOString();
+      const result = await createComment(
+        commentPost,
+        req.user.id,
+        postId,
+        createdAt,
+      );
+      return res.json({ success: true, reply: result });
+    } catch (err) {
+      return next(new ErrorHandler(500, "Internal Server Error", err));
+    }
+  }
+
+  const commentID = String(req.body.comment_id ?? req.body.reply_id);
+  const replyPost = String(req.body.reply_post ?? req.body.comment_post);
   const validation = replySchema.safeParse({
     reply: replyPost,
     comment_id: commentID,
@@ -840,7 +1027,15 @@ app.post("/add-reply", async (req, res, next) => {
       replyPost: replyPost,
       createdAt: createdAt,
     };
-    return res.json({ success: true, replyMeta: replyMetadata });
+    return res.json({
+      success: true,
+      reply: {
+        ...result,
+        comment_post: result.reply_post,
+      },
+      replyMeta: replyMetadata,
+      subReply: true,
+    });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
   }

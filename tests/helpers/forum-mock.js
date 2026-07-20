@@ -165,16 +165,18 @@ export function setupPgMock() {
       }
 
       async query(sql, params = []) {
-        if (sql.includes("SELECT * FROM users WHERE email = $1")) {
+        const normalizedSql = String(sql).replace(/\s+/g, " ").trim();
+
+        if (normalizedSql.includes("SELECT * FROM users WHERE email = $1")) {
           return {
             rows: dbState.users.filter((user) => user.email === params[0]),
           };
         }
 
         if (
-          sql.includes(
-            "SELECT EXISTS (SELECT 1 FROM users WHERE email = $1 OR display_name = $2) AS user_exists",
-          )
+          normalizedSql.includes("SELECT EXISTS (") &&
+          normalizedSql.includes("FROM users WHERE email = $1 OR display_name = $2") &&
+          normalizedSql.includes(") AS user_exists")
         ) {
           const foundUser = dbState.users.some(
             (user) =>
@@ -186,9 +188,9 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes(
-            "INSERT INTO users (display_name, email, password) VALUES ($1, $2, $3) RETURNING *",
-          )
+          normalizedSql.includes("INSERT INTO users (display_name, email, password)") &&
+          normalizedSql.includes("VALUES ($1, $2, $3)") &&
+          normalizedSql.includes("RETURNING *")
         ) {
           const user = {
             id: dbState.nextUserId++,
@@ -204,30 +206,30 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes("'posts_down' AS notification_type") &&
-          sql.includes("likes_to_posts") &&
-          sql.includes("other_comments_to_posts")
+          normalizedSql.includes("'posts_down' AS notification_type") &&
+          normalizedSql.includes("likes_to_posts") &&
+          normalizedSql.includes("other_comments_to_posts")
         ) {
           return { rows: [] };
         }
 
         if (
-          sql.includes("'comments_down' AS notification_type") &&
-          sql.includes("likes_to_comments") &&
-          sql.includes("other_replies_to_comments")
+          normalizedSql.includes("'comments_down' AS notification_type") &&
+          normalizedSql.includes("likes_to_comments") &&
+          normalizedSql.includes("other_replies_to_comments")
         ) {
           return { rows: [] };
         }
 
         if (
-          sql.includes("'replies_down' AS notification_type") &&
-          sql.includes("likes_to_replies")
+          normalizedSql.includes("'replies_down' AS notification_type") &&
+          normalizedSql.includes("likes_to_replies")
         ) {
           return { rows: [] };
         }
 
         if (
-          sql.includes("SELECT notification_state FROM users WHERE id = $1")
+          normalizedSql.includes("SELECT notification_state FROM users WHERE id = $1")
         ) {
           const user = dbState.users.find(
             (item) => item.id === Number(params[0]),
@@ -246,8 +248,8 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes("UPDATE users") &&
-          sql.includes("SET notification_state=jsonb_set")
+          normalizedSql.includes("UPDATE users") &&
+          normalizedSql.includes("SET notification_state=jsonb_set")
         ) {
           const userId = Number(params[0]);
           const notifications = JSON.parse(params[1]);
@@ -265,7 +267,7 @@ export function setupPgMock() {
           };
         }
 
-        if (sql.includes("SELECT * FROM users WHERE display_name = $1")) {
+        if (normalizedSql.includes("SELECT * FROM users WHERE display_name = $1")) {
           return {
             rows: dbState.users.filter(
               (user) => user.display_name === params[0],
@@ -273,8 +275,8 @@ export function setupPgMock() {
           };
         }
 
-        if (sql.includes("SELECT * FROM users JOIN posts")) {
-          if (sql.includes("WHERE user_id = $1")) {
+        if (normalizedSql.includes("SELECT * FROM users JOIN posts")) {
+          if (normalizedSql.includes("WHERE user_id = $1")) {
             const userId = params[0];
             return {
               rows: buildJoinRows().filter((row) => row.user_id === userId),
@@ -282,12 +284,12 @@ export function setupPgMock() {
           }
 
           let rows = buildJoinRows();
-          if (sql.includes("ORDER BY created_at DESC")) {
+          if (normalizedSql.includes("ORDER BY created_at DESC")) {
             rows = [...rows].sort(
               (a, b) => new Date(b.created_at) - new Date(a.created_at),
             );
           }
-          if (sql.includes("ORDER BY created_at ASC")) {
+          if (normalizedSql.includes("ORDER BY created_at ASC")) {
             rows = [...rows].sort(
               (a, b) => new Date(a.created_at) - new Date(b.created_at),
             );
@@ -297,9 +299,9 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes(
-            "INSERT INTO posts (post, user_id, created_at) VALUES ($1, $2, $3)",
-          )
+          normalizedSql.includes("INSERT INTO posts (post, user_id, created_at)") &&
+          normalizedSql.includes("VALUES ($1, $2, $3)") &&
+          normalizedSql.includes("RETURNING")
         ) {
           const post = {
             id: dbState.nextPostId++,
@@ -312,9 +314,11 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes(
-            "INSERT INTO comments (comment_post, user_id, post_id, created_at) VALUES ($1, $2, $3, $4) RETURNING *",
-          )
+          normalizedSql.includes(
+            "INSERT INTO comments (comment_post, user_id, post_id, created_at)",
+          ) &&
+          normalizedSql.includes("VALUES ($1, $2, $3, $4)") &&
+          normalizedSql.includes("RETURNING")
         ) {
           const reply = {
             id: dbState.nextReplyId++,
@@ -328,9 +332,11 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes(
-            "INSERT INTO replies (reply_post, user_id, comment_id, created_at) VALUES ($1, $2, $3, $4) RETURNING *",
-          )
+          normalizedSql.includes(
+            "INSERT INTO replies (reply_post, user_id, comment_id, created_at)",
+          ) &&
+          normalizedSql.includes("VALUES ($1, $2, $3, $4)") &&
+          normalizedSql.includes("RETURNING")
         ) {
           const finalReply = {
             id: dbState.nextFinalReplyId++,
@@ -345,13 +351,13 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes("FROM posts") &&
-          sql.includes(
+          normalizedSql.includes("FROM posts") &&
+          normalizedSql.includes(
             "COALESCE(all_comment_data.one_comment_data, '[]'::json) AS comments",
           )
         ) {
           const currentUserId = params[0];
-          const isAscSort = sql.includes("ORDER BY posts.created_at ASC");
+          const isAscSort = normalizedSql.includes("ORDER BY posts.created_at ASC");
           const limit = Number(params[1]);
           const offset = Number(params[2]);
           const allRows = buildForumRows(currentUserId, isAscSort);
@@ -364,7 +370,7 @@ export function setupPgMock() {
           };
         }
 
-        if (sql.includes("SELECT COUNT(*) FROM posts")) {
+        if (normalizedSql.includes("SELECT COUNT(*) FROM posts")) {
           return {
             rows: [
               {
@@ -376,7 +382,7 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes(
+          normalizedSql.includes(
             "DELETE FROM reactions_comments WHERE comment_id = $1 AND user_id = $2",
           )
         ) {
@@ -391,7 +397,7 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes(
+          normalizedSql.includes(
             "SELECT reaction_type FROM posts_reactions WHERE post_id = $1 AND user_id = $2",
           )
         ) {
@@ -407,7 +413,7 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes(
+          normalizedSql.includes(
             "DELETE FROM posts_reactions WHERE post_id = $1 AND user_id = $2",
           )
         ) {
@@ -422,7 +428,7 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes(
+          normalizedSql.includes(
             "SELECT reaction_type FROM reactions_to_finalreply WHERE reply_id = $1 AND user_id = $2",
           )
         ) {
@@ -438,7 +444,7 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes(
+          normalizedSql.includes(
             "DELETE FROM reactions_to_finalreply WHERE reply_id = $1 AND user_id = $2",
           )
         ) {
@@ -453,7 +459,7 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes(
+          normalizedSql.includes(
             "INSERT INTO reactions_to_finalreply (reply_id, user_id, reaction_type)",
           )
         ) {
@@ -479,7 +485,7 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes(
+          normalizedSql.includes(
             "INSERT INTO posts_reactions (post_id, user_id, reaction_type)",
           )
         ) {
@@ -504,7 +510,7 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes(
+          normalizedSql.includes(
             "SELECT reaction_type FROM comments_reactions WHERE comment_id = $1 AND user_id = $2",
           )
         ) {
@@ -520,7 +526,7 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes(
+          normalizedSql.includes(
             "INSERT INTO comments_reactions (comment_id, user_id, reaction_type, created_at)",
           )
         ) {
@@ -546,7 +552,7 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes(
+          normalizedSql.includes(
             "DELETE FROM comments_reactions WHERE comment_id = $1 AND user_id = $2",
           )
         ) {
@@ -561,7 +567,7 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes(
+          normalizedSql.includes(
             "SELECT reaction_type FROM replies_reactions WHERE reply_id = $1 AND user_id = $2",
           )
         ) {
@@ -577,7 +583,7 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes(
+          normalizedSql.includes(
             "INSERT INTO replies_reactions (reply_id, user_id, reaction_type, created_at)",
           )
         ) {
@@ -603,7 +609,7 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes(
+          normalizedSql.includes(
             "DELETE FROM replies_reactions WHERE reply_id = $1 AND user_id = $2",
           )
         ) {
@@ -618,7 +624,7 @@ export function setupPgMock() {
         }
 
         if (
-          sql.includes(
+          normalizedSql.includes(
             "INSERT INTO posts_reactions (post_id, user_id, reaction_type, created_at)",
           )
         ) {
