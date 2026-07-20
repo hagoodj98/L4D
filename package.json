@@ -12,7 +12,7 @@
     "start:ts": "node dist/index.ts",
     "lint": "eslint . && npm run lint:ejs",
     "lint:ejs": "ejslint views/**/*.ejs",
-    "db:init": "node scripts/db-init.js",
+    "db:init": "tsx scripts/db-init.ts",
     "test": "vitest run tests",
     "test:watch": "vitest tests",
     "test:e2e": "playwright test",
