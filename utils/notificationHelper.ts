@@ -1,4 +1,8 @@
-import { NotificationSource, NotificationType } from "../types/types.js";
+import {
+  NotificationSource,
+  NotificationSourceType,
+  NotificationType,
+} from "../types/types.js";
 
 export const getAllSourcedNotifications = async (
   sourcedNotifications: NotificationSource[],
@@ -7,72 +11,171 @@ export const getAllSourcedNotifications = async (
 
   const notificationTypeOf = (
     item: NotificationSource & { notification_type?: string },
-  ) => item.notificationType ?? item.notification_type;
+  ) => {
+    return { notificationType: item.notification_type };
+  };
   const reactionsToPostsOf = (
-    item: NotificationSource & { reactions_to_posts?: NotificationType[] },
-  ) => item.reactionsToPosts ?? item.reactions_to_posts;
+    notificationItem: NotificationSourceType[] | undefined,
+  ): NotificationType[] => {
+    let reactionsToPosts: NotificationType[] = [];
+    notificationItem?.forEach((reaction) => {
+      reactionsToPosts.push({
+        postID: reaction.post_id,
+        notificationType: reaction.notification_type,
+        sourcePost: reaction.source_post,
+        userName: reaction.user_name,
+        post: reaction.post,
+        createdAt: reaction.created_at,
+        reactionType: reaction.reaction_type,
+      });
+    });
+    return reactionsToPosts;
+  };
   const otherCommentsOf = (
-    item: NotificationSource & { other_comments?: NotificationType[] },
-  ) => item.otherComments ?? item.other_comments;
+    notificationItem: NotificationSourceType[] | undefined,
+  ) => {
+    let otherComments: NotificationType[] = [];
+    notificationItem?.forEach((comment) => {
+      otherComments.push({
+        postID: comment.post_id,
+        notificationType: comment.notification_type,
+        sourcePost: comment.source_post,
+        userName: comment.user_name,
+        commentPost: comment.comment_post,
+        createdAt: comment.created_at,
+      });
+    });
+    return otherComments;
+  };
   const reactionsToCommentsOf = (
-    item: NotificationSource & { reactions_to_comments?: NotificationType[] },
-  ) => item.reactionsToComments ?? item.reactions_to_comments;
+    notificationItem: NotificationSourceType[] | undefined,
+  ) => {
+    let reactionsToComments: NotificationType[] = [];
+    notificationItem?.forEach((reaction) => {
+      reactionsToComments.push({
+        commentID: reaction.comment_id,
+        notificationType: reaction.notification_type,
+        sourcePost: reaction.source_post,
+        userName: reaction.user_name,
+        commentPost: reaction.comment_post,
+        createdAt: reaction.created_at,
+        reactionType: reaction.reaction_type,
+      });
+    });
+    return reactionsToComments;
+  };
   const repliesToCommentsOf = (
-    item: NotificationSource & { replies_to_comments?: NotificationType[] },
-  ) => item.repliesToComments ?? item.replies_to_comments;
+    notificationItem: NotificationSourceType[] | undefined,
+  ) => {
+    let repliesToComments: NotificationType[] = [];
+    notificationItem?.forEach((reply) => {
+      repliesToComments.push({
+        commentID: reply.comment_id,
+        notificationType: reply.notification_type,
+        sourcePost: reply.source_post,
+        userName: reply.user_name,
+        replyPost: reply.reply_post,
+        createdAt: reply.created_at,
+      });
+    });
+    return repliesToComments;
+  };
   const reactionsToRepliesOf = (
-    item: NotificationSource & { reactions_to_replies?: NotificationType[] },
-  ) => item.reactionsToReplies ?? item.reactions_to_replies;
+    notificationItem: NotificationSourceType[] | undefined,
+  ) => {
+    let reactionsToReplies: NotificationType[] = [];
+    notificationItem?.forEach((reaction) => {
+      reactionsToReplies.push({
+        replyID: reaction.reply_id,
+        notificationType: reaction.notification_type,
+        sourcePost: reaction.source_post,
+        userName: reaction.user_name,
+        replyPost: reaction.reply_post,
+        createdAt: reaction.created_at,
+        reactionType: reaction.reaction_type,
+      });
+    });
+    return reactionsToReplies;
+  };
 
   // If there are notifications, filter them by type and send them to the client.
   if (sourcedNotifications.length > 0) {
     const posts = sourcedNotifications.filter(
       (otherUser: NotificationSource) =>
-        notificationTypeOf(otherUser) === "posts_down",
+        notificationTypeOf(otherUser).notificationType === "posts_down",
     );
     const comments = sourcedNotifications.filter(
       (otherUser: NotificationSource) =>
-        notificationTypeOf(otherUser) === "comments_down",
+        notificationTypeOf(otherUser).notificationType === "comments_down",
     );
     const replies = sourcedNotifications.filter(
       (otherUser: NotificationSource) =>
-        notificationTypeOf(otherUser) === "replies_down",
+        notificationTypeOf(otherUser).notificationType === "replies_down",
     );
     if (posts.length > 0) {
       posts.forEach((notification) => {
-        const reactionsToPosts = reactionsToPostsOf(notification) ?? [];
-        const otherComments = otherCommentsOf(notification) ?? [];
-
-        reactionsToPosts.length > 0 &&
-          getAllOtherUsersNotifications.push(...reactionsToPosts);
-        otherComments.length > 0 &&
-          getAllOtherUsersNotifications.push(...otherComments);
+        if (Array.isArray(notification.reactions_to_posts)) {
+          if (notification.reactions_to_posts.length > 0) {
+            const reactionsToPosts = reactionsToPostsOf(
+              notification.reactions_to_posts,
+            );
+            reactionsToPosts.length > 0 &&
+              getAllOtherUsersNotifications.push(...reactionsToPosts);
+          }
+        }
+        if (Array.isArray(notification.other_comments)) {
+          if (notification.other_comments.length > 0) {
+            const otherComments = otherCommentsOf(notification.other_comments);
+            otherComments.length > 0 &&
+              getAllOtherUsersNotifications.push(...otherComments);
+          }
+        }
       });
     }
     if (comments.length > 0) {
       comments.forEach((notification) => {
-        const reactionsToComments = reactionsToCommentsOf(notification) ?? [];
-        const repliesToComments = repliesToCommentsOf(notification) ?? [];
-
-        reactionsToComments.length > 0 &&
-          getAllOtherUsersNotifications.push(...reactionsToComments);
-        repliesToComments.length > 0 &&
-          getAllOtherUsersNotifications.push(...repliesToComments);
+        if (
+          Array.isArray(notification.reactions_to_comments) &&
+          notification.reactions_to_comments.length > 0
+        ) {
+          const reactionsToComments = reactionsToCommentsOf(
+            notification.reactions_to_comments,
+          );
+          reactionsToComments.length > 0 &&
+            getAllOtherUsersNotifications.push(...reactionsToComments);
+        }
+        if (Array.isArray(notification.replies_to_comments)) {
+          if (notification.replies_to_comments.length > 0) {
+            const repliesToComments = repliesToCommentsOf(
+              notification.replies_to_comments,
+            );
+            repliesToComments.length > 0 &&
+              getAllOtherUsersNotifications.push(...repliesToComments);
+          }
+        }
       });
     }
     if (replies.length > 0) {
       replies.forEach((notification) => {
-        const reactionsToReplies = reactionsToRepliesOf(notification) ?? [];
-        reactionsToReplies.length > 0 &&
+        if (
+          Array.isArray(notification.reactions_to_replies) &&
+          notification.reactions_to_replies.length > 0
+        ) {
+          const reactionsToReplies = reactionsToRepliesOf(
+            notification.reactions_to_replies,
+          );
+
           getAllOtherUsersNotifications.push(...reactionsToReplies);
+        }
       });
     }
   }
   getAllOtherUsersNotifications.sort(
     // Sort notifications by createdAt in descending order (most recent first)
-    (a: any, b: any) =>
-      new Date(b.createdAt ?? b.created_at).getTime() -
-      new Date(a.createdAt ?? a.created_at).getTime(),
+    (
+      a: Pick<NotificationType, "createdAt">,
+      b: Pick<NotificationType, "createdAt">,
+    ) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 
   return getAllOtherUsersNotifications;

@@ -1,6 +1,6 @@
 export type NotificationType = {
   createdAt: string;
-  id: string;
+  id?: string;
   notificationType: string;
   userName: string;
   replyID?: number;
@@ -22,16 +22,14 @@ export type ReplyMetaDataType = Pick<
   NotificationType,
   "id" | "replyPost" | "commentID" | "createdAt"
 >;
-export type NotificationSource = Pick<
-  NotificationType,
-  "id" | "notificationType"
-> & {
+export type NotificationSource = Pick<NotificationType, "id"> & {
+  notification_type?: string;
   sourcePostType?: string;
-  reactionsToPosts?: NotificationType[];
-  reactionsToComments?: NotificationType[];
-  reactionsToReplies?: NotificationType[];
-  repliesToComments?: NotificationType[];
-  otherComments?: NotificationType[];
+  reactions_to_posts?: NotificationSourceType[];
+  reactions_to_comments?: NotificationSourceType[];
+  reactions_to_replies?: NotificationSourceType[];
+  replies_to_comments?: NotificationSourceType[];
+  other_comments?: NotificationSourceType[];
 };
 export type CacheNotificationState = Map<number, NotificationType[]>;
 export interface User {
@@ -72,4 +70,19 @@ export interface Post {
 }
 export interface ReactionType {
   reaction_type: string;
+}
+
+export interface NotificationSourceType {
+  id: string;
+  comment_post?: string;
+  created_at: string;
+  notification_type: string;
+  post_id?: number;
+  source_post: string;
+  user_name: string;
+  post?: string;
+  comment_id?: string;
+  reply_post?: string;
+  reaction_type?: string;
+  reply_id?: number;
 }
