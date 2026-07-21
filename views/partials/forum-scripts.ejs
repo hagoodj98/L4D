@@ -1,5 +1,5 @@
 <script>
-
+  let currentPage = 1;
   function scrollToForumContent() {
       const forumAnchor = document.getElementById("anchor25");
       if (!forumAnchor) return;
@@ -8,8 +8,9 @@
 
     async function handlePagination(page) {
       const offset = (Number(page) - 1) * 4; // Assuming 4 posts per page
+      currentPage = Number(page);
       try {
-        const response = await fetch(`/forumpagination?page=${page}&offset=${offset}`);
+        const response = await fetch(`/forum-pagination?page=${page}&offset=${offset}`);
         const data = await response.json();
         // Update the active page button styling
         document.querySelectorAll(".unstyledPaginationButtons").forEach((button) => {
@@ -28,7 +29,7 @@
       if (!postContent) return;
 
       try {
-        const response = await fetch("/add-post", {
+        const response = await fetch("http://localhost:3000/add-post", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ newPost: postContent }),
@@ -238,7 +239,7 @@
           if (!replyInput || !replyInput.value.trim()) return;
 
           const replyValue = replyInput.value.trim();
-          const response = await fetch("/add-reply", {
+          const response = await fetch("http://localhost:3000/add-reply", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ comment_id: commentID, reply_post: replyValue }),
@@ -361,10 +362,10 @@
           if (!commentInput || !commentInput.value.trim()) return;
 
           const commentValue = commentInput.value.trim();
-          const response = await fetch("/add-comment", {
+          const response = await fetch("http://localhost:3000/add-comment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ post_id: postId, comment_post: commentValue }),
+            body: JSON.stringify({ post_id: postId, comment_post: commentValue, currentPage }),
           });
 
           await handleRedirect(response);
@@ -517,7 +518,7 @@
       }
           async function ascendForum() {
         try {
-          const response = await fetch("/ascend");
+          const response = await fetch("http://localhost:3000/ascend");
           const redirect = await response.redirected ? { url: response.url } : null;
 
           if (redirect) {
@@ -532,7 +533,7 @@
       }
       async function descendForum() {
         try {
-          const response = await fetch("/descend");
+          const response = await fetch("http://localhost:3000/descend");
           const redirect = await response.redirected ? { url: response.url } : null;
 
           if (redirect) {
@@ -626,7 +627,7 @@
                     class="reply roboto-condensed"
                     onclick="toggleReplyBox(${p.id})"
                   >
-                    Reply
+                    Comment
                   </button>
                 </div>
                 <button
@@ -634,14 +635,14 @@
                   id="postcommentButton-${p.id}"
                   class="comment postButton  ${p.current_user_reaction === "comment" ? "reaction-color" : ""} "
                 >
-                  <span  style="color: white"> <span id="commentCount-for-post-${p.id}">${p.comment_count}</span> replies </span>
+                  <span  style="color: white"> <span id="commentCount-for-post-${p.id}">${p.comment_count}</span> comments </span>
                 </button>
                 <div
                   id="create-comment-for-post-${p.id}"
                   style="display: none"
                   class="forum-reply-editor-wrap"
                 >
-                  <form onsubmit="handleCommentSubmit(${p.id}, null, null, '${p.display_name}'); return false;">
+                  <form onsubmit="handleCommentSubmit(${p.id}, '${p.display_name}'); return false;">
                     <input type="hidden" name="post_id" value="${p.id}" />
                     <div
                       style="display: flex; flex-direction: column"
@@ -1047,7 +1048,7 @@
     const notificationSourcePostContainer = document.createElement("div");
     const notififcationSourcePost = document.createElement("p");
     notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
-    //notificationLink.href = `/forum/${notification.postID ?? notification.commentID ?? notification.replyID}`;
+    notificationLink.href = `/forum/${notification.postID ?? notification.commentID ?? notification.replyID}`;
     notificationLink.className = 'nav-link';
     notificationTime.className = 'notification-time';
     notificationMessage.className = 'notification-message';

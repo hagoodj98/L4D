@@ -923,10 +923,10 @@ app.post("/add-post", async (req, res, next) => {
       new ErrorHandler(400, "Invalid post data", validation.error.issues),
     );
   }
-
+  const currentPage = String(req.body.current_page);
   try {
     const createdAt = new Date().toISOString();
-    const result = await createPost(post, req.user.id, createdAt);
+    const result = await createPost(post, req.user.id, createdAt, currentPage);
     return res.json({ success: true, post: result });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
@@ -948,6 +948,7 @@ app.post("/add-comment", async (req, res, next) => {
       new ErrorHandler(400, "Invalid comment data", validation.error.issues),
     );
   }
+  const currentPage = String(req.body.current_page);
 
   try {
     const creationTime = new Date().toISOString();
@@ -956,6 +957,7 @@ app.post("/add-comment", async (req, res, next) => {
       req.user.id,
       postId,
       creationTime,
+      currentPage,
     );
     return res.json({ success: true, comment: result });
   } catch (err) {
@@ -982,6 +984,7 @@ app.post("/add-reply", async (req, res, next) => {
       reply: commentPost,
       post_id: postId,
     });
+    const currentPage = String(req.body.current_page);
 
     if (!validation.success) {
       return next(
@@ -996,6 +999,7 @@ app.post("/add-reply", async (req, res, next) => {
         req.user.id,
         postId,
         createdAt,
+        currentPage,
       );
       return res.json({ success: true, reply: result });
     } catch (err) {
@@ -1014,6 +1018,7 @@ app.post("/add-reply", async (req, res, next) => {
       new ErrorHandler(400, "Invalid reply data", validation.error.issues),
     );
   }
+  const currentPage = String(req.body.current_page);
   try {
     const createdAt = new Date().toISOString();
     const result = await createReply(
@@ -1021,6 +1026,7 @@ app.post("/add-reply", async (req, res, next) => {
       req.user.id,
       commentID,
       createdAt,
+      currentPage,
     );
     const replyMetadata: ReplyMetaDataType = {
       id: result.id,
