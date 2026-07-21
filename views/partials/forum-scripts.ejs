@@ -989,24 +989,24 @@
   });
 
   function createTextForNotificationType(notification) {
-    if (notification.notification_type === 'posts_down') {
+    if (notification.notificationType === 'posts_down') {
       // Determine the notification message based on the type of reaction or reply
-      const likePost = (notification.reaction_type && notification.post_id) ? `${notification.user_name} ${notification.reaction_type}d your post` : '';
-      const likeComment = (notification.reaction_type && notification.comment_id ) ? `${notification.user_name} ${notification.reaction_type}d your comment` : '';
-      const likeReply = (notification.reaction_type && notification.reply_id) ? `${notification.user_name} ${notification.reaction_type}d your reply` : '';
-      const commentPost = (!notification.reaction_type && notification.post_id) ? `${notification.user_name} commented on your post` : '';
-      const replyPost = (!notification.reaction_type && notification.comment_id) ? `${notification.user_name} replied to your comment` : '';
+      const likePost = (notification.reactionType && notification.postID) ? `${notification.userName} ${notification.reactionType}d your post` : '';
+      const likeComment = (notification.reactionType && notification.commentID ) ? `${notification.userName} ${notification.reactionType}d your comment` : '';
+      const likeReply = (notification.reactionType && notification.replyID) ? `${notification.userName} ${notification.reactionType}d your reply` : '';
+      const commentPost = (!notification.reactionType && notification.postID) ? `${notification.userName} commented on your post` : '';
+      const replyPost = (!notification.reactionType && notification.commentID) ? `${notification.userName} replied to your comment` : '';
       return {likePost, likeComment, likeReply, commentPost, replyPost};
-    } else if (notification.notification_type === 'comments_down') {
-        const likeComment = (notification.reaction_type && notification.comment_id) ? `${notification.user_name} ${notification.reaction_type}d your comment` : '';
-         const likeReply = (notification.reaction_type && notification.reply_id) ? `${notification.user_name} ${notification.reaction_type}d your reply` : '';
-        const commentPost = (!notification.reaction_type && notification.comment_id) ? `${notification.user_name} replied to your comment` : '';
+    } else if (notification.notificationType === 'comments_down') {
+        const likeComment = (notification.reactionType && notification.commentID) ? `${notification.userName} ${notification.reactionType}d your comment` : '';
+         const likeReply = (notification.reactionType && notification.replyID) ? `${notification.userName} ${notification.reactionType}d your reply` : '';
+        const commentPost = (!notification.reactionType && notification.commentID) ? `${notification.userName} replied to your comment` : '';
 
         const likePost = null; // No likePost for comments_down
         const replyPost = null; // No replyPost for comments_down
         return {likePost, likeComment, likeReply, commentPost, replyPost};
-    } else if (notification.notification_type === 'replies_down') {
-        const likeReply = (notification.reaction_type && notification.reply_id) ? `${notification.user_name} ${notification.reaction_type}d your reply` : '';
+    } else if (notification.notificationType === 'replies_down') {
+        const likeReply = (notification.reactionType && notification.replyID) ? `${notification.userName} ${notification.reactionType}d your reply` : '';
         const likeComment = null; // No likeComment for replies_down
         const commentPost = null; // No commentPost for replies_down
         const likePost = null; // No likePost for replies_down
@@ -1033,7 +1033,7 @@
     // Set the content of the notification elements
     notificationMessage.textContent = likeComment || commentPost || replyPost || likePost || likeReply;
     // Calculate the time difference in minutes
-    const minutesAgo = Math.floor((new Date() - new Date(notification.created_at)) / 60000);
+    const minutesAgo = Math.floor((new Date() - new Date(notification.createdAt)) / 60000);
     // Create the notification elements
     const notificationListItem = document.createElement("li");
     notificationListItem.className = `nav-item notification-link ${wasNotificationRead ? '' : 'unread-indicator'}`;
@@ -1047,7 +1047,7 @@
     const notificationSourcePostContainer = document.createElement("div");
     const notififcationSourcePost = document.createElement("p");
     notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
-    //notificationLink.href = `/forum/${n.id}`;
+    //notificationLink.href = `/forum/${notification.postID ?? notification.commentID ?? notification.replyID}`;
     notificationLink.className = 'nav-link';
     notificationTime.className = 'notification-time';
     notificationMessage.className = 'notification-message';
@@ -1057,7 +1057,7 @@
     profilePost.className = 'profile-post';
     profileIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg"  fill="currentColor" id="profileIcon" class="bi bi-person-circle" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10.5 8 10.5s4.757.726 5.468-2.13A7 7 0 0 0 8 1z"/></svg>`;
     // Append the notification elements to the DOM
-    const convertStringToArray = notification.source_post.split("");
+    const convertStringToArray = notification.sourcePost.split("");
     const partOfSourcePost = convertStringToArray.splice(0, 20);
     notififcationSourcePost.innerText = `"${partOfSourcePost.join("")}..."`;
     profilePost.appendChild(profileIcon)

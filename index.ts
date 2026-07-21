@@ -102,6 +102,7 @@ app.use(async (req, res, next) => {
         cachedUserNotificationState.set(req.user.id, cachedNotifications);
       }
     }
+
     // Retrieve the cached notification state for the authenticated user, if available.
     const cachedNotifications =
       cachedUserNotificationState.get(req.user.id) ?? [];
@@ -112,11 +113,12 @@ app.use(async (req, res, next) => {
       return next(); // Use the cached state and skip fetching from the database
     }
     // Fetch notifications for posts, comments, and replies for the authenticated user from the database.
-    const {
+    let {
       postsNotificationsSource,
       commentsNotificationSource,
       repliesNotificationsSource,
     } = await fetchAllNotifications(req.user.id);
+
     // Merge all notifications into a single array for the authenticated user.
     let allSourcedNotifications = [
       ...postsNotificationsSource,
@@ -285,8 +287,7 @@ app.get("/update-notifications", (req, res) => {
   // Keep the connection open for future updates
   const intervalId = setInterval(async () => {
     const userId = req.user.id;
-    const getUserNotification = cachedUserNotificationState.get(userId) || [];
-    const cachedNotifications = getUserNotification ?? [];
+    const cachedNotifications = cachedUserNotificationState.get(userId) || [];
     //check to see if there are new notifications for the user by pulling from database
     const {
       postsNotificationsSource,
@@ -303,7 +304,7 @@ app.get("/update-notifications", (req, res) => {
     );
     //at this point, the cache is the only aspect with an id. the individual notifications from the database may not have an id yet. So we need to map the id's from the cache if certain keys match.
     const mapNotificationsById = IndividualNotifications?.map(
-      (notification: Omit<NotificationType, "id" | "wasRead">) => {
+      (notification) => {
         // Check if the current notification matches any cached notification based on various criteria.
         const cachedNotification = cachedNotifications.find((cacheN) => {
           const notificationTypeMatch =
@@ -336,16 +337,16 @@ app.get("/update-notifications", (req, res) => {
             userMatch
           ) {
             return {
-              id: cacheN.id,
               ...notification,
+              id: cacheN.id,
             };
           }
         });
         // If no matching cached notification is found, create a new notification with a unique ID and mark it as unread.
         return (
           cachedNotification ?? {
-            id: crypto.randomUUID(),
             ...notification,
+            id: crypto.randomUUID(),
             wasRead: false,
           }
         );
