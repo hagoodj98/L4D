@@ -9,11 +9,6 @@ export const getAllSourcedNotifications = async (
 ) => {
   let getAllOtherUsersNotifications: NotificationType[] = [];
 
-  const notificationTypeOf = (
-    item: NotificationSource & { notification_type?: string },
-  ) => {
-    return { notificationType: item.notification_type };
-  };
   const reactionsToPostsOf = (
     notificationItem: NotificationSourceType[] | undefined,
   ): NotificationType[] => {
@@ -102,15 +97,15 @@ export const getAllSourcedNotifications = async (
   if (sourcedNotifications.length > 0) {
     const posts = sourcedNotifications.filter(
       (otherUser: NotificationSource) =>
-        notificationTypeOf(otherUser).notificationType === "posts_down",
+        otherUser.notification_type === "posts_down",
     );
     const comments = sourcedNotifications.filter(
       (otherUser: NotificationSource) =>
-        notificationTypeOf(otherUser).notificationType === "comments_down",
+        otherUser.notification_type === "comments_down",
     );
     const replies = sourcedNotifications.filter(
       (otherUser: NotificationSource) =>
-        notificationTypeOf(otherUser).notificationType === "replies_down",
+        otherUser.notification_type === "replies_down",
     );
     if (posts.length > 0) {
       posts.forEach((notification) => {

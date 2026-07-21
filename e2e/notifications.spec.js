@@ -160,40 +160,49 @@ async function waitForNotification(ownerPage, expected) {
           });
           const payload = await response.json();
           return payload.notifications.some((notification) => {
-            if (target.type && notification.notification_type !== target.type) {
+            const notificationType =
+              notification.notificationType ?? notification.notification_type;
+            const userName = notification.userName ?? notification.user_name;
+            const reactionType =
+              notification.reactionType ?? notification.reaction_type;
+            const postId = notification.postID ?? notification.post_id;
+            const commentId = notification.commentID ?? notification.comment_id;
+            const replyId = notification.replyID ?? notification.reply_id;
+
+            if (target.type && notificationType !== target.type) {
               return false;
             }
 
-            if (target.userName && notification.user_name !== target.userName) {
+            if (target.userName && userName !== target.userName) {
               return false;
             }
 
             if (
               Object.prototype.hasOwnProperty.call(target, "reactionType") &&
               !(target.reactionType === null
-                ? notification.reaction_type == null
-                : notification.reaction_type === target.reactionType)
+                ? reactionType == null
+                : reactionType === target.reactionType)
             ) {
               return false;
             }
 
             if (
               target.postId &&
-              String(notification.post_id) !== String(target.postId)
+              String(postId) !== String(target.postId)
             ) {
               return false;
             }
 
             if (
               target.commentId &&
-              String(notification.comment_id) !== String(target.commentId)
+              String(commentId) !== String(target.commentId)
             ) {
               return false;
             }
 
             if (
               target.replyId &&
-              String(notification.reply_id) !== String(target.replyId)
+              String(replyId) !== String(target.replyId)
             ) {
               return false;
             }
