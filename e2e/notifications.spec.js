@@ -186,10 +186,7 @@ async function waitForNotification(ownerPage, expected) {
               return false;
             }
 
-            if (
-              target.postId &&
-              String(postId) !== String(target.postId)
-            ) {
+            if (target.postId && String(postId) !== String(target.postId)) {
               return false;
             }
 
@@ -200,10 +197,7 @@ async function waitForNotification(ownerPage, expected) {
               return false;
             }
 
-            if (
-              target.replyId &&
-              String(replyId) !== String(target.replyId)
-            ) {
+            if (target.replyId && String(replyId) !== String(target.replyId)) {
               return false;
             }
 
