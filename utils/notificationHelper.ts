@@ -19,6 +19,7 @@ export const getAllSourcedNotifications = async (
         notificationType: reaction.notification_type,
         sourcePost: reaction.source_post,
         userName: reaction.user_name,
+        onPage: reaction.on_page,
         post: reaction.post,
         createdAt: reaction.created_at,
         reactionType: reaction.reaction_type,
@@ -37,6 +38,7 @@ export const getAllSourcedNotifications = async (
         sourcePost: comment.source_post,
         userName: comment.user_name,
         commentPost: comment.comment_post,
+        onPage: comment.on_page,
         createdAt: comment.created_at,
       });
     });
@@ -52,6 +54,7 @@ export const getAllSourcedNotifications = async (
         notificationType: reaction.notification_type,
         sourcePost: reaction.source_post,
         userName: reaction.user_name,
+        onPage: reaction.on_page,
         commentPost: reaction.comment_post,
         createdAt: reaction.created_at,
         reactionType: reaction.reaction_type,
@@ -71,6 +74,7 @@ export const getAllSourcedNotifications = async (
         userName: reply.user_name,
         replyPost: reply.reply_post,
         createdAt: reply.created_at,
+        onPage: reply.on_page,
       });
     });
     return repliesToComments;
@@ -86,6 +90,7 @@ export const getAllSourcedNotifications = async (
         sourcePost: reaction.source_post,
         userName: reaction.user_name,
         replyPost: reaction.reply_post,
+        onPage: reaction.on_page,
         createdAt: reaction.created_at,
         reactionType: reaction.reaction_type,
       });

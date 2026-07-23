@@ -1,4 +1,94 @@
 <script>
+  function createPageButtons(i){
+    return /*html*/`
+      <li class="page-item">
+        <button
+          class="page-link unstyledPaginationButtons"
+          type="button"
+          onclick="handlePagination(${i})"
+        >
+          ${i}
+        </button>
+      </li>
+    `;
+    }
+    function handlePaginationDecrease(maxNum,minNum, paginationNumber) {
+      if (minNum <= 1) {
+        return;
+      }
+      const newMaxNum = Number(maxNum) - 1;
+      const newMinNum = Number(minNum) - 1;
+      const paginationContainer = document.getElementById("paginationControls");
+      paginationContainer.replaceChildren();
+      let pagesToShow= [];
+      for (let i = newMinNum; i <= newMaxNum; i++) {
+        pagesToShow.push(createPageButtons(i));
+      }
+      paginationContainer.innerHTML = /*html*/`
+        <li class="page-item">
+          <button class="page-link" onclick="handlePaginationDecrease(${newMaxNum}, ${newMinNum}, ${paginationNumber}); return false;" type="button" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </button>
+        </li>
+        ${pagesToShow.join("")}
+        <li class="page-item">
+          <button
+            onclick="
+              handlePaginationIncrease(
+                ${newMaxNum},
+                ${newMinNum},
+                ${paginationNumber}
+              );
+              return false;
+            "
+            class="page-link"
+            type="button"
+            aria-label="Next"
+          >
+            <span aria-hidden="true">&raquo;</span>
+          </button>
+        </li>`;
+    }
+   function handlePaginationIncrease(maxNum,minNum, paginationNumber) {
+    if (maxNum >= paginationNumber) {
+      return;
+    }
+    const newMaxNum = Number(maxNum) + 1;
+    const newMinNum = Number(minNum) + 1;
+    //const response = await fetch(`http://localhost:3000/pagination-increment?maxPage=${newMaxNum}&minPage=${newMinNum}`);
+    //embedd the new
+    const paginationContainer = document.getElementById("paginationControls");
+    paginationContainer.replaceChildren();
+    let pagesToShow= [];
+    for (let i = newMinNum; i <= newMaxNum; i++) {
+      pagesToShow.push(createPageButtons(i));
+    }
+
+    paginationContainer.innerHTML = /*html*/`
+      <li class="page-item">
+        <button class="page-link" onclick="handlePaginationDecrease(${newMaxNum}, ${newMinNum}, ${paginationNumber}); return false;" type="button" aria-label="Previous">
+          <span aria-hidden="true">&laquo;</span>
+        </button>
+      </li>
+      ${pagesToShow.join("")}
+      <li class="page-item">
+        <button
+          onclick="
+          handlePaginationIncrease(
+             ${newMaxNum},
+             ${newMinNum},
+             ${paginationNumber}
+          );
+          return false;
+          "
+          class="page-link"
+          type="button"
+          aria-label="Next"
+        >
+          <span aria-hidden="true">&raquo;</span>
+        </button>
+      </li>`;
+  }
   let currentPage = 1;
   function scrollToForumContent() {
       const forumAnchor = document.getElementById("anchor25");
@@ -954,6 +1044,7 @@
     const list = <%- JSON.stringify(listAllContent) %>;
     if (!Array.isArray(list) || list.length === 0) return;
     listPosts(list);
+
     const response = await fetch("/load-notifications", {
       method: "GET",
       headers: {

@@ -82,40 +82,54 @@
     </div>
   </div>
   <nav aria-label="Page navigation example">
-    <ul class="pagination justify-content-end">
+    <ul class="pagination justify-content-end" id="paginationControls">
       <li class="page-item">
-        <a class="page-link" href="#" aria-label="Previous">
-          <span aria-hidden="true">&laquo;</span>
-        </a>
-      </li>
-      <% 
-        const paginationNumber = Math.ceil(totalPosts / 4);
-        for(let i = 1; i <= paginationNumber; i++) { 
-      %>
-      <li class="page-item">
-        <form
-          onsubmit="
-            handlePagination('<%= i %>');
+        <button
+          class="page-link"
+          onclick="
+            handlePagination(currentPage - 1);
             return false;
           "
+          type="button"
+          aria-label="Previous"
         >
-          <input type="hidden" name="page" value="<%= i %>" />
-          <input type="hidden" name="offset" value="<%= (i - 1) %>" />
-          <button type="submit" class="unstyledPaginationButtons">
-            <%= i %>
-          </button>
-        </form>
+          <span aria-hidden="true">&laquo;</span>
+        </button>
+      </li>
+      <% const maxPagination = maxPage ?? 10; %>
+      <% const minPagination = minPage ?? 1; %>
+      <% for (let index = 1; index <= paginationNumber; index++) { %>
+      <% if(index > 10) continue; %>
+      <li class="page-item">
+        <button
+          class="page-link unstyledPaginationButtons"
+          type="button"
+          onclick="handlePagination(<%= index %>)"
+        >
+          <%= index %>
+        </button>
       </li>
       <% } %>
-
       <li class="page-item">
-        <a class="page-link" href="#" aria-label="Next">
+        <button
+          onclick="
+              handlePaginationIncrease(
+                <%= maxPagination %>,
+                <%= minPagination %>,
+                <%= paginationNumber %>
+              );
+              return false;
+            "
+          class="page-link"
+          type="button"
+          aria-label="Next"
+        >
           <span aria-hidden="true">&raquo;</span>
-        </a>
+        </button>
       </li>
     </ul>
   </nav>
 </div>
 
 <%- include("partials/footer.ejs") %>
-<%- include("partials/forum-scripts.ejs", { listAllContent, user: currentUser }) %>
+<%- include("partials/forum-scripts.ejs", { listAllContent, user: currentUser, paginationNumber, minPage, maxPage }) %>

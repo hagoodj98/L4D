@@ -9,6 +9,7 @@ export type NotificationType = {
   sourcePost?: string;
   reactionType?: string;
   post?: string;
+  onPage: string;
   commentPost?: string;
   replyPost?: string;
   wasRead?: boolean;
@@ -78,6 +79,7 @@ export interface NotificationSourceType {
   created_at: string;
   notification_type: string;
   post_id?: number;
+  on_page: string;
   source_post: string;
   user_name: string;
   post?: string;

@@ -54,6 +54,7 @@ export const commentsRepliesNotifications = async (
                     'created_at', comments_reactions.created_at,
                     'comment_id', comment_id,
                     'comment_post', comments.comment_post,
+                    'on_page', comments.on_page,
                     'source_post', comments.comment_post
                 )
             ) AS reaction FROM comments_reactions
@@ -71,6 +72,7 @@ export const commentsRepliesNotifications = async (
                     'comment_id', replies.comment_id,
                     'reply_post', replies.reply_post,
                     'notification_type', 'comments_down',
+                    'on_page', replies.on_page,
                     'source_post', comments.comment_post
                 )
             ) AS replies FROM replies
@@ -110,7 +112,8 @@ export const postsCommentsNotifications = async (
                     'post_id', post_id,
                     'post', posts.post,
                     'source_post', posts.post,
-                    'notification_type', 'posts_down'
+                    'notification_type', 'posts_down',
+                    'on_page', posts.on_page
                 )
             ) AS reaction_to_post FROM posts_reactions
             LEFT JOIN users ON posts_reactions.user_id = users.id
@@ -124,9 +127,10 @@ export const postsCommentsNotifications = async (
                 json_build_object(
                     'user_name', users.display_name,
                     'comment_post', comment_post,
-                    'created_at', created_at,
+                    'created_at', comments.created_at,
                     'post_id', post_id,
                     'source_post', posts.post,
+                    'on_page', posts.on_page,
                     'notification_type', 'posts_down'
                 )
             ) AS comments FROM comments
@@ -165,6 +169,7 @@ LEFT JOIN LATERAL (
                 'reply_id', replies_reactions.reply_id,
                 'source_post', replies.reply_post,
                 'reply_post', replies.reply_post,
+                'on_page', replies.on_page,
                 'notification_type', 'replies_down'
             )
         ) AS reactions_to_replies 
