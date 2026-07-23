@@ -7,87 +7,49 @@
           type="button"
           onclick="handlePagination(${i})"
         >
-          ${i}
+        ${i}
         </button>
       </li>
     `;
     }
-    function handlePaginationDecrease(maxNum,minNum, paginationNumber) {
-      if (minNum <= 1) {
-        return;
+    let pageControlClicks = 1;
+    let starter = 1;
+
+    function handlePaginationDecrease(paginationNumber) {
+      if (starter <= 1) return; // Prevent going below page 1
+      let increaseButtonValue = parseInt(document.getElementById("paginationIncrease").value);
+      let decreaseButtonValue = parseInt(document.getElementById("paginationDecrease").value);
+
+      //we let the value of the buttons start and end our loop
+      for (let i = 0; i <= increaseButtonValue - pageControlClicks; i++) {
+        const oldButton = document.getElementById("paginationButton" + (i + 1));
+
+        oldButton.innerText = (i + starter) - 1;
       }
-      const newMaxNum = Number(maxNum) - 1;
-      const newMinNum = Number(minNum) - 1;
-      const paginationContainer = document.getElementById("paginationControls");
-      paginationContainer.replaceChildren();
-      let pagesToShow= [];
-      for (let i = newMinNum; i <= newMaxNum; i++) {
-        pagesToShow.push(createPageButtons(i));
-      }
-      paginationContainer.innerHTML = /*html*/`
-        <li class="page-item">
-          <button class="page-link" onclick="handlePaginationDecrease(${newMaxNum}, ${newMinNum}, ${paginationNumber}); return false;" type="button" aria-label="Previous">
-            <span aria-hidden="true">&laquo;</span>
-          </button>
-        </li>
-        ${pagesToShow.join("")}
-        <li class="page-item">
-          <button
-            onclick="
-              handlePaginationIncrease(
-                ${newMaxNum},
-                ${newMinNum},
-                ${paginationNumber}
-              );
-              return false;
-            "
-            class="page-link"
-            type="button"
-            aria-label="Next"
-          >
-            <span aria-hidden="true">&raquo;</span>
-          </button>
-        </li>`;
-    }
-   function handlePaginationIncrease(maxNum,minNum, paginationNumber) {
-    if (maxNum >= paginationNumber) {
-      return;
-    }
-    const newMaxNum = Number(maxNum) + 1;
-    const newMinNum = Number(minNum) + 1;
-    //const response = await fetch(`http://localhost:3000/pagination-increment?maxPage=${newMaxNum}&minPage=${newMinNum}`);
-    //embedd the new
-    const paginationContainer = document.getElementById("paginationControls");
-    paginationContainer.replaceChildren();
-    let pagesToShow= [];
-    for (let i = newMinNum; i <= newMaxNum; i++) {
-      pagesToShow.push(createPageButtons(i));
+      increaseButtonValue--;
+      decreaseButtonValue--;
+      pageControlClicks--;
+      starter--;
+      document.getElementById("paginationIncrease").value = increaseButtonValue;
+      document.getElementById("paginationDecrease").value = decreaseButtonValue;
     }
 
-    paginationContainer.innerHTML = /*html*/`
-      <li class="page-item">
-        <button class="page-link" onclick="handlePaginationDecrease(${newMaxNum}, ${newMinNum}, ${paginationNumber}); return false;" type="button" aria-label="Previous">
-          <span aria-hidden="true">&laquo;</span>
-        </button>
-      </li>
-      ${pagesToShow.join("")}
-      <li class="page-item">
-        <button
-          onclick="
-          handlePaginationIncrease(
-             ${newMaxNum},
-             ${newMinNum},
-             ${paginationNumber}
-          );
-          return false;
-          "
-          class="page-link"
-          type="button"
-          aria-label="Next"
-        >
-          <span aria-hidden="true">&raquo;</span>
-        </button>
-      </li>`;
+   function handlePaginationIncrease(paginationNumber) {
+    if (starter + 10 > paginationNumber) return; // Prevent going beyond the last page
+    let increaseButtonValue = parseInt(document.getElementById("paginationIncrease").value);
+    let decreaseButtonValue = parseInt(document.getElementById("paginationDecrease").value);
+
+    //we let the value of the buttons start and end our loop
+    for (let i = 0; i <= increaseButtonValue - pageControlClicks; i++) {
+      const oldButton = document.getElementById("paginationButton" + (i + 1));
+      oldButton.innerText = (i + starter) + 1;
+    }
+    increaseButtonValue++;
+    decreaseButtonValue++;
+    pageControlClicks ++;
+    starter++;
+    document.getElementById("paginationIncrease").value = increaseButtonValue;
+    document.getElementById("paginationDecrease").value = decreaseButtonValue;
   }
   let currentPage = 1;
   function scrollToForumContent() {

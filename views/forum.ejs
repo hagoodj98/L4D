@@ -82,40 +82,44 @@
     </div>
   </div>
   <nav aria-label="Page navigation example">
-    <ul class="pagination justify-content-end" id="paginationControls">
+    <ul class="pagination" id="paginationControls">
       <li class="page-item">
         <button
           class="page-link"
+          id="paginationDecrease"
           onclick="
-            handlePagination(currentPage - 1);
+            handlePaginationDecrease(
+              <%= paginationNumber %>
+            );
             return false;
           "
           type="button"
+          value="1"
           aria-label="Previous"
         >
           <span aria-hidden="true">&laquo;</span>
         </button>
       </li>
-      <% const maxPagination = maxPage ?? 10; %>
-      <% const minPagination = minPage ?? 1; %>
-      <% for (let index = 1; index <= paginationNumber; index++) { %>
-      <% if(index > 10) continue; %>
+
+      <% for (let i = 1; i <= paginationNumber; i++) { %>
+      <% if(i > 10) continue; %>
       <li class="page-item">
         <button
           class="page-link unstyledPaginationButtons"
           type="button"
-          onclick="handlePagination(<%= index %>)"
+          id="paginationButton<%= i %>"
+          onclick="handlePagination(<%= i %>)"
         >
-          <%= index %>
+          <%=i%>
         </button>
       </li>
+
       <% } %>
       <li class="page-item">
         <button
+          id="paginationIncrease"
           onclick="
               handlePaginationIncrease(
-                <%= maxPagination %>,
-                <%= minPagination %>,
                 <%= paginationNumber %>
               );
               return false;
@@ -123,6 +127,7 @@
           class="page-link"
           type="button"
           aria-label="Next"
+          value="10"
         >
           <span aria-hidden="true">&raquo;</span>
         </button>
@@ -132,4 +137,4 @@
 </div>
 
 <%- include("partials/footer.ejs") %>
-<%- include("partials/forum-scripts.ejs", { listAllContent, user: currentUser, paginationNumber, minPage, maxPage }) %>
+<%- include("partials/forum-scripts.ejs", { listAllContent, user: currentUser, paginationNumber }) %>

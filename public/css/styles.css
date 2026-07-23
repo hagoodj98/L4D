@@ -23,6 +23,7 @@
   margin-bottom: 6px;
   transition: none;
 }
+
 .notification-source-post {
   font-size: 12px;
   line-height: 1.35;
@@ -1213,6 +1214,7 @@ button[type="submit"]:not(.unstyledPaginationButtons):not(.bell-button) {
   border: none;
   color: #6e9731;
   padding: 0;
+  width: 30px;
   padding: 7px 10px;
   cursor: pointer;
 }

@@ -443,8 +443,6 @@ app.get("/forum", async (req, res, next) => {
       isAuthenticated: req.isAuthenticated(),
       listAllContent: content,
       paginationNumber,
-      minPage: 1,
-      maxPage: 10,
     });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
