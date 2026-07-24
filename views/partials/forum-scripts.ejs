@@ -1,10 +1,11 @@
 <script>
-  function createPageButtons(i){
+  function createPageButtons(i,hidden = false) {
     return /*html*/`
-      <li class="page-item">
+      <li class="page-item" >
         <button
           class="page-link unstyledPaginationButtons"
           type="button"
+          style="display: ${hidden ? 'none' : 'inline-block'};"
           onclick="handlePagination(${i})"
         >
         ${i}
@@ -12,44 +13,58 @@
       </li>
     `;
     }
-    let pageControlClicks = 1;
-    let starter = 1;
+    //let pageControlClicks = 1;
+   // let starter = 1;
+   let paginationState = {
+    start: 1,
+    end: 10,
+    buttonsHidden: 0
+   };
 
-    function handlePaginationDecrease(paginationNumber) {
-      if (starter <= 1) return; // Prevent going below page 1
-      let increaseButtonValue = parseInt(document.getElementById("paginationIncrease").value);
-      let decreaseButtonValue = parseInt(document.getElementById("paginationDecrease").value);
 
-      //we let the value of the buttons start and end our loop
-      for (let i = 0; i <= increaseButtonValue - pageControlClicks; i++) {
-        const oldButton = document.getElementById("paginationButton" + (i + 1));
+  function handlePaginationIncrements(paginationNumber, direction) {
+    if (direction === 'decrease') {
+      if (paginationState.start <= 1) return; // Prevent going below the first page
+    } else if (direction === 'increase') {
+      if (paginationState.end >= paginationNumber) return; // Prevent going beyond the last page
+    }
+    const paginationControls = document.getElementById("paginationControls");
+    let currentButtons = document.createElement("div");
+    let pastButtons = document.createElement("div");
+    let futureButtons = document.createElement("div");
+    const paginationDecreaseButton = document.getElementById("paginationDecrease").value;
+    const paginationIncreaseButton = document.getElementById("paginationIncrease").value;
 
-        oldButton.innerText = (i + starter) - 1;
-      }
-      increaseButtonValue--;
-      decreaseButtonValue--;
-      pageControlClicks--;
-      starter--;
-      document.getElementById("paginationIncrease").value = increaseButtonValue;
-      document.getElementById("paginationDecrease").value = decreaseButtonValue;
+    //replace the buttons with the new range of buttons and their new ids so we can keep track of them
+    for (let i = paginationState.start; i <= paginationState.end; i++) {
+      if (i > paginationNumber) break; // Stop if we exceed the total number of pages
+      const newButtonHTML = createPageButtons(direction === 'increase' ? i + 1 : i - 1);
+      currentButtons.innerHTML += newButtonHTML.trim();
     }
 
-   function handlePaginationIncrease(paginationNumber) {
-    if (starter + 10 > paginationNumber) return; // Prevent going beyond the last page
-    let increaseButtonValue = parseInt(document.getElementById("paginationIncrease").value);
-    let decreaseButtonValue = parseInt(document.getElementById("paginationDecrease").value);
-
-    //we let the value of the buttons start and end our loop
-    for (let i = 0; i <= increaseButtonValue - pageControlClicks; i++) {
-      const oldButton = document.getElementById("paginationButton" + (i + 1));
-      oldButton.innerText = (i + starter) + 1;
+    if (direction === 'decrease') {
+      paginationState.buttonsHidden--;
+      paginationState.start--;
+      paginationState.end--;
+    } else if (direction === 'increase') {
+      paginationState.buttonsHidden++;
+      paginationState.start++;
+      paginationState.end++;
     }
-    increaseButtonValue++;
-    decreaseButtonValue++;
-    pageControlClicks ++;
-    starter++;
-    document.getElementById("paginationIncrease").value = increaseButtonValue;
-    document.getElementById("paginationDecrease").value = decreaseButtonValue;
+    document.getElementById("paginationDecrease").value = paginationState.start;
+    document.getElementById("paginationIncrease").value = paginationState.end;
+    for (let i = 1; i <= paginationState.buttonsHidden; i++) {
+      const oldButton = document.getElementById("paginationButton" + i);
+      const hiddenButtonHTML = createPageButtons(i, true);
+      pastButtons.innerHTML += hiddenButtonHTML.trim();
+    }
+    for (let i = paginationState.end + 1; i <= paginationNumber - (paginationState.end + 1); i++) {
+      const future = document.getElementById("paginationButton" + i);
+      const hiddenButtonHTML = createPageButtons(i, true);
+      futureButtons.innerHTML += hiddenButtonHTML.trim();
+    }
+    // Remove all buttons except the first and last
+    paginationControls.replaceChildren(paginationControls.firstElementChild, ...pastButtons.children, ...currentButtons.children, ...futureButtons.children, paginationControls.lastElementChild);
   }
   let currentPage = 1;
   function scrollToForumContent() {
