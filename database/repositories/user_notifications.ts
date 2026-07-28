@@ -53,6 +53,7 @@ export const commentsRepliesNotifications = async (
                     'notification_type', 'comments_down',
                     'created_at', comments_reactions.created_at,
                     'comment_id', comment_id,
+                    'post_id', comments.post_id,
                     'comment_post', comments.comment_post,
                     'on_page', comments.on_page,
                     'source_post', comments.comment_post
@@ -67,9 +68,11 @@ export const commentsRepliesNotifications = async (
             comment_id,
             json_agg(
                 json_build_object(
+                    'reply_id', replies.id,
                     'user_name', users.display_name,
                     'created_at', replies.created_at,
                     'comment_id', replies.comment_id,
+                    'post_id', comments.post_id,
                     'reply_post', replies.reply_post,
                     'notification_type', 'comments_down',
                     'on_page', replies.on_page,
@@ -129,8 +132,9 @@ export const postsCommentsNotifications = async (
                     'comment_post', comment_post,
                     'created_at', comments.created_at,
                     'post_id', post_id,
+                    'comment_id', comments.id,
                     'source_post', posts.post,
-                    'on_page', posts.on_page,
+                    'on_page', comments.on_page,
                     'notification_type', 'posts_down'
                 )
             ) AS comments FROM comments
