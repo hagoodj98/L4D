@@ -151,7 +151,13 @@ app.use(async (req, res, next) => {
     res.locals.notificationState = notifications;
   }
   // Store the current path for active nav link highlighting.
-  res.locals.currentPath = req.path;
+  if (req.path) {
+    if (req.path === "/forum") {
+      res.locals.currentPath = `${req.path}?page=1`;
+    } else {
+      res.locals.currentPath = req.path;
+    }
+  }
   next();
 });
 const isUserAuthenticated = (
@@ -464,6 +470,7 @@ app.get("/forum-pagination", async (req, res, next) => {
       limit,
       offset,
     );
+
     return res.json({ listAllContent: result });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));

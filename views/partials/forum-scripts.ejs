@@ -1,4 +1,14 @@
 <script>
+  document.querySelectorAll(".unstyledPaginationButtons").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+
+    });
+  });
+  function handleNotifcationRoute(route){
+    alert(`Notification route is currently disabled. Please check the forum for updates.${route}`);
+
+  }
   function createPageButtons(i,hidden = false) {
     return /*html*/`
       <li class="page-item" >
@@ -22,7 +32,7 @@
    };
 
 
-  function handlePaginationIncrements(paginationNumber, direction) {
+  function handlePaginationIncrements(paginationNumber, direction, routePath = null) {
     if (direction === 'decrease') {
       if (paginationState.start <= 1) return; // Prevent going below the first page
     } else if (direction === 'increase') {
@@ -81,9 +91,9 @@
         const data = await response.json();
         // Update the active page button styling
         document.querySelectorAll(".unstyledPaginationButtons").forEach((button) => {
-          button.textContent = button.textContent.trim();
-          button.classList.toggle("selected", button.textContent === page);
+          button.classList.toggle("selected",  button.textContent.trim() === String(page));
         });
+        history.pushState(null, "", `/forum?page=${page}`);
         listPosts(data.listAllContent);
         scrollToForumContent();
       } catch (err) {
@@ -207,7 +217,6 @@
                         padding: 10px;
                       "
                       class="forum-reply-input"
-                      autofocus="true"
                       name="reply"
                       placeholder="Write a reply..."
                       required
@@ -552,7 +561,6 @@
                           padding: 10px;
                         "
                         class="forum-reply-input"
-                        autofocus="true"
                         name="reply"
                         placeholder="reply to @<%= user %>..."
                         required
@@ -722,7 +730,6 @@
                           padding: 10px;
                         "
                         class="forum-reply-input"
-                        autofocus="true"
                         name="reply"
                         placeholder="reply to @${p.display_name}..."
                         required
@@ -851,7 +858,6 @@
                                     padding: 10px;
                                   "
                                   class="forum-reply-input"
-                                  autofocus="true"
                                   name="reply"
                                   placeholder="reply to @${comment.display_name}..."
                                   required
@@ -1021,7 +1027,9 @@
     const list = <%- JSON.stringify(listAllContent) %>;
     if (!Array.isArray(list) || list.length === 0) return;
     listPosts(list);
-
+    // Highlight the current page button in the pagination
+    const currentPage = new URLSearchParams(window.location.search).get("page") || "1";
+    document.getElementById(`paginationButton${currentPage}`).classList.toggle("selected");
     const response = await fetch("/load-notifications", {
       method: "GET",
       headers: {
@@ -1116,7 +1124,8 @@
     const notificationSourcePostContainer = document.createElement("div");
     const notififcationSourcePost = document.createElement("p");
     notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
-    notificationLink.href = `/forum/${notification.postID ?? notification.commentID ?? notification.replyID}`;
+    notificationLink.id = `anchor${notification.onPage}`;
+    notificationLink.onclick = () => handleNotifcationRoute(notificationLink.id);
     notificationLink.className = 'nav-link';
     notificationTime.className = 'notification-time';
     notificationMessage.className = 'notification-message';
