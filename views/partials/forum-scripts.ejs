@@ -6,7 +6,25 @@
     });
   });
   function handleNotifcationRoute(route){
-    alert(`Notification route is currently disabled. Please check the forum for updates.${route}`);
+    const routeParts = route.split("/");
+    const pageNumber = routeParts[0];
+    const postID = routeParts[1];
+    const commentID = routeParts[2];
+    const replyID = routeParts[3];
+    if (pageNumber) {
+      paginationState.start = Number(pageNumber);
+      paginationState.end = Number(pageNumber) + 9;
+      paginationState.buttonsHidden = Number(pageNumber) - 1;
+      // Ensure the end does not exceed the total number of pages
+      paginationState.end = Math.min(paginationState.end, <%= paginationNumber %>);
+      handlePagination(paginationState.start);
+      handlePaginationIncrements(<%= paginationNumber %>, 'decrease', routeParts);
+      history.pushState(null, "", `/forum?page=${pageNumber}`);
+
+
+    }
+
+
 
   }
   function createPageButtons(i,hidden = false) {
@@ -23,8 +41,6 @@
       </li>
     `;
     }
-    //let pageControlClicks = 1;
-   // let starter = 1;
    let paginationState = {
     start: 1,
     end: 10,
@@ -51,24 +67,25 @@
     //replace the buttons with the new range of buttons and their new ids so we can keep track of them
     for (let i = paginationState.start; i <= paginationState.end; i++) {
       if (i > paginationNumber) break; // Stop if we exceed the total number of pages
-      const newButtonHTML = createPageButtons(direction === 'increase' ? i + 1 : i - 1);
+
+      const newButtonHTML = createPageButtons(routePath ? i : (direction === 'increase' ? i + 1 : i - 1));
       currentButtons.innerHTML += newButtonHTML.trim();
     }
 
-    if (direction === 'decrease') {
-      paginationState.buttonsHidden--;
-      paginationState.start--;
-      paginationState.end--;
-      handlePagination(paginationState.start);
-      //update the url
-      history.pushState(null, "", `/forum?page=${paginationState.start}`);
-    } else if (direction === 'increase') {
-      paginationState.buttonsHidden++;
-      paginationState.start++;
-      paginationState.end++;
-      handlePagination(paginationState.start);
-      history.pushState(null, "", `/forum?page=${paginationState.start}`);
-    }
+      if (direction === 'decrease') {
+        routePath ? null : paginationState.buttonsHidden--;
+        routePath ? null : paginationState.start--;
+        routePath ? null : paginationState.end--;
+        handlePagination(paginationState.start);
+        //update the url
+        history.pushState(null, "", `/forum?page=${paginationState.start}`);
+      } else if (direction === 'increase') {
+        paginationState.buttonsHidden++;
+        paginationState.start++;
+        paginationState.end++;
+        handlePagination(paginationState.start);
+        history.pushState(null, "", `/forum?page=${paginationState.start}`);
+      }
     document.getElementById("paginationDecrease").value = paginationState.start;
     document.getElementById("paginationIncrease").value = paginationState.end;
     const newListItem = document.createElement('li');
@@ -80,7 +97,7 @@
     newButton.value = paginationState.start;
     //add event listener to the new button to handle the click event
     newButton.addEventListener('click', function() {
-      handlePaginationIncrements(paginationNumber, 'decrease', paginationState.start);
+      handlePaginationIncrements(paginationNumber, 'decrease');
       return false;
     });
     newButton.innerHTML = '<span aria-hidden="true">&laquo;</span>';
@@ -96,7 +113,7 @@
     newButtonNext.innerHTML = '<span aria-hidden="true">&raquo;</span>';
     newButtonNext.id= 'paginationIncrease'
     newButtonNext.addEventListener('click', function() {
-      handlePaginationIncrements(paginationNumber, 'increase', paginationState.start);
+      handlePaginationIncrements(paginationNumber, 'increase');
       return false;
     });
     newListItemNext.appendChild(newButtonNext);
@@ -105,7 +122,7 @@
       const hiddenButtonHTML = createPageButtons(i, true);
       pastButtons.innerHTML += hiddenButtonHTML.trim();
     }
-    for (let i = paginationState.end + 1; i <= paginationNumber - (paginationState.end + 1); i++) {
+    for (let i = Math.min(paginationState.end + 1, paginationNumber); i <= paginationNumber - (Math.min(paginationState.end + 1, paginationNumber)); i++) {
       const future = document.getElementById("paginationButton" + i);
       const hiddenButtonHTML = createPageButtons(i, true);
       futureButtons.innerHTML += hiddenButtonHTML.trim();
@@ -1163,8 +1180,8 @@
     const notificationSourcePostContainer = document.createElement("div");
     const notififcationSourcePost = document.createElement("p");
     notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
-    notificationLink.id = `anchor${notification.onPage}`;
-    notificationLink.onclick = () => handleNotifcationRoute(notificationLink.id);
+    notificationLink.id = notification.onPage;
+    notificationLink.addEventListener('click', () => handleNotifcationRoute(notificationLink.id));
     notificationLink.className = 'nav-link';
     notificationTime.className = 'notification-time';
     notificationMessage.className = 'notification-message';
