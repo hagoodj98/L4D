@@ -449,6 +449,7 @@ app.get("/forum", async (req, res, next) => {
       isAuthenticated: req.isAuthenticated(),
       listAllContent: content,
       paginationNumber,
+      page: req.query.page ? parseInt(req.query.page as string) : 1,
     });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));

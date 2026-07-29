@@ -30,9 +30,14 @@
     end: 10,
     buttonsHidden: 0
    };
+   function initializePaginationState(page) {
+    paginationState.start = page;
+    paginationState.end = page + 9;
+    paginationState.buttonsHidden = page - 1;
+   }
 
+  async function handlePaginationIncrements(paginationNumber, direction, routePath = null) {
 
-  function handlePaginationIncrements(paginationNumber, direction, routePath = null) {
     if (direction === 'decrease') {
       if (paginationState.start <= 1) return; // Prevent going below the first page
     } else if (direction === 'increase') {
@@ -42,8 +47,6 @@
     let currentButtons = document.createElement("div");
     let pastButtons = document.createElement("div");
     let futureButtons = document.createElement("div");
-    const paginationDecreaseButton = document.getElementById("paginationDecrease").value;
-    const paginationIncreaseButton = document.getElementById("paginationIncrease").value;
 
     //replace the buttons with the new range of buttons and their new ids so we can keep track of them
     for (let i = paginationState.start; i <= paginationState.end; i++) {
@@ -56,13 +59,47 @@
       paginationState.buttonsHidden--;
       paginationState.start--;
       paginationState.end--;
+      handlePagination(paginationState.start);
+      //update the url
+      history.pushState(null, "", `/forum?page=${paginationState.start}`);
     } else if (direction === 'increase') {
       paginationState.buttonsHidden++;
       paginationState.start++;
       paginationState.end++;
+      handlePagination(paginationState.start);
+      history.pushState(null, "", `/forum?page=${paginationState.start}`);
     }
     document.getElementById("paginationDecrease").value = paginationState.start;
     document.getElementById("paginationIncrease").value = paginationState.end;
+    const newListItem = document.createElement('li');
+    const newButton = document.createElement('button');
+    newListItem.className = 'page-item';
+    newButton.type = 'button';
+    newButton.setAttribute('aria-label', 'Previous');
+    newButton.className = 'page-link';
+    newButton.value = paginationState.start;
+    //add event listener to the new button to handle the click event
+    newButton.addEventListener('click', function() {
+      handlePaginationIncrements(paginationNumber, 'decrease', paginationState.start);
+      return false;
+    });
+    newButton.innerHTML = '<span aria-hidden="true">&laquo;</span>';
+    newButton.id= 'paginationDecrease'
+    newListItem.appendChild(newButton);
+    const newListItemNext = document.createElement('li');
+    const newButtonNext = document.createElement('button');
+    newListItemNext.className = 'page-item';
+    newButtonNext.type = 'button';
+    newButtonNext.setAttribute('aria-label', 'Next');
+    newButtonNext.className = 'page-link';
+    newButtonNext.value = paginationState.end;
+    newButtonNext.innerHTML = '<span aria-hidden="true">&raquo;</span>';
+    newButtonNext.id= 'paginationIncrease'
+    newButtonNext.addEventListener('click', function() {
+      handlePaginationIncrements(paginationNumber, 'increase', paginationState.start);
+      return false;
+    });
+    newListItemNext.appendChild(newButtonNext);
     for (let i = 1; i <= paginationState.buttonsHidden; i++) {
       const oldButton = document.getElementById("paginationButton" + i);
       const hiddenButtonHTML = createPageButtons(i, true);
@@ -74,7 +111,8 @@
       futureButtons.innerHTML += hiddenButtonHTML.trim();
     }
     // Remove all buttons except the first and last
-    paginationControls.replaceChildren(paginationControls.firstElementChild, ...pastButtons.children, ...currentButtons.children, ...futureButtons.children, paginationControls.lastElementChild);
+    // Update the pagination controls with the new buttons with new initialized page numbers
+    paginationControls.replaceChildren(newListItem, ...pastButtons.children, ...currentButtons.children, ...futureButtons.children, newListItemNext);
   }
   let currentPage = 1;
   function scrollToForumContent() {
@@ -1029,6 +1067,7 @@
     listPosts(list);
     // Highlight the current page button in the pagination
     const currentPage = new URLSearchParams(window.location.search).get("page") || "1";
+    initializePaginationState(<%= page %>);
     document.getElementById(`paginationButton${currentPage}`).classList.toggle("selected");
     const response = await fetch("/load-notifications", {
       method: "GET",

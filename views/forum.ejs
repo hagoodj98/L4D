@@ -100,7 +100,6 @@
             <span aria-hidden="true">&laquo;</span>
           </button>
         </li>
-
         <% for (let i = 1; i <= paginationNumber; i++) { %>
         <li class="page-item">
           <button
@@ -108,7 +107,7 @@
             type="button"
             href="<%= i %>"
             id="paginationButton<%= i %>"
-            style="display: <%= i <= 10 ? 'inline-block' : 'none' %>;"
+            style="display: <%= i < page || i > page + 9 ? 'none' : 'inline-block' %>;"
             onclick="handlePagination(<%= i %>)"
           >
             <%=i%>
@@ -139,4 +138,4 @@
 </div>
 
 <%- include("partials/footer.ejs") %>
-<%- include("partials/forum-scripts.ejs", { listAllContent, user: currentUser, paginationNumber }) %>
+<%- include("partials/forum-scripts.ejs", { listAllContent, user: currentUser, paginationNumber, page }) %>
