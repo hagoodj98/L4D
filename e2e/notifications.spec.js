@@ -283,13 +283,8 @@ test.describe("Notification SSE flows", () => {
             wasRead: false,
           };
 
-          const {
-            likeComment,
-            commentPost,
-            replyPost,
-            likePost,
-            likeReply,
-          } = createTextForNotificationType(notification);
+          const { likeComment, commentPost, replyPost, likePost, likeReply } =
+            createTextForNotificationType(notification);
 
           createNotificationElement(
             notification,
@@ -304,7 +299,9 @@ test.describe("Notification SSE flows", () => {
 
           const links = dropdown.querySelectorAll(".notification-link a");
           const injectedLink = links[links.length - 1];
-          injectedLink?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+          injectedLink?.dispatchEvent(
+            new MouseEvent("click", { bubbles: true }),
+          );
         },
         {
           postId: post.id,
@@ -321,16 +318,12 @@ test.describe("Notification SSE flows", () => {
       await expect.poll(async () => ownerPage.url()).toContain("/forum?page=1");
       await expect
         .poll(async () =>
-          targetReply.evaluate((node) =>
-            node.classList.contains("highlight"),
-          ),
+          targetReply.evaluate((node) => node.classList.contains("highlight")),
         )
         .toBe(true);
       await expect
         .poll(async () =>
-          targetReply.evaluate((node) =>
-            node.classList.contains("highlight"),
-          ),
+          targetReply.evaluate((node) => node.classList.contains("highlight")),
         )
         .toBe(false);
     } finally {

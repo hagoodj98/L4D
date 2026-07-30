@@ -42,19 +42,22 @@ test.describe("Forum authenticated flows", () => {
       text: `Pagination E2E post ${index + 1} ${suffix}`,
     }));
 
-    await page.evaluate(async ({ posts }) => {
-      for (const post of posts) {
-        const response = await fetch("/add-post", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ newPost: post.text, current_page: "1" }),
-        });
-        const payload = await response.json();
-        if (!payload.success) {
-          throw new Error("Failed to create pagination seed post");
+    await page.evaluate(
+      async ({ posts }) => {
+        for (const post of posts) {
+          const response = await fetch("/add-post", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ newPost: post.text, current_page: "1" }),
+          });
+          const payload = await response.json();
+          if (!payload.success) {
+            throw new Error("Failed to create pagination seed post");
+          }
         }
-      }
-    }, { posts });
+      },
+      { posts },
+    );
 
     await page.goto("/forum?page=1");
     await expect(page.locator(".forum-post-content").first()).toContainText(
@@ -66,9 +69,9 @@ test.describe("Forum authenticated flows", () => {
     await expect(page).toHaveURL(/\/forum\?page=2$/);
     await expect(page.locator("#demo")).toContainText(posts[0].text);
     await expect(page.locator("#demo")).toContainText(posts[1].text);
-    await expect(page.locator(".unstyledPaginationButtons.selected")).toHaveText(
-      "2",
-    );
+    await expect(
+      page.locator(".unstyledPaginationButtons.selected"),
+    ).toHaveText("2");
   });
 
   test("authenticated user can register, post, react, reply, and logout", async ({
