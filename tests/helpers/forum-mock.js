@@ -307,28 +307,39 @@ export function setupPgMock() {
         }
 
         if (
-          normalizedSql.includes(
+          (normalizedSql.includes(
+            "INSERT INTO posts (post, user_id, created_at, on_page)",
+          ) &&
+            normalizedSql.includes("VALUES ($1, $2, $3, $4)") &&
+            normalizedSql.includes("RETURNING")) ||
+          (normalizedSql.includes(
             "INSERT INTO posts (post, user_id, created_at)",
           ) &&
-          normalizedSql.includes("VALUES ($1, $2, $3)") &&
-          normalizedSql.includes("RETURNING")
+            normalizedSql.includes("VALUES ($1, $2, $3)") &&
+            normalizedSql.includes("RETURNING"))
         ) {
           const post = {
             id: dbState.nextPostId++,
             post: params[0],
             user_id: params[1],
             created_at: params[2],
+            on_page: params[3] ?? null,
           };
           dbState.posts.push(post);
           return { rows: [post] };
         }
 
         if (
-          normalizedSql.includes(
+          (normalizedSql.includes(
+            "INSERT INTO comments (comment_post, user_id, post_id, created_at, on_page)",
+          ) &&
+            normalizedSql.includes("VALUES ($1, $2, $3, $4, $5)") &&
+            normalizedSql.includes("RETURNING")) ||
+          (normalizedSql.includes(
             "INSERT INTO comments (comment_post, user_id, post_id, created_at)",
           ) &&
-          normalizedSql.includes("VALUES ($1, $2, $3, $4)") &&
-          normalizedSql.includes("RETURNING")
+            normalizedSql.includes("VALUES ($1, $2, $3, $4)") &&
+            normalizedSql.includes("RETURNING"))
         ) {
           const reply = {
             id: dbState.nextReplyId++,
@@ -336,17 +347,23 @@ export function setupPgMock() {
             user_id: params[1],
             post_id: Number(params[2]),
             created_at: params[3],
+            on_page: params[4] ?? null,
           };
           dbState.replies.push(reply);
           return { rows: [reply] };
         }
 
         if (
-          normalizedSql.includes(
+          (normalizedSql.includes(
+            "INSERT INTO replies (reply_post, user_id, comment_id, created_at, on_page)",
+          ) &&
+            normalizedSql.includes("VALUES ($1, $2, $3, $4, $5)") &&
+            normalizedSql.includes("RETURNING")) ||
+          (normalizedSql.includes(
             "INSERT INTO replies (reply_post, user_id, comment_id, created_at)",
           ) &&
-          normalizedSql.includes("VALUES ($1, $2, $3, $4)") &&
-          normalizedSql.includes("RETURNING")
+            normalizedSql.includes("VALUES ($1, $2, $3, $4)") &&
+            normalizedSql.includes("RETURNING"))
         ) {
           const finalReply = {
             id: dbState.nextFinalReplyId++,
@@ -355,6 +372,7 @@ export function setupPgMock() {
             user_id: params[1],
             reply_id: Number(params[2]),
             created_at: params[3],
+            on_page: params[4] ?? null,
           };
           dbState.repliesFinalTier.push(finalReply);
           return { rows: [finalReply] };

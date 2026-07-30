@@ -10,7 +10,20 @@ const port = String(process.env.PG_PORT || "5432");
 
 const result = spawnSync(
   "psql",
-  ["-h", host, "-U", user, "-d", database, "-p", port, "-f", "db/init.sql"],
+  [
+    "-v",
+    "ON_ERROR_STOP=1",
+    "-h",
+    host,
+    "-U",
+    user,
+    "-d",
+    database,
+    "-p",
+    port,
+    "-f",
+    "db/init.sql",
+  ],
   {
     stdio: "inherit",
     env: {

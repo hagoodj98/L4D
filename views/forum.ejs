@@ -2,7 +2,7 @@
 
 <div style="height: auto">
   <div class="container d-flex flex-column">
-    <div id="anchor25" class="paddingtop">
+    <div id="anchor/<%= page %>" class="paddingtop">
       <div class="forum-intro-wrap">
         <% if (isAuthenticated) { %>
         <p style="color: white" class="forum-intro">
@@ -80,42 +80,62 @@
         <div id="demo" class="posts forum-post-list"></div>
       </div>
     </div>
-  </div>
-  <nav aria-label="Page navigation example">
-    <ul class="pagination justify-content-end">
-      <li class="page-item">
-        <a class="page-link" href="#" aria-label="Previous">
-          <span aria-hidden="true">&laquo;</span>
-        </a>
-      </li>
-      <% 
-        const paginationNumber = Math.ceil(totalPosts / 4);
-        for(let i = 1; i <= paginationNumber; i++) { 
-      %>
-      <li class="page-item">
-        <form
-          onsubmit="
-            handlePagination('<%= i %>');
-            return false;
-          "
-        >
-          <input type="hidden" name="page" value="<%= i %>" />
-          <input type="hidden" name="offset" value="<%= (i - 1) %>" />
-          <button type="submit" class="unstyledPaginationButtons">
-            <%= i %>
+    <nav aria-label="Page navigation example">
+      <ul class="pagination justify-content-end" id="paginationControls">
+        <li class="page-item">
+          <button
+            class="page-link"
+            id="paginationDecrease"
+            onclick="
+            handlePaginationIncrements(
+              <%= paginationNumber %>,
+              'decrease'
+            );
+              return false;
+            "
+            type="button"
+            value="1"
+            aria-label="Previous"
+          >
+            <span aria-hidden="true">&laquo;</span>
           </button>
-        </form>
-      </li>
-      <% } %>
-
-      <li class="page-item">
-        <a class="page-link" href="#" aria-label="Next">
-          <span aria-hidden="true">&raquo;</span>
-        </a>
-      </li>
-    </ul>
-  </nav>
+        </li>
+        <% for (let i = 1; i <= paginationNumber; i++) { %>
+        <li class="page-item">
+          <button
+            class="page-link unstyledPaginationButtons"
+            type="button"
+            href="<%= i %>"
+            id="paginationButton<%= i %>"
+            style="display: <%= i < page || i > page + 9 ? 'none' : 'inline-block' %>;"
+            onclick="handlePagination(<%= i %>)"
+          >
+            <%=i%>
+          </button>
+        </li>
+        <% } %>
+        <li class="page-item">
+          <button
+            id="paginationIncrease"
+            onclick="
+              handlePaginationIncrements(
+                <%= paginationNumber %>,
+                'increase'
+              );
+              return false;
+            "
+            class="page-link"
+            type="button"
+            aria-label="Next"
+            value="10"
+          >
+            <span aria-hidden="true">&raquo;</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </div>
 </div>
 
 <%- include("partials/footer.ejs") %>
-<%- include("partials/forum-scripts.ejs", { listAllContent, user: currentUser }) %>
+<%- include("partials/forum-scripts.ejs", { listAllContent, user: currentUser, paginationNumber, page }) %>

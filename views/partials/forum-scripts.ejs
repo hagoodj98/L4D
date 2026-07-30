@@ -1,23 +1,213 @@
 <script>
+  document.querySelectorAll(".unstyledPaginationButtons").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
 
-  function scrollToForumContent() {
-      const forumAnchor = document.getElementById("anchor25");
+    });
+  });
+  function handleNotifcationRoute(route){
+    const routeParts = route.split("/");
+    const pageNumber = routeParts[0];
+    const postID = routeParts[1];
+    const commentID = routeParts[2];
+    const replyID = routeParts[3];
+    if (pageNumber) {
+      paginationState.start = Number(pageNumber);
+      paginationState.end = Number(pageNumber) + 9;
+      paginationState.buttonsHidden = Number(pageNumber) - 1;
+      // Ensure the end does not exceed the total number of pages
+      paginationState.end = Math.min(paginationState.end, <%= paginationNumber %>);
+      handlePagination(paginationState.start);
+      handlePaginationIncrements(<%= paginationNumber %>, 'decrease', routeParts);
+      history.pushState(null, "", `/forum?page=${pageNumber}`);
+      //ignore the first part and join
+      //const anchorId = routeParts.slice(1).join("/");
+      setTimeout(async () => {
+        if (postID && !commentID && !replyID) {
+          scrollToForumContent(postID);
+          setTimeout(() => {
+            const itemToHighlight = document.getElementById(`anchor/${postID}`);
+            if (itemToHighlight) {
+              itemToHighlight.classList.remove("forum-post-card"); // Remove the existing class to reset any previous styles
+              itemToHighlight.classList.add("highlight");
+              setTimeout(() => {
+                itemToHighlight.classList.remove("highlight");
+                itemToHighlight.classList.add("forum-post-card"); // Restore the original class
+              }, 1500); // Adjust the duration of the highlight effect as needed
+            }
+          }, 500); // Adjust the delay as needed
+        }
+        if (postID && commentID && !replyID) {
+          scrollToForumContent(postID);
+          setTimeout(() => {
+            showAllReplies(postID, true, false, false, 'comment');
+          }, 500); // Adjust the delay as needed
+          scrollToForumContent(commentID);
+          setTimeout(() => {
+            const itemToHighlight = document.getElementById(`anchor/${commentID}`);
+            if (itemToHighlight) {
+              itemToHighlight.classList.remove("forum-reply-card"); // Remove the existing class to reset any previous styles
+              itemToHighlight.classList.add("highlight");
+              setTimeout(() => {
+                itemToHighlight.classList.remove("highlight");
+                itemToHighlight.classList.add("forum-reply-card"); // Restore the original class
+              }, 1500); // Adjust the duration of the highlight effect as needed
+            }
+          }, 1500); // Adjust the delay as needed
+        }
+        if (postID && commentID && replyID) {
+          scrollToForumContent(`${postID}`);
+          setTimeout(() => {
+            showAllReplies(postID, true, false, false, 'comment');
+          }, 500); // Adjust the delay as needed
+          scrollToForumContent(commentID);
+          setTimeout(() => {
+            showAllReplies(commentID, false, true, false, 'reply');
+          }, 1500); // Adjust the delay as needed
+          scrollToForumContent(`${commentID}`);
+          setTimeout(() => {
+            scrollToForumContent(`${replyID}`);
+            const itemToHighlight = document.getElementById(`anchor/${replyID}`);
+            if (itemToHighlight) {
+              itemToHighlight.classList.remove("forum-reply-card-finalreply"); // Remove the existing class to reset any previous styles
+              itemToHighlight.classList.add("highlight");
+              setTimeout(() => {
+                itemToHighlight.classList.remove("highlight");
+                itemToHighlight.classList.add("forum-reply-card-finalreply"); // Restore the original class
+              }, 1500); // Adjust the duration of the highlight effect as needed
+            }
+          }, 2000); // Adjust the delay as needed
+        }
+      }, 500); // Adjust the delay as needed
+
+    }
+
+  }
+  function createPageButtons(i,hidden = false) {
+    return /*html*/`
+      <li class="page-item" >
+        <button
+          class="page-link unstyledPaginationButtons"
+          type="button"
+          style="display: ${hidden ? 'none' : 'inline-block'};"
+          onclick="handlePagination(${i})"
+        >
+        ${i}
+        </button>
+      </li>
+    `;
+    }
+   let paginationState = {
+    start: 1,
+    end: 10,
+    buttonsHidden: 0
+   };
+   function initializePaginationState(page) {
+    paginationState.start = page;
+    paginationState.end = page + 9;
+    paginationState.buttonsHidden = page - 1;
+   }
+
+  async function handlePaginationIncrements(paginationNumber, direction, routePath = null) {
+
+    if (direction === 'decrease') {
+      if (paginationState.start <= 1) return; // Prevent going below the first page
+    } else if (direction === 'increase') {
+      if (paginationState.end >= paginationNumber) return; // Prevent going beyond the last page
+    }
+    const paginationControls = document.getElementById("paginationControls");
+    let currentButtons = document.createElement("div");
+    let pastButtons = document.createElement("div");
+    let futureButtons = document.createElement("div");
+
+    //replace the buttons with the new range of buttons and their new ids so we can keep track of them
+    for (let i = paginationState.start; i <= paginationState.end; i++) {
+      if (i > paginationNumber) break; // Stop if we exceed the total number of pages
+
+      const newButtonHTML = createPageButtons(routePath ? i : (direction === 'increase' ? i + 1 : i - 1));
+      currentButtons.innerHTML += newButtonHTML.trim();
+    }
+
+      if (direction === 'decrease') {
+        routePath ? null : paginationState.buttonsHidden--;
+        routePath ? null : paginationState.start--;
+        routePath ? null : paginationState.end--;
+        handlePagination(paginationState.start);
+        //update the url
+        history.pushState(null, "", `/forum?page=${paginationState.start}`);
+      } else if (direction === 'increase') {
+        paginationState.buttonsHidden++;
+        paginationState.start++;
+        paginationState.end++;
+        handlePagination(paginationState.start);
+        history.pushState(null, "", `/forum?page=${paginationState.start}`);
+      }
+    document.getElementById("paginationDecrease").value = paginationState.start;
+    document.getElementById("paginationIncrease").value = paginationState.end;
+    const newListItem = document.createElement('li');
+    const newButton = document.createElement('button');
+    newListItem.className = 'page-item';
+    newButton.type = 'button';
+    newButton.setAttribute('aria-label', 'Previous');
+    newButton.className = 'page-link';
+    newButton.value = paginationState.start;
+    //add event listener to the new button to handle the click event
+    newButton.addEventListener('click', function() {
+      handlePaginationIncrements(paginationNumber, 'decrease');
+      return false;
+    });
+    newButton.innerHTML = '<span aria-hidden="true">&laquo;</span>';
+    newButton.id= 'paginationDecrease'
+    newListItem.appendChild(newButton);
+    const newListItemNext = document.createElement('li');
+    const newButtonNext = document.createElement('button');
+    newListItemNext.className = 'page-item';
+    newButtonNext.type = 'button';
+    newButtonNext.setAttribute('aria-label', 'Next');
+    newButtonNext.className = 'page-link';
+    newButtonNext.value = paginationState.end;
+    newButtonNext.innerHTML = '<span aria-hidden="true">&raquo;</span>';
+    newButtonNext.id= 'paginationIncrease'
+    newButtonNext.addEventListener('click', function() {
+      handlePaginationIncrements(paginationNumber, 'increase');
+      return false;
+    });
+    newListItemNext.appendChild(newButtonNext);
+    for (let i = 1; i <= paginationState.buttonsHidden; i++) {
+      const oldButton = document.getElementById("paginationButton" + i);
+      const hiddenButtonHTML = createPageButtons(i, true);
+      pastButtons.innerHTML += hiddenButtonHTML.trim();
+    }
+    for (let i = Math.min(paginationState.end + 1, paginationNumber); i <= paginationNumber - (Math.min(paginationState.end + 1, paginationNumber)); i++) {
+      const future = document.getElementById("paginationButton" + i);
+      const hiddenButtonHTML = createPageButtons(i, true);
+      futureButtons.innerHTML += hiddenButtonHTML.trim();
+    }
+    // Remove all buttons except the first and last
+    // Update the pagination controls with the new buttons with new initialized page numbers
+    paginationControls.replaceChildren(newListItem, ...pastButtons.children, ...currentButtons.children, ...futureButtons.children, newListItemNext);
+  }
+  let currentPage = 1;
+  function scrollToForumContent(idSection) {
+      const forumAnchor = document.getElementById(`anchor/${String(idSection)}`);
       if (!forumAnchor) return;
       forumAnchor.scrollIntoView({ behavior: "smooth", block: "start" });
+
     }
 
     async function handlePagination(page) {
       const offset = (Number(page) - 1) * 4; // Assuming 4 posts per page
+      currentPage = Number(page);
       try {
-        const response = await fetch(`/forumpagination?page=${page}&offset=${offset}`);
+        const response = await fetch(`/forum-pagination?page=${page}&offset=${offset}`);
         const data = await response.json();
         // Update the active page button styling
         document.querySelectorAll(".unstyledPaginationButtons").forEach((button) => {
-          button.textContent = button.textContent.trim();
-          button.classList.toggle("selected", button.textContent === page);
+          button.classList.toggle("selected",  button.textContent.trim() === String(page));
         });
+        history.pushState(null, "", `/forum?page=${page}`);
         listPosts(data.listAllContent);
-        scrollToForumContent();
+        scrollToForumContent(currentPage);
       } catch (err) {
         console.error("Error fetching paginated posts:", err);
       }
@@ -28,7 +218,7 @@
       if (!postContent) return;
 
       try {
-        const response = await fetch("/add-post", {
+        const response = await fetch("http://localhost:3000/add-post", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ newPost: postContent }),
@@ -139,7 +329,6 @@
                         padding: 10px;
                       "
                       class="forum-reply-input"
-                      autofocus="true"
                       name="reply"
                       placeholder="Write a reply..."
                       required
@@ -238,7 +427,7 @@
           if (!replyInput || !replyInput.value.trim()) return;
 
           const replyValue = replyInput.value.trim();
-          const response = await fetch("/add-reply", {
+          const response = await fetch("http://localhost:3000/add-reply", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ comment_id: commentID, reply_post: replyValue }),
@@ -361,10 +550,10 @@
           if (!commentInput || !commentInput.value.trim()) return;
 
           const commentValue = commentInput.value.trim();
-          const response = await fetch("/add-comment", {
+          const response = await fetch("http://localhost:3000/add-comment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ post_id: postId, comment_post: commentValue }),
+            body: JSON.stringify({ post_id: postId, comment_post: commentValue, currentPage }),
           });
 
           await handleRedirect(response);
@@ -484,7 +673,6 @@
                           padding: 10px;
                         "
                         class="forum-reply-input"
-                        autofocus="true"
                         name="reply"
                         placeholder="reply to @<%= user %>..."
                         required
@@ -517,7 +705,7 @@
       }
           async function ascendForum() {
         try {
-          const response = await fetch("/ascend");
+          const response = await fetch("http://localhost:3000/ascend");
           const redirect = await response.redirected ? { url: response.url } : null;
 
           if (redirect) {
@@ -532,7 +720,7 @@
       }
       async function descendForum() {
         try {
-          const response = await fetch("/descend");
+          const response = await fetch("http://localhost:3000/descend");
           const redirect = await response.redirected ? { url: response.url } : null;
 
           if (redirect) {
@@ -561,7 +749,7 @@
             minute: "2-digit",
           });
           content += /*html*/`
-              <div class="forum-post-card" style="border-bottom: 1px solid white">
+              <div class="forum-post-card" id="anchor/${p.id}" style="border-bottom: 1px solid white">
                 <!--
                       <textarea  class="textareapost autoresizing" style="  width: 100%;"  readonly  id="title/textarea>-->
                 <p style="color: white" class="forum-post-content">
@@ -626,7 +814,7 @@
                     class="reply roboto-condensed"
                     onclick="toggleReplyBox(${p.id})"
                   >
-                    Reply
+                    Comment
                   </button>
                 </div>
                 <button
@@ -634,14 +822,14 @@
                   id="postcommentButton-${p.id}"
                   class="comment postButton  ${p.current_user_reaction === "comment" ? "reaction-color" : ""} "
                 >
-                  <span  style="color: white"> <span id="commentCount-for-post-${p.id}">${p.comment_count}</span> replies </span>
+                  <span  style="color: white"> <span id="commentCount-for-post-${p.id}">${p.comment_count}</span> comments </span>
                 </button>
                 <div
                   id="create-comment-for-post-${p.id}"
                   style="display: none"
                   class="forum-reply-editor-wrap"
                 >
-                  <form onsubmit="handleCommentSubmit(${p.id}, null, null, '${p.display_name}'); return false;">
+                  <form onsubmit="handleCommentSubmit(${p.id}, '${p.display_name}'); return false;">
                     <input type="hidden" name="post_id" value="${p.id}" />
                     <div
                       style="display: flex; flex-direction: column"
@@ -654,7 +842,6 @@
                           padding: 10px;
                         "
                         class="forum-reply-input"
-                        autofocus="true"
                         name="reply"
                         placeholder="reply to @${p.display_name}..."
                         required
@@ -681,6 +868,7 @@
                       return /*html*/`
                         <div
                           class="p-2 forum-reply-card"
+                          id="anchor/${comment.id}"
                           style="border-top: 1px solid white; margin-left: 20px"
                         >
                           <p style="color: white"> ${comment.comment_post} </p>
@@ -783,7 +971,6 @@
                                     padding: 10px;
                                   "
                                   class="forum-reply-input"
-                                  autofocus="true"
                                   name="reply"
                                   placeholder="reply to @${comment.display_name}..."
                                   required
@@ -810,6 +997,7 @@
                               return /*html*/`
                                 <div
                                   class="p-2 forum-reply-card-finalreply"
+                                  id="anchor/${reply.id}"
                                   style="border-top: 1px solid white; margin-left: 20px"
                                 >
                                   <p style="color: white"> ${reply.reply_post} </p>
@@ -953,6 +1141,10 @@
     const list = <%- JSON.stringify(listAllContent) %>;
     if (!Array.isArray(list) || list.length === 0) return;
     listPosts(list);
+    // Highlight the current page button in the pagination
+    const currentPage = new URLSearchParams(window.location.search).get("page") || "1";
+    initializePaginationState(<%= page %>);
+    document.getElementById(`paginationButton${currentPage}`).classList.toggle("selected");
     const response = await fetch("/load-notifications", {
       method: "GET",
       headers: {
@@ -1047,7 +1239,11 @@
     const notificationSourcePostContainer = document.createElement("div");
     const notififcationSourcePost = document.createElement("p");
     notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
-    //notificationLink.href = `/forum/${notification.postID ?? notification.commentID ?? notification.replyID}`;
+    notificationLink.href = `#anchor/${notification.onPage}`;
+    notificationLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      handleNotifcationRoute(notification.onPage);
+    });
     notificationLink.className = 'nav-link';
     notificationTime.className = 'notification-time';
     notificationMessage.className = 'notification-message';

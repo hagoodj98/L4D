@@ -5,11 +5,12 @@ export const createComment = async (
   user_id: number,
   post_id: string | null,
   created_at: string,
+  on_page: string,
 ) => {
   const sql = String.raw;
   const insertCommentQuery = sql`
-    INSERT INTO comments (comment_post, user_id, post_id, created_at)
-    VALUES ($1, $2, $3, $4)
+    INSERT INTO comments (comment_post, user_id, post_id, created_at, on_page)
+    VALUES ($1, $2, $3, $4, $5)
     RETURNING *
   `;
   const result = await db.query(insertCommentQuery, [
@@ -17,6 +18,7 @@ export const createComment = async (
     user_id,
     post_id,
     created_at,
+    on_page,
   ]);
   return result.rows[0];
 };

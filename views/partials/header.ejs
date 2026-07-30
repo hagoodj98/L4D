@@ -19,15 +19,12 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
     />
-    <link rel="stylesheet"  href="/css/reset.css" />
     <link rel="stylesheet" type="text/css" href="/css/styles.css" />
   </head>
-  
-  
+
   <body
     style="background-color: black; "
-    class="<%= currentPath === '/forum' ? 'forum-page' : '' %>"
-
+    class="<%= currentPath.startsWith('/forum') ? 'forum-page' : '' %>"
   >
 
     <nav class="navbar navbar-expand-lg fixed-top site-navbar">
@@ -97,7 +94,7 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end site-dropdown-menu" >
                   <li><a class="dropdown-item" href="/community">Get Connected</a></li>
-                  <li><a class="dropdown-item" href="/forum">Forum</a></li>
+                  <li><a class="dropdown-item" href="/forum?page=1">Forum</a></li>
                 </ul>
               </li>
                

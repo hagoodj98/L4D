@@ -62,6 +62,15 @@ CREATE TABLE IF NOT EXISTS replies (
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE posts
+  ADD COLUMN IF NOT EXISTS on_page TEXT;
+
+ALTER TABLE comments
+  ADD COLUMN IF NOT EXISTS on_page TEXT;
+
+ALTER TABLE replies
+  ADD COLUMN IF NOT EXISTS on_page TEXT;
+
 ALTER TABLE comments
   ADD COLUMN IF NOT EXISTS comment_post TEXT;
 
@@ -76,15 +85,28 @@ ALTER TABLE replies
   ADD COLUMN IF NOT EXISTS reply_post TEXT;
 
 ALTER TABLE replies
+  ADD COLUMN IF NOT EXISTS comment_post TEXT;
+
+ALTER TABLE replies
   ADD COLUMN IF NOT EXISTS comment_id INTEGER;
+
+ALTER TABLE replies
+  ADD COLUMN IF NOT EXISTS post_id INTEGER;
 
 UPDATE replies
 SET reply_post = comment_post
 WHERE reply_post IS NULL AND comment_post IS NOT NULL;
 
 INSERT INTO replies (id, comment_post, reply_post, user_id, post_id, created_at)
-SELECT c.id, c.comment, c.comment, c.user_id, c.post_id, c.created_at
+SELECT
+  c.id,
+  COALESCE(c.comment_post, c.comment),
+  COALESCE(c.comment_post, c.comment),
+  c.user_id,
+  c.post_id,
+  c.created_at
 FROM comments c
+WHERE COALESCE(c.comment_post, c.comment) IS NOT NULL
 ON CONFLICT (id) DO NOTHING;
 
 SELECT setval(

@@ -61,7 +61,7 @@ describe("Forum pagination", () => {
 
     const forumResponse = await agent.get("/forum?page=2");
     expect(forumResponse.status).toBe(200);
-    expect(forumResponse.text).toContain("handlePagination('1')");
-    expect(forumResponse.text).toContain("handlePagination('2')");
+    expect(forumResponse.text).toContain("handlePagination(1)");
+    expect(forumResponse.text).toContain("handlePagination(2)");
   });
 });

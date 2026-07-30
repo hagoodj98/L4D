@@ -92,7 +92,6 @@ app.use(async (req, res, next) => {
   res.locals.user = req.user ? req.user.display_name : null;
   if (req.user) {
     // Check if the user's notification state is already cached. If not, fetch it from the database and cache it.
-
     if (!cachedUserNotificationState.has(req.user.id)) {
       const cachedNotificationsState: NotificationState =
         await getNotificationState(req.user.id);
@@ -102,7 +101,6 @@ app.use(async (req, res, next) => {
         cachedUserNotificationState.set(req.user.id, cachedNotifications);
       }
     }
-
     // Retrieve the cached notification state for the authenticated user, if available.
     const cachedNotifications =
       cachedUserNotificationState.get(req.user.id) ?? [];
@@ -151,7 +149,13 @@ app.use(async (req, res, next) => {
     res.locals.notificationState = notifications;
   }
   // Store the current path for active nav link highlighting.
-  res.locals.currentPath = req.path;
+  if (req.path) {
+    if (req.path === "/forum") {
+      res.locals.currentPath = `${req.path}?page=1`;
+    } else {
+      res.locals.currentPath = req.path;
+    }
+  }
   next();
 });
 const isUserAuthenticated = (
@@ -430,18 +434,21 @@ app.get("/forum", async (req, res, next) => {
     ? (parseInt(req.query.page as string) - 1) * limit
     : 0;
   try {
-    const content: NotificationSource[] = await getAllForumData(
+    let content: NotificationSource[] = await getAllForumData(
       req.user ? req.user.id : null,
       "DESC",
       limit,
       offset,
     );
+
     const totalPosts: string = await totalPostsResult();
+    const paginationNumber = Math.ceil(Number(totalPosts) / 4);
     return res.render("forum.ejs", {
       currentUser: req.user ? req.user.display_name : "Guest",
       isAuthenticated: req.isAuthenticated(),
       listAllContent: content,
-      totalPosts,
+      paginationNumber,
+      page: req.query.page ? parseInt(req.query.page as string) : 1,
     });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
@@ -457,12 +464,13 @@ app.get("/forum-pagination", async (req, res, next) => {
     ? (parseInt(req.query.page as string) - 1) * limit
     : 0;
   try {
-    const result: NotificationSource[] = await getAllForumData(
+    let result: NotificationSource[] = await getAllForumData(
       req.user ? req.user.id : null,
       "DESC",
       limit,
       offset,
     );
+
     return res.json({ listAllContent: result });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
@@ -923,10 +931,10 @@ app.post("/add-post", async (req, res, next) => {
       new ErrorHandler(400, "Invalid post data", validation.error.issues),
     );
   }
-
+  const currentPage = String(req.body.current_page);
   try {
     const createdAt = new Date().toISOString();
-    const result = await createPost(post, req.user.id, createdAt);
+    const result = await createPost(post, req.user.id, createdAt, currentPage);
     return res.json({ success: true, post: result });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
@@ -948,6 +956,7 @@ app.post("/add-comment", async (req, res, next) => {
       new ErrorHandler(400, "Invalid comment data", validation.error.issues),
     );
   }
+  const currentPage = String(req.body.current_page);
 
   try {
     const creationTime = new Date().toISOString();
@@ -956,6 +965,7 @@ app.post("/add-comment", async (req, res, next) => {
       req.user.id,
       postId,
       creationTime,
+      currentPage,
     );
     return res.json({ success: true, comment: result });
   } catch (err) {
@@ -982,6 +992,7 @@ app.post("/add-reply", async (req, res, next) => {
       reply: commentPost,
       post_id: postId,
     });
+    const currentPage = String(req.body.current_page);
 
     if (!validation.success) {
       return next(
@@ -996,6 +1007,7 @@ app.post("/add-reply", async (req, res, next) => {
         req.user.id,
         postId,
         createdAt,
+        currentPage,
       );
       return res.json({ success: true, reply: result });
     } catch (err) {
@@ -1014,6 +1026,7 @@ app.post("/add-reply", async (req, res, next) => {
       new ErrorHandler(400, "Invalid reply data", validation.error.issues),
     );
   }
+  const currentPage = String(req.body.current_page);
   try {
     const createdAt = new Date().toISOString();
     const result = await createReply(
@@ -1021,6 +1034,7 @@ app.post("/add-reply", async (req, res, next) => {
       req.user.id,
       commentID,
       createdAt,
+      currentPage,
     );
     const replyMetadata: ReplyMetaDataType = {
       id: result.id,

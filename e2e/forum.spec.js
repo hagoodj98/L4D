@@ -23,6 +23,57 @@ function secondTierRepliesButton(page, id) {
 }
 
 test.describe("Forum authenticated flows", () => {
+  test("authenticated user can paginate forum posts and see page-specific content", async ({
+    page,
+  }) => {
+    const suffix = uniqueSuffix();
+    const username = `e2e-pagination-${suffix}`;
+    const email = `e2e-pagination-${suffix}@example.com`;
+    const password = "secret123";
+
+    await page.goto("/register");
+    await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Username").fill(username);
+    await page.getByLabel("Password").fill(password);
+    await page.getByRole("button", { name: "Create account" }).click();
+    await expect(page).toHaveURL(/\/forum$/);
+
+    const posts = Array.from({ length: 6 }, (_, index) => ({
+      text: `Pagination E2E post ${index + 1} ${suffix}`,
+    }));
+
+    await page.evaluate(
+      async ({ posts }) => {
+        for (const post of posts) {
+          const response = await fetch("/add-post", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ newPost: post.text, current_page: "1" }),
+          });
+          const payload = await response.json();
+          if (!payload.success) {
+            throw new Error("Failed to create pagination seed post");
+          }
+        }
+      },
+      { posts },
+    );
+
+    await page.goto("/forum?page=1");
+    await expect(page.locator(".forum-post-content").first()).toContainText(
+      posts[5].text,
+    );
+    await expect(page.locator("#demo")).not.toContainText(posts[0].text);
+
+    await page.locator("#paginationButton2").click();
+    await expect(page).toHaveURL(/\/forum\?page=2$/);
+    await expect(page.locator("#demo")).toContainText(posts[0].text);
+    await expect(page.locator("#demo")).toContainText(posts[1].text);
+    await expect(
+      page.locator(".unstyledPaginationButtons.selected"),
+    ).toHaveText("2");
+  });
+
   test("authenticated user can register, post, react, reply, and logout", async ({
     page,
   }) => {
