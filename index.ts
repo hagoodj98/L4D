@@ -436,12 +436,13 @@ app.get("/forum", async (req, res, next) => {
     ? (parseInt(req.query.page as string) - 1) * limit
     : 0;
   try {
-    const content: NotificationSource[] = await getAllForumData(
+    let content: NotificationSource[] = await getAllForumData(
       req.user ? req.user.id : null,
       "DESC",
       limit,
       offset,
     );
+
     const totalPosts: string = await totalPostsResult();
     const paginationNumber = Math.ceil(Number(totalPosts) / 4);
     return res.render("forum.ejs", {
@@ -465,7 +466,7 @@ app.get("/forum-pagination", async (req, res, next) => {
     ? (parseInt(req.query.page as string) - 1) * limit
     : 0;
   try {
-    const result: NotificationSource[] = await getAllForumData(
+    let result: NotificationSource[] = await getAllForumData(
       req.user ? req.user.id : null,
       "DESC",
       limit,

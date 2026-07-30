@@ -23,6 +23,14 @@
   margin-bottom: 6px;
   transition: none;
 }
+.highlight {
+  background-color: #6e9731a1; /* Highlight color */
+  transition: background-color 3s ease; /* Handles the fade effect */
+  border-radius: 12px;
+  margin-bottom: 12px;
+  padding: 6px;
+  margin-top: 12px;
+}
 
 .notification-source-post {
   font-size: 12px;
@@ -168,6 +176,10 @@
 }
 .forum-reply-card-finalreply.new-sub-reply.fade-bg {
   background-color: rgba(143, 31, 31, 0.277); /* Target color */
+}
+
+.postarrived {
+  background-color: #6e9731;
 }
 #skip {
   color: #6e9731;

@@ -20,11 +20,67 @@
       handlePagination(paginationState.start);
       handlePaginationIncrements(<%= paginationNumber %>, 'decrease', routeParts);
       history.pushState(null, "", `/forum?page=${pageNumber}`);
-
+      //ignore the first part and join
+      //const anchorId = routeParts.slice(1).join("/");
+      setTimeout(async () => {
+        if (postID && !commentID && !replyID) {
+          scrollToForumContent(postID);
+          setTimeout(() => {
+            const itemToHighlight = document.getElementById(`anchor/${postID}`);
+            if (itemToHighlight) {
+              itemToHighlight.classList.remove("forum-post-card"); // Remove the existing class to reset any previous styles
+              itemToHighlight.classList.add("highlight");
+              setTimeout(() => {
+                itemToHighlight.classList.remove("highlight");
+                itemToHighlight.classList.add("forum-post-card"); // Restore the original class
+              }, 1500); // Adjust the duration of the highlight effect as needed
+            }
+          }, 500); // Adjust the delay as needed
+        }
+        if (postID && commentID && !replyID) {
+          scrollToForumContent(postID);
+          setTimeout(() => {
+            showAllReplies(postID, true, false, false, 'comment');
+          }, 500); // Adjust the delay as needed
+          scrollToForumContent(commentID);
+          setTimeout(() => {
+            const itemToHighlight = document.getElementById(`anchor/${commentID}`);
+            if (itemToHighlight) {
+              itemToHighlight.classList.remove("forum-reply-card"); // Remove the existing class to reset any previous styles
+              itemToHighlight.classList.add("highlight");
+              setTimeout(() => {
+                itemToHighlight.classList.remove("highlight");
+                itemToHighlight.classList.add("forum-reply-card"); // Restore the original class
+              }, 1500); // Adjust the duration of the highlight effect as needed
+            }
+          }, 1500); // Adjust the delay as needed
+        }
+        if (postID && commentID && replyID) {
+          scrollToForumContent(`${postID}`);
+          setTimeout(() => {
+            showAllReplies(postID, true, false, false, 'comment');
+          }, 500); // Adjust the delay as needed
+          scrollToForumContent(commentID);
+          setTimeout(() => {
+            showAllReplies(commentID, false, true, false, 'reply');
+          }, 1500); // Adjust the delay as needed
+          scrollToForumContent(`${commentID}`);
+          setTimeout(() => {
+            scrollToForumContent(`${replyID}`);
+            const itemToHighlight = document.getElementById(`anchor/${replyID}`);
+            if (itemToHighlight) {
+              itemToHighlight.classList.remove("forum-reply-card-finalreply"); // Remove the existing class to reset any previous styles
+              itemToHighlight.classList.add("highlight");
+              setTimeout(() => {
+                itemToHighlight.classList.remove("highlight");
+                itemToHighlight.classList.add("forum-reply-card-finalreply"); // Restore the original class
+              }, 1500); // Adjust the duration of the highlight effect as needed
+            }
+          }, 2000); // Adjust the delay as needed
+        }
+      }, 500); // Adjust the delay as needed
 
     }
-
-
 
   }
   function createPageButtons(i,hidden = false) {
@@ -132,10 +188,11 @@
     paginationControls.replaceChildren(newListItem, ...pastButtons.children, ...currentButtons.children, ...futureButtons.children, newListItemNext);
   }
   let currentPage = 1;
-  function scrollToForumContent() {
-      const forumAnchor = document.getElementById("anchor25");
+  function scrollToForumContent(idSection) {
+      const forumAnchor = document.getElementById(`anchor/${String(idSection)}`);
       if (!forumAnchor) return;
       forumAnchor.scrollIntoView({ behavior: "smooth", block: "start" });
+
     }
 
     async function handlePagination(page) {
@@ -150,7 +207,7 @@
         });
         history.pushState(null, "", `/forum?page=${page}`);
         listPosts(data.listAllContent);
-        scrollToForumContent();
+        scrollToForumContent(currentPage);
       } catch (err) {
         console.error("Error fetching paginated posts:", err);
       }
@@ -692,7 +749,7 @@
             minute: "2-digit",
           });
           content += /*html*/`
-              <div class="forum-post-card" style="border-bottom: 1px solid white">
+              <div class="forum-post-card" id="anchor/${p.id}" style="border-bottom: 1px solid white">
                 <!--
                       <textarea  class="textareapost autoresizing" style="  width: 100%;"  readonly  id="title/textarea>-->
                 <p style="color: white" class="forum-post-content">
@@ -811,6 +868,7 @@
                       return /*html*/`
                         <div
                           class="p-2 forum-reply-card"
+                          id="anchor/${comment.id}"
                           style="border-top: 1px solid white; margin-left: 20px"
                         >
                           <p style="color: white"> ${comment.comment_post} </p>
@@ -939,6 +997,7 @@
                               return /*html*/`
                                 <div
                                   class="p-2 forum-reply-card-finalreply"
+                                  id="anchor/${reply.id}"
                                   style="border-top: 1px solid white; margin-left: 20px"
                                 >
                                   <p style="color: white"> ${reply.reply_post} </p>
@@ -1180,8 +1239,11 @@
     const notificationSourcePostContainer = document.createElement("div");
     const notififcationSourcePost = document.createElement("p");
     notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
-    notificationLink.id = notification.onPage;
-    notificationLink.addEventListener('click', () => handleNotifcationRoute(notificationLink.id));
+    notificationLink.href = `#anchor/${notification.onPage}`;
+    notificationLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      handleNotifcationRoute(notification.onPage);
+    });
     notificationLink.className = 'nav-link';
     notificationTime.className = 'notification-time';
     notificationMessage.className = 'notification-message';
