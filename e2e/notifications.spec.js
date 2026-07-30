@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+/* global document, MouseEvent, ensureNotificationsDropdownTitle, createTextForNotificationType, createNotificationElement */
 
 function uniqueSuffix() {
   return `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
@@ -341,7 +342,6 @@ test.describe("Notification SSE flows", () => {
       user97Context,
       user1Page,
       user97Name,
-      postId,
       postText,
     } = await createNotificationScenario(browser, suffix);
 
