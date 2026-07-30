@@ -337,13 +337,8 @@ test.describe("Notification SSE flows", () => {
     browser,
   }) => {
     const suffix = uniqueSuffix();
-    const {
-      user1Context,
-      user97Context,
-      user1Page,
-      user97Name,
-      postText,
-    } = await createNotificationScenario(browser, suffix);
+    const { user1Context, user97Context, user1Page, user97Name, postText } =
+      await createNotificationScenario(browser, suffix);
 
     try {
       await waitForUnreadNotification(user1Page);
