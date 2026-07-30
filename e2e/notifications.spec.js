@@ -224,6 +224,121 @@ async function waitForUnreadNotification(page) {
 test.describe("Notification SSE flows", () => {
   test.describe.configure({ timeout: 60_000 });
 
+  test("clicking a notification route scrolls to the targeted final reply and highlights it temporarily", async ({
+    browser,
+  }) => {
+    const suffix = uniqueSuffix();
+    const { ownerContext, actorContext, ownerPage, actorPage, actorName } =
+      await createTwoUserScenario(browser, suffix, "route");
+
+    try {
+      const post = await createPost(ownerPage, `route post ${suffix}`);
+      const ownerComment = await addCommentToPost(
+        ownerPage,
+        post.id,
+        `route comment ${suffix}`,
+      );
+      const ownerFinalReply = await addReplyToComment(
+        ownerPage,
+        ownerComment.id,
+        `route final reply ${suffix}`,
+      );
+
+      const finalReplyReactionResponse = await actorPage.request.post(
+        "/post-reaction",
+        {
+          data: {
+            final_reply_id: String(ownerFinalReply.id),
+            reaction_type: "like",
+          },
+        },
+      );
+      expect(finalReplyReactionResponse.status()).toBe(200);
+
+      await waitForNotification(ownerPage, {
+        type: "replies_down",
+        userName: actorName,
+        reactionType: "like",
+        replyId: ownerFinalReply.id,
+      });
+
+      await ownerPage.reload();
+
+      await ownerPage.evaluate(
+        ({ postId, commentId, replyId, actor }) => {
+          const dropdown = document.getElementById("notificationsDropdown");
+          if (!dropdown) return;
+          ensureNotificationsDropdownTitle(dropdown);
+
+          const notification = {
+            notificationType: "replies_down",
+            userName: actor,
+            reactionType: "like",
+            sourcePost: `route final reply ${replyId}`,
+            postID: postId,
+            commentID: commentId,
+            replyID: replyId,
+            onPage: `1/${postId}/${commentId}/${replyId}`,
+            createdAt: new Date().toISOString(),
+            wasRead: false,
+          };
+
+          const {
+            likeComment,
+            commentPost,
+            replyPost,
+            likePost,
+            likeReply,
+          } = createTextForNotificationType(notification);
+
+          createNotificationElement(
+            notification,
+            likeComment,
+            commentPost,
+            replyPost,
+            likePost,
+            likeReply,
+            dropdown,
+            false,
+          );
+
+          const links = dropdown.querySelectorAll(".notification-link a");
+          const injectedLink = links[links.length - 1];
+          injectedLink?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        },
+        {
+          postId: post.id,
+          commentId: ownerComment.id,
+          replyId: ownerFinalReply.id,
+          actor: actorName,
+        },
+      );
+
+      const targetReply = ownerPage.locator(
+        `[id="anchor/${ownerFinalReply.id}"]`,
+      );
+
+      await expect.poll(async () => ownerPage.url()).toContain("/forum?page=1");
+      await expect
+        .poll(async () =>
+          targetReply.evaluate((node) =>
+            node.classList.contains("highlight"),
+          ),
+        )
+        .toBe(true);
+      await expect
+        .poll(async () =>
+          targetReply.evaluate((node) =>
+            node.classList.contains("highlight"),
+          ),
+        )
+        .toBe(false);
+    } finally {
+      await ownerContext.close();
+      await actorContext.close();
+    }
+  });
+
   test("persists notification updates between two users", async ({
     browser,
   }) => {
