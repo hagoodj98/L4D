@@ -19,7 +19,6 @@
       paginationState.end = Math.min(paginationState.end, <%= paginationNumber %>);
       handlePagination(paginationState.start);
       handlePaginationIncrements(<%= paginationNumber %>, 'decrease', routeParts);
-      history.pushState(null, "", `/forum?page=${pageNumber}`);
       //ignore the first part and join
       //const anchorId = routeParts.slice(1).join("/");
       setTimeout(async () => {
@@ -189,7 +188,7 @@
   }
   let currentPage = 1;
   function scrollToForumContent(idSection) {
-      const forumAnchor = document.getElementById(`anchor/${String(idSection)}`);
+      const forumAnchor = document.getElementById(`anchor/${idSection}`);
       if (!forumAnchor) return;
       forumAnchor.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -207,7 +206,6 @@
         });
         history.pushState(null, "", `/forum?page=${page}`);
         listPosts(data.listAllContent);
-        scrollToForumContent(currentPage);
       } catch (err) {
         console.error("Error fetching paginated posts:", err);
       }
@@ -1239,10 +1237,15 @@
     const notificationSourcePostContainer = document.createElement("div");
     const notififcationSourcePost = document.createElement("p");
     notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
-    notificationLink.href = `#anchor/${notification.onPage}`;
+    let route = (notification.postID && !notification.commentID && !notification.replyID) ?
+      `${notification.onPage}/${notification.postID}` :
+      (notification.postID && notification.commentID && !notification.replyID) ?
+      `${notification.onPage}/${notification.postID}/${notification.commentID}` :
+      `${notification.onPage}/${notification.postID}/${notification.commentID}/${notification.replyID}`;
+    notificationLink.href = `#anchor/${route}`;
     notificationLink.addEventListener('click', (event) => {
       event.preventDefault();
-      handleNotifcationRoute(notification.onPage);
+      handleNotifcationRoute(route);
     });
     notificationLink.className = 'nav-link';
     notificationTime.className = 'notification-time';
@@ -1258,7 +1261,6 @@
     notififcationSourcePost.innerText = `"${partOfSourcePost.join("")}..."`;
     profilePost.appendChild(profileIcon)
     profilePost.appendChild(notificationMessage).appendChild(notificationSourcePostContainer).appendChild(notififcationSourcePost);;
-
     getNotificationsSection.appendChild(notificationListItem).appendChild(notificationLink).appendChild(profilePost)
     notificationLink.appendChild(timeAgoContainer).appendChild(notificationTime)
   }

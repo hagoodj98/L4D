@@ -214,7 +214,34 @@ export function setupPgMock() {
           normalizedSql.includes("likes_to_posts") &&
           normalizedSql.includes("other_comments_to_posts")
         ) {
-          return { rows: [] };
+          if (dbState.pendingNotificationState.length === 0) {
+            return { rows: [] };
+          }
+
+          const reactionsToPosts = dbState.pendingNotificationState.map(
+            (notification) => ({
+              user_name: notification.user_name,
+              reaction_type: notification.reaction_type,
+              created_at: notification.created_at,
+              post_id: notification.post_id,
+              post: notification.source_post ?? "mock post",
+              source_post: notification.source_post ?? "mock post",
+              notification_type: "posts_down",
+              on_page: notification.on_page ?? "1/1",
+            }),
+          );
+
+          return {
+            rows: [
+              {
+                id: 1,
+                post: "mock post",
+                notification_type: "posts_down",
+                reactions_to_posts: reactionsToPosts,
+                other_comments: [],
+              },
+            ],
+          };
         }
 
         if (

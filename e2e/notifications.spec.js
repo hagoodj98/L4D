@@ -312,9 +312,9 @@ test.describe("Notification SSE flows", () => {
         },
       );
 
-      const targetReply = ownerPage.locator(
-        `[id="anchor/${ownerFinalReply.id}"]`,
-      );
+      const targetReply = ownerPage
+        .locator(`[id="anchor/${ownerFinalReply.id}"]`)
+        .first();
 
       await expect.poll(async () => ownerPage.url()).toContain("/forum?page=1");
       await expect
