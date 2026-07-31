@@ -91,6 +91,7 @@ app.use(passport.session());
 app.use(async (req, res, next) => {
   res.locals.user = req.user ? req.user.display_name : null;
   if (req.user) {
+    //
     // Check if the user's notification state is already cached. If not, fetch it from the database and cache it.
     if (!cachedUserNotificationState.has(req.user.id)) {
       const cachedNotificationsState: NotificationState =
