@@ -31,6 +31,7 @@ export type NotificationSource = Pick<NotificationType, "id"> & {
   reactions_to_replies?: NotificationSourceType[];
   replies_to_comments?: NotificationSourceType[];
   other_comments?: NotificationSourceType[];
+  on_page?: string;
 };
 export type CacheNotificationState = Map<number, NotificationType[]>;
 export interface User {

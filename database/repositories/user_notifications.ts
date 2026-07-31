@@ -34,15 +34,24 @@ export const saveNotificationState = async (
 
 export const commentsRepliesNotifications = async (
   userId: number,
+  safeSortDirection: "ASC" | "DESC",
+  pageSize: number,
 ): Promise<NotificationSource[]> => {
   const sql = String.raw;
   const commentNotificationsQuery = sql`
     SELECT
-        id,
+        comments.id,
         'comments_down' AS notification_type,
+        page_lookup.page_number,
         COALESCE(likes_to_comments.reaction, '[]'::json) AS reactions_to_comments,
         COALESCE(other_replies_to_comments.replies, '[]'::json) AS replies_to_comments
     FROM comments
+     LEFT JOIN (
+      SELECT
+        posts.id,
+        ((ROW_NUMBER() OVER (ORDER BY created_at ${safeSortDirection}) - 1) / $2) + 1 AS page_number
+      FROM posts
+    ) page_lookup ON comments.post_id = page_lookup.id
         LEFT JOIN LATERAL (
         SELECT 
             comment_id,
@@ -55,7 +64,7 @@ export const commentsRepliesNotifications = async (
                     'comment_id', comment_id,
                     'post_id', comments.post_id,
                     'comment_post', comments.comment_post,
-                    'on_page', comments.on_page,
+                    'on_page', page_lookup.page_number,
                     'source_post', comments.comment_post
                 )
             ) AS reaction FROM comments_reactions
@@ -75,7 +84,7 @@ export const commentsRepliesNotifications = async (
                     'post_id', comments.post_id,
                     'reply_post', replies.reply_post,
                     'notification_type', 'comments_down',
-                    'on_page', replies.on_page,
+                    'on_page', page_lookup.page_number,
                     'source_post', comments.comment_post
                 )
             ) AS replies FROM replies
@@ -89,11 +98,13 @@ export const commentsRepliesNotifications = async (
         OR other_replies_to_comments.replies IS NOT NULL
     );
   `;
-  const result = await db.query(commentNotificationsQuery, [userId]);
+  const result = await db.query(commentNotificationsQuery, [userId, pageSize]);
   return result.rows;
 };
 export const postsCommentsNotifications = async (
   userId: number,
+  safeSortDirection: "ASC" | "DESC",
+  pageSize: number,
 ): Promise<NotificationSource[]> => {
   const sql = String.raw;
   const postsCommentsNotificationsQuery = sql`
@@ -101,9 +112,16 @@ export const postsCommentsNotifications = async (
     posts.id,
     posts.post,
     'posts_down' AS notification_type,
+    page_lookup.page_number,
     COALESCE(likes_to_posts.reaction_to_post, '[]'::json) AS reactions_to_posts,
     COALESCE(other_comments_to_posts.comments, '[]'::json) AS other_comments
     FROM posts
+    LEFT JOIN (
+      SELECT
+        id,
+        ((ROW_NUMBER() OVER (ORDER BY created_at ${safeSortDirection}) - 1) / $2) + 1 AS page_number
+      FROM posts
+    ) page_lookup ON posts.id = page_lookup.id
     LEFT JOIN LATERAL (
         SELECT
             post_id,
@@ -116,7 +134,7 @@ export const postsCommentsNotifications = async (
                     'post', posts.post,
                     'source_post', posts.post,
                     'notification_type', 'posts_down',
-                    'on_page', posts.on_page
+                    'on_page', page_lookup.page_number
                 )
             ) AS reaction_to_post FROM posts_reactions
             LEFT JOIN users ON posts_reactions.user_id = users.id
@@ -134,7 +152,7 @@ export const postsCommentsNotifications = async (
                     'post_id', post_id,
                     'comment_id', comments.id,
                     'source_post', posts.post,
-                    'on_page', comments.on_page,
+                    'on_page', page_lookup.page_number,
                     'notification_type', 'posts_down'
                 )
             ) AS comments FROM comments
@@ -147,11 +165,16 @@ export const postsCommentsNotifications = async (
         other_comments_to_posts.comments IS NOT NULL
     );
 `;
-  const result = await db.query(postsCommentsNotificationsQuery, [userId]);
+  const result = await db.query(postsCommentsNotificationsQuery, [
+    userId,
+    pageSize,
+  ]);
   return result.rows;
 };
 export const repliesNotifications = async (
   userId: number,
+  safeSortDirection: "ASC" | "DESC",
+  pageSize: number,
 ): Promise<NotificationSource[]> => {
   const sql = String.raw;
   const allRepliesNotificationsDownQuery = sql`
@@ -160,8 +183,16 @@ export const repliesNotifications = async (
     reply_post,
     'replies_down' AS notification_type,
     user_id,
+    page_lookup.page_number,
     COALESCE(likes_to_replies.reactions_to_replies, '[]'::json) AS reactions_to_replies
 FROM replies
+LEFT JOIN (
+      SELECT
+        id,
+        ((ROW_NUMBER() OVER (ORDER BY created_at ${safeSortDirection}) - 1) / $2) + 1 AS page_number
+      FROM replies
+    ) page_lookup ON replies.id = page_lookup.id
+
 LEFT JOIN LATERAL (
     SELECT
         reply_id,
@@ -173,7 +204,7 @@ LEFT JOIN LATERAL (
                 'reply_id', replies_reactions.reply_id,
                 'source_post', replies.reply_post,
                 'reply_post', replies.reply_post,
-                'on_page', replies.on_page,
+                'on_page', page_lookup.page_number,
                 'notification_type', 'replies_down'
             )
         ) AS reactions_to_replies 
@@ -186,17 +217,20 @@ WHERE replies.user_id = $1 AND (
     likes_to_replies.reactions_to_replies IS NOT NULL
 );`;
 
-  const result = await db.query(allRepliesNotificationsDownQuery, [userId]);
+  const result = await db.query(allRepliesNotificationsDownQuery, [
+    userId,
+    pageSize,
+  ]);
   return result.rows;
 };
 
 export const fetchAllNotifications = async (userId: number) => {
   const postsNotificationsSource: NotificationSource[] =
-    await postsCommentsNotifications(userId);
+    await postsCommentsNotifications(userId, "DESC", 4);
   const commentsNotificationSource: NotificationSource[] =
-    await commentsRepliesNotifications(userId);
+    await commentsRepliesNotifications(userId, "DESC", 4);
   const repliesNotificationsSource: NotificationSource[] =
-    await repliesNotifications(userId);
+    await repliesNotifications(userId, "DESC", 4);
   return {
     postsNotificationsSource,
     commentsNotificationSource,
