@@ -49,6 +49,7 @@ export const getAllForumData = async (
           json_build_object(
             'id', comments.id,
             'comment_post', comments.comment_post,
+            'post_id', comments.post_id,
             'created_at', comments.created_at,
             'user_id', comments.user_id,
             'display_name', users.display_name,
@@ -85,6 +86,8 @@ export const getAllForumData = async (
             'id', replies.id,
             'user_id', replies.user_id,
             'reply_post', replies.reply_post,
+            'comment_id', replies.comment_id,
+            'post_id', comments.post_id,
             'created_at', replies.created_at,
             'display_name', users.display_name,
             'current_user_reaction', replies_reactions.reaction_type,

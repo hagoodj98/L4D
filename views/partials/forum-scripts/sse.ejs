@@ -1,0 +1,169 @@
+<script>
+  const notificationCountElement = document.getElementById(
+    "notificationCountText",
+  );
+  const notificationCountContainer = document.getElementById(
+    "notificationCountContainer",
+  );
+  if (typeof EventSource !== undefined) {
+    const source = new EventSource("/update-notifications");
+    source.onmessage = (e) => {
+      const lengthOfNotifications = JSON.parse(e.data).payload.count;
+      const notifications = JSON.parse(e.data).payload.notifications ?? [];
+      if (
+        notificationCountContainer.classList.contains(
+          "notification-count-container-hidden",
+        )
+      ) {
+        notificationCountContainer.classList.remove(
+          "notification-count-container-hidden",
+        );
+      }
+      const notificationsNotRead = notifications.filter(
+        (item) => item.wasRead === false,
+      );
+      const notificationRead = notifications.filter(
+        (item) => item.wasRead === true,
+      );
+      if (notifications.length > 0) {
+        //clear the notifications section before replacing them
+        const getNotificationsSection = document.getElementById(
+          "notificationsDropdown",
+        );
+        getNotificationsSection.replaceChildren(
+          getNotificationsSection.firstChild,
+        );
+        ensureNotificationsDropdownTitle(getNotificationsSection);
+        if (notificationsNotRead.length !== 0) {
+          const notificationCountContainer = document.getElementById(
+            "notificationCountContainer",
+          );
+          const notificationCountElement = document.getElementById(
+            "notificationCountText",
+          );
+          notificationCountElement.textContent = notificationsNotRead.length;
+          notificationCountContainer.className = "notification-count-container";
+          notificationsNotRead.forEach((item) => {
+            const getNotificationsSection = document.getElementById(
+              "notificationsDropdown",
+            );
+            const { likeComment, commentPost, replyPost, likePost, likeReply } =
+              createTextForNotificationType(item);
+            createNotificationElement(
+              item,
+              likeComment,
+              commentPost,
+              replyPost,
+              likePost,
+              likeReply,
+              getNotificationsSection,
+              false,
+            );
+          });
+        }
+        if (notificationRead.length !== 0) {
+          //We don't need to show the notification count for read notifications
+          notificationRead.forEach((item) => {
+            const getNotificationsSection = document.getElementById(
+              "notificationsDropdown",
+            );
+            const { likeComment, commentPost, replyPost, likePost, likeReply } =
+              createTextForNotificationType(item);
+            createNotificationElement(
+              item,
+              likeComment,
+              commentPost,
+              replyPost,
+              likePost,
+              likeReply,
+              getNotificationsSection,
+              true,
+            );
+          });
+        }
+      }
+      console.log("Received SSE message:", lengthOfNotifications);
+    };
+  }
+  function handleReactionIntent(
+    reactionIntent,
+    reactionButton,
+    postType,
+    postId,
+    commentId,
+    replyId,
+  ) {
+    const id = postId ?? commentId ?? replyId;
+    const likeButton = document.getElementById(`${postType}LikeButton-${id}`);
+    const dislikeButton = document.getElementById(
+      `${postType}DislikeButton-${id}`,
+    );
+    const likeCount = document.getElementById(`${postType}LikeCount-${id}`);
+    const dislikeCount = document.getElementById(
+      `${postType}DislikeCount-${id}`,
+    );
+
+    if (reactionIntent === "add") {
+      // This means a like was added to a final reply
+      const currentLikeCount = Number(
+        reactionButton === "likeButton"
+          ? likeCount.textContent
+          : dislikeCount.textContent,
+      );
+      const newLikeCount = currentLikeCount + 1;
+      reactionButton === "likeButton"
+        ? (likeCount.textContent = newLikeCount)
+        : (dislikeCount.textContent = newLikeCount);
+      reactionButton === "likeButton"
+        ? likeButton.classList.add("reaction-color")
+        : dislikeButton.classList.add("reaction-color");
+      return;
+    } else if (reactionIntent === "remove") {
+      // This means a like was removed from a final reply
+      const currentLikeCount = Number(
+        reactionButton === "likeButton"
+          ? likeCount.textContent
+          : dislikeCount.textContent,
+      );
+      const newLikeCount = currentLikeCount - 1;
+      reactionButton === "likeButton"
+        ? (likeCount.textContent = newLikeCount)
+        : (dislikeCount.textContent = newLikeCount);
+      reactionButton === "likeButton"
+        ? likeButton.classList.remove("reaction-color")
+        : dislikeButton.classList.remove("reaction-color");
+      return;
+    } else if (reactionIntent === "update") {
+      // This means the user switched from dislike to like on a final reply
+      const currentOppositeReactionCount = Number(
+        reactionButton === "likeButton"
+          ? dislikeCount.textContent
+          : likeCount.textContent,
+      );
+      const newOppositeReactionCount = currentOppositeReactionCount - 1;
+      reactionButton === "likeButton"
+        ? (dislikeCount.textContent = newOppositeReactionCount)
+        : (likeCount.textContent = newOppositeReactionCount);
+      reactionButton === "likeButton"
+        ? dislikeButton.classList.remove("reaction-color")
+        : likeButton.classList.remove("reaction-color");
+      const currentLikeCount = Number(
+        reactionButton === "likeButton"
+          ? likeCount.textContent
+          : dislikeCount.textContent,
+      );
+      const newLikeCount = currentLikeCount + 1;
+      reactionButton === "likeButton"
+        ? (likeCount.textContent = newLikeCount)
+        : (dislikeCount.textContent = newLikeCount);
+      reactionButton === "likeButton"
+        ? likeButton.classList.add("reaction-color")
+        : dislikeButton.classList.add("reaction-color");
+      return;
+    }
+    const currentlikeCount = Number(likeCount.textContent);
+    const newCount = currentlikeCount + 1;
+    likeCount.textContent = newCount;
+    likeButton.classList.add("reaction-color");
+  }
+</script>

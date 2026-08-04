@@ -138,4 +138,5 @@
 </div>
 
 <%- include("partials/footer.ejs") %>
-<%- include("partials/forum-scripts.ejs", { listAllContent, user: currentUser, paginationNumber, page }) %>
+<%- include("partials/forum-scripts/forum.ejs", { listAllContent, user: currentUser, paginationNumber, page }) %>
+<%- include("partials/forum-scripts/sse.ejs", { user: currentUser }) %>

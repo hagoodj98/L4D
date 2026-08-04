@@ -1,0 +1,1000 @@
+<script>
+    document.querySelectorAll(".unstyledPaginationButtons").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+
+      });
+    });
+    // Function to format the time
+    function formatTime(createTime){
+      const created = new Date(createTime);
+      const day = created.getDate().toString().padStart(2, "0");
+      const month = created.toLocaleString("default", { month: "short" }); // e.g. 'Mar'
+      const year = created.getFullYear();
+      const timeZone = created
+        .toLocaleTimeString("default", { timeZoneName: "short" })
+        .split(" ")[2]; // e.g. 'PST'
+      const time = created.toLocaleTimeString("default", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      return { day, month, year, time, timeZone };
+    }
+
+    function createForumContent(listAllContents) {
+      let content = "";
+      for (let p of listAllContents) {
+        content += createCardPostTypeContainer(p, null, null);
+      }
+      return content;
+    }
+    function createCardPostTypeContainer(p, c, r) {
+
+      const { day, month, year, time, timeZone } = formatTime(p ? p.created_at : c ? c.created_at : r.created_at);
+
+      return /*html*/`
+
+        <div id="${c ? 'comments-' + c.post_id : r ? 'replies-' + r.id : ''}" style="${(c || r) ? 'display: none' : ''}">
+          <div class="${p ? 'forum-post-card' : c ? 'forum-comment-card' : 'forum-reply-card'}" id="${p ? 'anchor/${p.id}': c ? 'anchor/${c.id}' : 'anchor/${r.id}'}" style="border-bottom: 1px solid white; ${p ? '' : (c || r) ?? 'margin-left: 20px;'}">
+            <div>
+              <p style="color: white" class="forum-content">
+                  ${(p && p.post) ?? (c && c.comment_post) ?? (r && r.reply_post)}
+              </p>
+              <p style="color: white" class="forum-meta">
+                Posted By:
+                <span style="color: #6e9731">  ${(p && p.display_name) ?? (c && c.display_name) ?? (r && r.display_name)} </span>
+              </p>
+              <p style="color: white" class="forum-date">
+                  ${day}  ${month}  ${year}  at  ${time}  ${timeZone}
+              </p>
+            </div>
+            <div
+              style="display: flex; align-items: center"
+              class="forum-post-actions"
+            >
+              <form onsubmit="handleReaction('like', 'post', ${(p && p.id) ?? (c && c.id) ?? (r && r.id)}); return false;">
+                <input type="hidden" name="post_id" value="${(p && p.id) ?? (c && c.id) ?? (r && r.id)}" />
+                <input type="hidden" name="reaction_type" value="like" />
+                <button
+                  id="postLikeButton-${(p && p.id) ?? (c && c.id) ?? (r && r.id)}"
+                  class="postButton  ${((p && p.current_user_reaction === 'like') ? 'reaction-color' : (c && c.current_user_reaction === 'like') ? 'reaction-color' : (r && r.current_user_reaction === 'like') ? 'reaction-color' : '')} "
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M13.12 2.06L7.58 7.6c-.37.37-.58.88-.58 1.41V19c0 1.1.9 2 2 2h9c.8 0 1.52-.48 1.84-1.21l3.26-7.61C23.94 10.2 22.49 8 20.34 8h-5.65l.95-4.58c.1-.5-.05-1.01-.41-1.37c-.59-.58-1.53-.58-2.11.01M3 21c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2s-2 .9-2 2v8c0 1.1.9 2 2 2"
+                    ></path>
+                  </svg>
+                </button>
+              </form>
+              <span id="postLikeCount-${(p && p.id) ?? (c && c.id) ?? (r && r.id)}" style="color: white"> ${(p && p.likes) ?? (c && c.likes) ?? (r && r.likes)} </span>
+              <form onsubmit="handleReaction('dislike', 'post', ${(p && p.id) ?? (c && c.id) ?? (r && r.id)}); return false;">
+                <input type="hidden" name="post_id" value="${(p && p.id) ?? (c && c.id) ?? (r && r.id)}" />
+                <input type="hidden" name="reaction_type" value="dislike" />
+                <button
+                  id="postDislikeButton-${(p && p.id) ?? (c && c.id) ?? (r && r.id)}"
+                  class="postButton  ${((p && p.current_user_reaction === 'dislike') ? 'reaction-color' : (c && c.current_user_reaction === 'dislike') ? 'reaction-color' : (r && r.current_user_reaction === 'dislike') ? 'reaction-color' : '')} "
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M3.616 15q-.627 0-1.122-.494T2 13.385v-1.231q0-.137.028-.298q.028-.162.084-.298l2.73-6.473q.206-.462.693-.773Q6.02 4 6.538 4h8.192q.671 0 1.143.472t.472 1.143v8.714q0 .323-.133.628t-.351.522l-5.156 5.112q-.221.215-.493.27t-.517-.059t-.35-.373t-.04-.579l1.03-4.85zM19.385 4q.67 0 1.143.472q.472.472.472 1.144v7.769q0 .67-.472 1.143q-.472.472-1.143.472h-.423q-.671 0-1.144-.472t-.472-1.144V5.597q0-.671.472-1.133Q18.291 4 18.962 4z"
+                    ></path>
+                  </svg>
+                </button>
+              </form>
+              <span id="postDislikeCount-${(p && p.id) ?? (c && c.id) ?? (r && r.id)}" style="color: white"> ${(p && p.dislikes) ?? (c && c.dislikes) ?? (r && r.dislikes)} </span>
+              <button
+                class="reply roboto-condensed"
+                onclick="toggleReplyBox(${(p && p.id) ?? (c && c.id) ?? (r && r.id)}, true, '${p ? 'comment' : c ? 'reply' : ''}')"
+              >
+                Comment
+              </button>
+            </div>
+            <button
+              onclick="showAllReplies(${(p && p.id) ?? (c && c.id)}, true, false, false, 'comment')"
+              id="postcommentButton-${(p && p.id) ?? (c && c.id) ?? (r && r.id)}"
+              class="comment postButton  ${((p && p.current_user_reaction === 'comment') ? 'reaction-color' : (c && c.current_user_reaction === 'comment') ? 'reaction-color' : (r && r.current_user_reaction === 'comment') ? 'reaction-color' : '')} "
+            >
+              <span  style="color: white"> <span id="commentCount-for-post-${(p && p.id) ?? (c && c.id) ?? (r && r.id)}">${(p && p.comment_count) ?? (c && c.comment_count) ?? (r && r.comment_count)}</span> comments </span>
+            </button>
+              ${p && p.comments && p.comments.length > 0 && p.comments.map(comment => createCardPostTypeContainer(null, comment, null, day, month, year, time, timeZone)).join('')}
+          </div>
+          <div
+            id="create-comment-for-post-${(p && p.id) ?? (c && c.id) ?? (r && r.id)}"
+            style="display: none"
+            class="forum-reply-editor-wrap"
+          >
+            <form onsubmit="handleCommentSubmit(${(p && p.id) ?? (c && c.id) ?? (r && r.id)}, '${(p && p.display_name) ?? (c && c.display_name) ?? (r && r.display_name)}'); return false;">
+              <input type="hidden" name="post_id" value="${(p && p.id) ?? (c && c.id) ?? (r && r.id)}" />
+              <div
+                style="display: flex; flex-direction: column"
+                class="forum-reply-editor"
+              >
+                <textarea
+                  style="
+                    background-color: #0d0d0d;
+                    color: white;
+                    padding: 10px;
+                  "
+                  class="forum-reply-input"
+                  name="reply"
+                  placeholder="reply to @${(p && p.display_name) ?? (c && c.display_name) ?? (r && r.display_name)}..."
+                  required
+                ></textarea>
+
+                <button type="submit">Submit</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      `;
+    }
+
+    function handleNotifcationRoute(route){
+      const routeParts = route.split("/");
+      const pageNumber = routeParts[0];
+      const postID = routeParts[1];
+      const commentID = routeParts[2];
+      const replyID = routeParts[3];
+      if (pageNumber) {
+        paginationState.start = Number(pageNumber);
+        paginationState.end = Number(pageNumber) + 9;
+        paginationState.buttonsHidden = Number(pageNumber) - 1;
+        // Ensure the end does not exceed the total number of pages
+        paginationState.end = Math.min(paginationState.end, <%= paginationNumber %>);
+        handlePagination(paginationState.start);
+        handlePaginationIncrements(<%= paginationNumber %>, 'decrease', routeParts);
+        //ignore the first part and join
+        //const anchorId = routeParts.slice(1).join("/");
+        setTimeout(async () => {
+          if (postID && !commentID && !replyID) {
+            scrollToForumContent(postID);
+            setTimeout(() => {
+              const itemToHighlight = document.getElementById(`anchor/${postID}`);
+              if (itemToHighlight) {
+                itemToHighlight.classList.remove("forum-post-card"); // Remove the existing class to reset any previous styles
+                itemToHighlight.classList.add("highlight");
+                setTimeout(() => {
+                  itemToHighlight.classList.remove("highlight");
+                  itemToHighlight.classList.add("forum-post-card"); // Restore the original class
+                }, 1500); // Adjust the duration of the highlight effect as needed
+              }
+            }, 500); // Adjust the delay as needed
+          }
+          if (postID && commentID && !replyID) {
+            scrollToForumContent(postID);
+            setTimeout(() => {
+              showAllReplies(postID, true, false, false, 'comment');
+            }, 500); // Adjust the delay as needed
+            scrollToForumContent(commentID);
+            setTimeout(() => {
+              const itemToHighlight = document.getElementById(`anchor/${commentID}`);
+              if (itemToHighlight) {
+                itemToHighlight.classList.remove("forum-reply-card"); // Remove the existing class to reset any previous styles
+                itemToHighlight.classList.add("highlight");
+                setTimeout(() => {
+                  itemToHighlight.classList.remove("highlight");
+                  itemToHighlight.classList.add("forum-reply-card"); // Restore the original class
+                }, 1500); // Adjust the duration of the highlight effect as needed
+              }
+            }, 1500); // Adjust the delay as needed
+          }
+          if (postID && commentID && replyID) {
+            scrollToForumContent(`${postID}`);
+            setTimeout(() => {
+              showAllReplies(postID, true, false, false, 'comment');
+            }, 500); // Adjust the delay as needed
+            scrollToForumContent(commentID);
+            setTimeout(() => {
+              showAllReplies(commentID, false, true, false, 'reply');
+            }, 1500); // Adjust the delay as needed
+            scrollToForumContent(`${commentID}`);
+            setTimeout(() => {
+              scrollToForumContent(`${replyID}`);
+              const itemToHighlight = document.getElementById(`anchor/${replyID}`);
+              if (itemToHighlight) {
+                itemToHighlight.classList.remove("forum-reply-card-finalreply"); // Remove the existing class to reset any previous styles
+                itemToHighlight.classList.add("highlight");
+                setTimeout(() => {
+                  itemToHighlight.classList.remove("highlight");
+                  itemToHighlight.classList.add("forum-reply-card-finalreply"); // Restore the original class
+                }, 1500); // Adjust the duration of the highlight effect as needed
+              }
+            }, 2000); // Adjust the delay as needed
+          }
+        }, 500); // Adjust the delay as needed
+
+      }
+
+    }
+    function createPageButtons(i,hidden = false) {
+      return /*html*/`
+        <li class="page-item" >
+          <button
+            class="page-link unstyledPaginationButtons"
+            type="button"
+            style="display: ${hidden ? 'none' : 'inline-block'};"
+            onclick="handlePagination(${i})"
+          >
+          ${i}
+          </button>
+        </li>
+      `;
+      }
+     let paginationState = {
+      start: 1,
+      end: 10,
+      buttonsHidden: 0
+     };
+     function initializePaginationState(page) {
+      paginationState.start = page;
+      paginationState.end = page + 9;
+      paginationState.buttonsHidden = page - 1;
+     }
+
+    async function handlePaginationIncrements(paginationNumber, direction, routePath = null) {
+
+      if (direction === 'decrease') {
+        if (paginationState.start <= 1) return; // Prevent going below the first page
+      } else if (direction === 'increase') {
+        if (paginationState.end >= paginationNumber) return; // Prevent going beyond the last page
+      }
+      const paginationControls = document.getElementById("paginationControls");
+      let currentButtons = document.createElement("div");
+      let pastButtons = document.createElement("div");
+      let futureButtons = document.createElement("div");
+
+      //replace the buttons with the new range of buttons and their new ids so we can keep track of them
+      for (let i = paginationState.start; i <= paginationState.end; i++) {
+        if (i > paginationNumber) break; // Stop if we exceed the total number of pages
+
+        const newButtonHTML = createPageButtons(routePath ? i : (direction === 'increase' ? i + 1 : i - 1));
+        currentButtons.innerHTML += newButtonHTML.trim();
+      }
+
+        if (direction === 'decrease') {
+          routePath ? null : paginationState.buttonsHidden--;
+          routePath ? null : paginationState.start--;
+          routePath ? null : paginationState.end--;
+          handlePagination(paginationState.start);
+          //update the url
+          history.pushState(null, "", `/forum?page=${paginationState.start}`);
+        } else if (direction === 'increase') {
+          paginationState.buttonsHidden++;
+          paginationState.start++;
+          paginationState.end++;
+          handlePagination(paginationState.start);
+          history.pushState(null, "", `/forum?page=${paginationState.start}`);
+        }
+      document.getElementById("paginationDecrease").value = paginationState.start;
+      document.getElementById("paginationIncrease").value = paginationState.end;
+      const newListItem = document.createElement('li');
+      const newButton = document.createElement('button');
+      newListItem.className = 'page-item';
+      newButton.type = 'button';
+      newButton.setAttribute('aria-label', 'Previous');
+      newButton.className = 'page-link';
+      newButton.value = paginationState.start;
+      //add event listener to the new button to handle the click event
+      newButton.addEventListener('click', function() {
+        handlePaginationIncrements(paginationNumber, 'decrease');
+        return false;
+      });
+      newButton.innerHTML = '<span aria-hidden="true">&laquo;</span>';
+      newButton.id= 'paginationDecrease'
+      newListItem.appendChild(newButton);
+      const newListItemNext = document.createElement('li');
+      const newButtonNext = document.createElement('button');
+      newListItemNext.className = 'page-item';
+      newButtonNext.type = 'button';
+      newButtonNext.setAttribute('aria-label', 'Next');
+      newButtonNext.className = 'page-link';
+      newButtonNext.value = paginationState.end;
+      newButtonNext.innerHTML = '<span aria-hidden="true">&raquo;</span>';
+      newButtonNext.id= 'paginationIncrease'
+      newButtonNext.addEventListener('click', function() {
+        handlePaginationIncrements(paginationNumber, 'increase');
+        return false;
+      });
+      newListItemNext.appendChild(newButtonNext);
+      for (let i = 1; i <= paginationState.buttonsHidden; i++) {
+        const oldButton = document.getElementById("paginationButton" + i);
+        const hiddenButtonHTML = createPageButtons(i, true);
+        pastButtons.innerHTML += hiddenButtonHTML.trim();
+      }
+      for (let i = Math.min(paginationState.end + 1, paginationNumber); i <= paginationNumber - (Math.min(paginationState.end + 1, paginationNumber)); i++) {
+        const future = document.getElementById("paginationButton" + i);
+        const hiddenButtonHTML = createPageButtons(i, true);
+        futureButtons.innerHTML += hiddenButtonHTML.trim();
+      }
+      // Remove all buttons except the first and last
+      // Update the pagination controls with the new buttons with new initialized page numbers
+      paginationControls.replaceChildren(newListItem, ...pastButtons.children, ...currentButtons.children, ...futureButtons.children, newListItemNext);
+    }
+    let currentPage = 1;
+    function scrollToForumContent(idSection) {
+        const forumAnchor = document.getElementById(`anchor/${idSection}`);
+        if (!forumAnchor) return;
+        forumAnchor.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      }
+
+      async function handlePagination(page) {
+        const offset = (Number(page) - 1) * 4; // Assuming 4 posts per page
+        currentPage = Number(page);
+        try {
+          const response = await fetch(`/forum-pagination?page=${page}&offset=${offset}`);
+          const data = await response.json();
+          // Update the active page button styling
+          document.querySelectorAll(".unstyledPaginationButtons").forEach((button) => {
+            button.classList.toggle("selected",  button.textContent.trim() === String(page));
+          });
+          history.pushState(null, "", `/forum?page=${page}`);
+          listPosts(data.listAllContent);
+        } catch (err) {
+          console.error("Error fetching paginated posts:", err);
+        }
+      }
+      async function handlePostSubmit(username) {
+        const textarea = document.querySelector(".forum-compose-input");
+        const postContent = textarea.value.trim();
+        if (!postContent) return;
+
+        try {
+          const response = await fetch("http://localhost:3000/add-post", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ newPost: postContent }),
+          });
+          const data = await response.json();
+          if (data.success) {
+            textarea.value = "";
+            const newPost = data.post;
+            // Prepend the new post to the list of posts
+            const postsContainer = document.querySelector("#demo");
+            const created = new Date(newPost.created_at);
+            const day = created.getDate().toString().padStart(2, "0");
+            const month = created.toLocaleString("default", { month: "short" }); // e.g. 'Mar'
+            const year = created.getFullYear();
+            const timeZone = created
+              .toLocaleTimeString("default", { timeZoneName: "short" })
+              .split(" ")[2]; // e.g. 'PST'
+            const time = created.toLocaleTimeString("default", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            const newHTML = /*html*/`<div class='new-post forum-post-card' style="border-bottom: 1px solid white">
+                <p style="color: white" class="forum-post-content">
+                    ${newPost.post}
+                </p>
+                <p style="color: white" class="forum-post-meta">
+                  Posted By:
+                  <span style="color: #6e9731">  ${username} </span>
+                </p>
+                <p style="color: white" class="forum-post-date">
+                    ${day}  ${month}  ${year}  at  ${time}  ${timeZone}
+                </p>
+                <div
+                  style="display: flex; align-items: center"
+                  class="forum-post-actions"
+                >
+                  <form onsubmit="handleReaction('like', 'post${newPost.id}'); return false;">
+                    <input type="hidden" name="post_id" value=" ${newPost.id} " />
+                    <input type="hidden" name="reaction_type" value="like" />
+                    <button
+                      id="postLikeButton-${newPost.id}"
+                      class="postButton"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          fill="currentColor"
+                          d="M13.12 2.06L7.58 7.6c-.37.37-.58.88-.58 1.41V19c0 1.1.9 2 2 2h9c.8 0 1.52-.48 1.84-1.21l3.26-7.61C23.94 10.2 22.49 8 20.34 8h-5.65l.95-4.58c.1-.5-.05-1.01-.41-1.37c-.59-.58-1.53-.58-2.11.01M3 21c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2s-2 .9-2 2v8c0 1.1.9 2 2 2"
+                        ></path>
+                      </svg>
+                    </button>
+                  <span id="postLikeCount-${newPost.id}" style="color: white"> 0 </span>
+                  <form onsubmit="handleReaction('dislike', 'post${newPost.id}'); return false;">
+                    <input type="hidden" name="post_id" value=" ${newPost.id} " />
+                    <input type="hidden" name="reaction_type" value="dislike" />
+                    <button
+                      id="postDislikeButton-${newPost.id}"
+                      class="postButton"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          fill="currentColor"
+                          d="M3.616 15q-.627 0-1.122-.494T2 13.385v-1.231q0-.137.028-.298q.028-.162.084-.298l2.73-6.473q.206-.462.693-.773Q6.02 4 6.538 4h8.192q.671 0 1.143.472t.472 1.143v8.714q0 .323-.133.628t-.351.522l-5.156 5.112q-.221.215-.493.27t-.517-.059t-.35-.373t-.04-.579l1.03-4.85zM19.385 4q.67 0 1.143.472q.472.472.472 1.144v7.769q0 .67-.472 1.143q-.472.472-1.143.472h-.423q-.671 0-1.144-.472t-.472-1.144V5.597q0-.671.472-1.133Q18.291 4 18.962 4z"
+                        ></path>
+                      </svg>
+                    </button>
+                  <span id="postDislikeCount-${newPost.id}" style="color: white"> 0 </span>
+                  </form>
+                  <button
+                    class="reply roboto-condensed"
+                    onclick="toggleReplyBox(${newPost.id})"
+                  >
+                    Reply
+                  </button>
+                </div>
+                <button
+                    onclick="showAllReplies(${newPost.id}, '${username}')"
+                    id="showAllComments-for-post-${newPost.id}"
+                    class="comment postButton"
+                  >
+                  <span  style="color: white"> <span id="commentCount-for-post-${newPost.id}">0</span> replies </span>
+                  </button>
+                <div
+                  id="create-comment-for-post-${newPost.id}"
+                  style="display: none"
+                  class="forum-reply-editor-wrap"
+                >
+                  <form onsubmit="handleReplySubmit(${newPost.id}, null, '${username}'); return false;">
+                    <input type="hidden" name="post_id" value=" ${newPost.id} " />
+                    <div
+                      style="display: flex; flex-direction: column"
+                      class="forum-reply-editor"
+                    >
+                      <textarea
+                        rows="9"
+                        style="
+                          background-color: #0d0d0d;
+                          color: white;
+                          padding: 10px;
+                        "
+                        class="forum-reply-input"
+                        name="reply"
+                        placeholder="Write a reply..."
+                        required
+                      ></textarea>
+
+                      <button type="submit">Submit</button>
+                    </div>
+                  </form>
+                </div>
+                <div id="create-comment-for-post-${newPost.id}" style="display: none"></div>
+              </div>`;
+            postsContainer.insertAdjacentHTML('afterbegin', newHTML);
+            const insertedPost = postsContainer.querySelector(".new-post");
+            if (insertedPost) {
+              requestAnimationFrame(() => {
+                insertedPost.classList.add("fade-bg");
+              });
+            }
+            }
+      } catch (err) {
+          console.error("Error submitting post:", err);
+        }
+      }
+      function toggleReplyBox(id, replying = false, postType = null) {
+
+          if (replying) {
+            if(postType === 'comment') {
+              const replySection = document.getElementById(`create-comment-for-post-${id}`);
+              replySection.style.display = replySection.style.display === "none" ? "block" : "none";
+              return;
+            }
+            const finalReplyBox = document.getElementById(`create-reply-for-comment-${id}`);
+            if (finalReplyBox.style.display === "block") {
+              finalReplyBox.style.display = "none";
+              return;
+            } else {
+              finalReplyBox.style.display = "block";
+              return;
+            }
+          }
+          const replyBox = document.getElementById(`create-comment-for-post-${id}`);
+          replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
+      }
+      async function handleRedirect(response) {
+         const redirect = response.redirected ? { url: response.url } : null;
+        if (redirect) {
+          window.location.href = redirect.url;
+          return;
+        }
+      }
+      function formatTime(dateString){
+        const date = new Date(dateString);
+        const day = date.getDate();
+        const month = date.getMonth() + 1;
+        const year = date.getFullYear();
+        const time = date.toLocaleTimeString();
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        return { day, month, year, time, timeZone };
+      }
+      function showAllReplies(id, isCommentSection = false, isReplySection = false, replied = false, postType = null) {
+        if (replied) {
+          if (isReplySection) {
+            const finalReplySection = document.getElementById(`replies-${id}`);
+            if (finalReplySection.style.display === "block") {
+              finalReplySection.style.display = "none";
+              return;
+            } else {
+              finalReplySection.style.display = "block";
+              return;
+            }
+          } else if (isCommentSection) {
+            const replySection = document.getElementById(`comments-${id}`);
+            replySection.style.display = replySection.style.display === "none" ? "block" : "none";
+          }
+            else {
+              const replySection = document.getElementById(`comments-${id}`);
+              replySection.style.display = replySection.style.display === "none" ? "block" : "none";
+            }
+          }
+          else {
+            if (postType === "reply") {
+                 const finalReplySection = document.getElementById(`replies-${id}`);
+                finalReplySection.style.display = finalReplySection.style.display === "none" ? "block" : "none";
+            } else if (postType === "comment") {
+            const commentSection = document.getElementById(`comments-${id}`);
+            commentSection.style.display = commentSection.style.display === "none" ? "block" : "none";
+            }
+          }
+      }
+        async function handleReplySubmit(commentID, userName){
+          const replyInput = document.querySelector(`#create-reply-for-comment-${commentID} textarea`);
+          const replySection = document.getElementById(`replies-${commentID}`);
+          const replyCountElement = document.getElementById(`replyCount-for-comment-${commentID}`);
+
+          try {
+            if (!replyInput || !replyInput.value.trim()) return;
+
+            const replyValue = replyInput.value.trim();
+            const response = await fetch("http://localhost:3000/add-reply", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ comment_id: commentID, reply_post: replyValue }),
+            });
+
+            await handleRedirect(response);
+            const data = await response.json();
+            if (!data.success || !data.reply) return;
+
+            const newReply = data.reply;
+            const { day, month, year, time, timeZone } = formatTime(newReply.created_at);
+
+            if (replySection && replySection.style.display !== "block") {
+              replySection.style.display = "block";
+            }
+            if (replySection) {
+              replySection.insertAdjacentHTML('afterbegin', createReplyContainer(newReply, "<%=user%>", day, month, year, time, timeZone, true));
+              const insertedReply = replySection.querySelector(".new-sub-reply");
+              if (insertedReply) {
+                requestAnimationFrame(() => {
+                  insertedReply.classList.add("fade-bg");
+                });
+              }
+            }
+
+            if (replyCountElement) {
+              const newReplyCount = Number(replyCountElement.textContent || "0") + 1;
+              replyCountElement.textContent = String(newReplyCount);
+            }
+
+            replyInput.value = "";
+          } catch (error) {
+            console.error("Error submitting nested reply:", error);
+          }
+        }
+
+        async function handleCommentSubmit(postId, username) {
+          const commentInput = document.querySelector(`#create-comment-for-post-${postId} textarea`);
+          const commentsSection = document.getElementById(`comments-${postId}`);
+          const commentCountElement = document.getElementById(`commentCount-for-post-${postId}`);
+
+          try {
+            if (!commentInput || !commentInput.value.trim()) return;
+
+            const commentValue = commentInput.value.trim();
+            const response = await fetch("http://localhost:3000/add-comment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ post_id: postId, comment_post: commentValue, currentPage }),
+            });
+
+            await handleRedirect(response);
+            const data = await response.json();
+            if (!data.success || !data.comment) return;
+
+            const newComment = data.comment;
+            const { day, month, year, time, timeZone } = formatTime(newComment.created_at);
+
+            if (commentsSection && commentsSection.style.display !== "block") {
+              commentsSection.style.display = "block";
+            }
+
+            const newHTML = /*html*/`
+                  <div
+                    class="new-reply p-2 forum-reply-card"
+                    style="border-top: 1px solid white; margin-left: 20px"
+                  >
+                    <p style="color: white"> ${newComment.comment_post} </p>
+                    <p style="color: white">
+                      Posted By:
+                      <span style="color: #6e9731">  <%= user %> </span>
+                    </p>
+                    <p style="color: white" class="forum-post-date">
+                      ${day}  ${month}  ${year}  at  ${time}  ${timeZone}
+                    </p>
+                  </div>
+                  <div
+                    class="forum-reply-actions"
+                    style=" margin-left: 20px"
+                  >
+                  <div style="display: flex; align-items: center">
+                    <form onsubmit="handleReaction('like', 'comment', ${newComment.id}); return false;">
+                      <input
+                        type="hidden"
+                        name="comment_post_id"
+                        value="${newComment.id}"
+                      />
+                      <input type="hidden" name="reaction_type" value="like" />
+                      <button
+                        id="commentLikeButton-${newComment.id}"
+                        class="postButton  ${newComment.current_user_reaction === "like" ? "reaction-color" : ""} "
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            fill="currentColor"
+                            d="M20.385 9q.627 0 1.12.494T22 10.616v1.23q0 .137-.028.298q-.028.162-.083.298l-2.731 6.474q-.206.461-.693.773q-.486.311-1.003.311H9.269q-.671 0-1.143-.472t-.472-1.144V9.672q0-.323.133-.628t.351-.522l5.156-5.112q.222-.215.494-.27t.516.059t.35.373q.108.258.04.579L13.665 9zM4.615 20q-.67 0-1.143-.472Q3 19.056 3 18.385v-7.77q0-.67.472-1.143Q3.944 9 4.616 9h.423q.67 0 1.143.472q.472.472.472 1.144v7.788q0 .671-.472 1.133Q5.71 20 5.039 20z"
+                          ></path>
+                        </svg>
+                      </button>
+                      <span id="commentLikeCount-${newComment.id}" style="color: white"> 0 </span>
+                    </form>
+                    <form onsubmit="handleReaction('dislike', 'comment', ${newComment.id}); return false;">
+                      <input
+                        type="hidden"
+                        name="comment_post_id"
+                        value="${newComment.id}"
+                      />
+                      <input
+                        type="hidden"
+                        name="reaction_type"
+                        value="dislike"
+                      />
+                      <button
+                        id="commentDislikeButton-${newComment.id}"
+                        class="postButton  ${newComment.current_user_reaction === "dislike" ? "reaction-color" : ""} "
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            fill="currentColor"
+                            d="M3.616 15q-.627 0-1.122-.494T2 13.385v-1.231q0-.137.028-.298q.028-.162.084-.298l2.73-6.473q.206-.462.693-.773Q6.02 4 6.538 4h8.192q.671 0 1.143.472t.472 1.143v8.714q0 .323-.133.628t-.351.522l-5.156 5.112q-.221.215-.493.27t-.517-.059t-.35-.373t-.04-.579l1.03-4.85zM19.385 4q.67 0 1.143.472q.472.472.472 1.144v7.769q0 .67-.472 1.143q-.472.472-1.143.472h-.423q-.671 0-1.144-.472t-.472-1.144V5.597q0-.671.472-1.133Q18.291 4 18.962 4z"
+                          ></path>
+                        </svg>
+                      </button>
+                      <span id="commentDislikeCount-${newComment.id}" style="color: white"> 0 </span>
+                    </form>
+                    <button
+                      class="reply roboto-condensed"
+                      onclick="toggleReplyBox(${newComment.id})"
+                    >
+                      Reply
+                    </button>
+                  </div>
+                  <button
+                    onclick="showAllReplies(${newComment.id}, false, false, false, event)"
+                    id="commentButton-${newComment.id}"
+                    class="comment postButton  ${newComment.current_user_reaction === "comment" ? "reaction-color" : ""} "
+                  >
+
+                    <span style="color: white"> <span id="replyCount-for-comment-${newComment.id}">0</span> replies </span>
+                  </button>
+                  <div
+                    id="create-reply-for-comment-${newComment.id}"
+                    style="display: none"
+                    class="forum-reply-editor-wrap"
+                  >
+                    <form onsubmit="handleReplySubmit(${newComment.id}, '${newComment.display_name}'); return false;">
+                      <input type="hidden" name="post_id" value="${newComment.id}" />
+                      <div
+                        style="display: flex; flex-direction: column"
+                        class="forum-reply-editor"
+                      >
+                        <textarea
+                          style="
+                            background-color: #0d0d0d;
+                            color: white;
+                            padding: 10px;
+                          "
+                          class="forum-reply-input"
+                          name="reply"
+                          placeholder="reply to @<%= user %>..."
+                          required
+                        ></textarea>
+
+                        <button type="submit">Submit</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+                `;
+                // Append the new comment to the comments section
+                if (commentsSection) {
+                  commentsSection.insertAdjacentHTML('afterbegin', newHTML);
+                }
+                const insertedPost = commentsSection?.querySelector(".new-reply");
+                // Update the comment count and apply fade effect to the new comment
+                if (insertedPost) {
+                  requestAnimationFrame(() => {
+                    insertedPost.classList.add("fade-bg");
+                  });
+                }
+                if (commentCountElement) {
+                  const newReplyCount = Number(commentCountElement.textContent || "0") + 1;
+                  commentCountElement.textContent = String(newReplyCount);
+                }
+
+                commentInput.value = "";
+            } catch (err) {
+              console.error("Error submitting reply:", err);
+            }
+        }
+        async function ascendForum() {
+
+          try {
+            const response = await fetch("http://localhost:3000/ascend");
+            const redirect = await response.redirected ? { url: response.url } : null;
+
+            if (redirect) {
+              window.location.href = redirect.url;
+            } else {
+                const data = await response.json();
+                listPosts(data.listAllContent);
+            }
+          } catch (err) {
+            console.error("Error sorting posts:", err);
+          }
+        }
+        async function descendForum() {
+          // Fetch the sorted posts from the server
+          try {
+            const response = await fetch("http://localhost:3000/descend");
+            const redirect = await response.redirected ? { url: response.url } : null;
+            // Check if the response was a redirect
+            if (redirect) {
+              window.location.href = redirect.url;
+            } else {
+                const data = await response.json();
+                listPosts(data.listAllContent);
+            }
+          } catch (err) {
+            console.error("Error sorting posts:", err);
+          }
+        }
+        async function listPosts(listAllContents) {
+
+          const content = createPostContainer(listAllContents);
+
+          document.querySelector(".posts").innerHTML = content;
+        }
+
+    async function handleReaction(reactionType, postType, id) {
+      //Prevent reference error by ensuring postType is defined
+      let postTypes = postType;
+        try {
+          const postEndpoint = postTypes === 'post' ? '/post-reaction' : null
+          const commentEndpoint = postTypes === 'comment' ? '/comment-reaction' : null;
+          const replyEndpoint = postTypes === 'reply' ? '/reply-reaction' : null;
+
+          const response = await fetch(postEndpoint ?? commentEndpoint ?? replyEndpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              post_id: postTypes === 'post' ? id : null,
+              comment_id: postTypes === 'comment' ? id : null,
+              reply_id: postTypes === 'reply' ? id : null,
+              reaction_type: reactionType,
+            }),
+          });
+          const redirect = await response.redirected ? { url: response.url } : null;
+          if (redirect) {
+            window.location.href = redirect.url;
+            return;
+          }
+          // Parse the JSON response from the server
+          const data = await response.json();
+          const reactionButton = data.reactionButton;
+          const reactionIntent = data.reaction_intent;
+          const postType = data.postType;
+          // Call the function to handle the reaction intent and update the UI accordingly
+          handleReactionIntent(reactionIntent, reactionButton, postType, id);
+        } catch (err) {
+          console.error("Error handling reaction:", err);
+        }
+      }
+      async function readNotifications() {
+        // Check if the notification count is zero before proceeding
+        const notificationCountContainer = document.getElementById("notificationCountContainer");
+        // Get the text content of the notification count container and trim any whitespace
+        const notificationCount = notificationCountContainer?.textContent?.trim();
+        // If the notification count is zero, remove the unread indicator from the bell icon
+        if(notificationCount === "0") {
+          const NotificationListItems = document.querySelectorAll(".notification-link");
+          //remove the unread indicator from the bell icon
+          NotificationListItems.forEach(item => item.classList.remove("unread-indicator"));
+        };
+        // Send a POST request to the server to mark notifications as read
+        const response = await fetch("/read-notifications", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+        })
+        // If the response is not OK, log an error message and return
+        if (!response.ok) {
+          console.error("Failed to mark notifications as read");
+          return;
+        }
+        const notificationCountElement = document.getElementById("notificationCountText");
+        notificationCountElement.textContent = "0";
+        notificationCountContainer.className = "notification-count-container-hidden";
+      }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      const list = <%- JSON.stringify(listAllContent) %>;
+      if (!Array.isArray(list) || list.length === 0) return;
+      const forumContent = createForumContent(list);
+      document.getElementById("demo").innerHTML = forumContent;
+      // Highlight the current page button in the pagination
+      const currentPage = new URLSearchParams(window.location.search).get("page") || "1";
+      initializePaginationState(<%= page %>);
+      document.getElementById(`paginationButton${currentPage}`).classList.toggle("selected");
+      const response = await fetch("/load-notifications", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      const notificationsDropdown = document.getElementById("notificationsDropdown");
+      ensureNotificationsDropdownTitle(notificationsDropdown);
+      const getAllOtherUsersNotifications = data.notifications;
+      const notificationsNotRead = getAllOtherUsersNotifications.filter(item => item.wasRead === false);
+      const notificationRead = getAllOtherUsersNotifications.filter(item => item.wasRead === true);
+      if (getAllOtherUsersNotifications.length > 0) {
+        if (notificationsNotRead.length !== 0) {
+          const notificationCountContainer = document.getElementById("notificationCountContainer");
+          const notificationCountElement = document.getElementById("notificationCountText");
+          notificationCountElement.textContent = notificationsNotRead.length;
+          notificationCountContainer.className = "notification-count-container";
+          notificationsNotRead.forEach(item =>  {
+            const getNotificationsSection = document.getElementById("notificationsDropdown");
+            const { likeComment, commentPost, replyPost, likePost, likeReply } = createTextForNotificationType(item);
+            createNotificationElement(item, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection, false);
+          });
+        }
+        if (notificationRead.length !== 0) {
+          //We don't need to show the notification count for read notifications
+          notificationRead.forEach(item =>  {
+            const getNotificationsSection = document.getElementById("notificationsDropdown");
+            const { likeComment, commentPost, replyPost, likePost, likeReply } = createTextForNotificationType(item);
+            createNotificationElement(item, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection, true);
+          });
+        }
+      }
+    });
+    // Function to create the notification text based on the notification type
+    function createTextForNotificationType(notification) {
+      if (notification.notificationType === 'posts_down') {
+        // Determine the notification message based on the type of reaction or reply
+        const likePost = (notification.reactionType && notification.postID) ? `${notification.userName} ${notification.reactionType}d your post` : '';
+        const likeComment = (notification.reactionType && notification.commentID ) ? `${notification.userName} ${notification.reactionType}d your comment` : '';
+        const likeReply = (notification.reactionType && notification.replyID) ? `${notification.userName} ${notification.reactionType}d your reply` : '';
+        const commentPost = (!notification.reactionType && notification.postID) ? `${notification.userName} commented on your post` : '';
+        const replyPost = (!notification.reactionType && notification.commentID) ? `${notification.userName} replied to your comment` : '';
+        return {likePost, likeComment, likeReply, commentPost, replyPost};
+      } else if (notification.notificationType === 'comments_down') {
+          const likeComment = (notification.reactionType && notification.commentID) ? `${notification.userName} ${notification.reactionType}d your comment` : '';
+           const likeReply = (notification.reactionType && notification.replyID) ? `${notification.userName} ${notification.reactionType}d your reply` : '';
+          const commentPost = (!notification.reactionType && notification.commentID) ? `${notification.userName} replied to your comment` : '';
+
+          const likePost = null; // No likePost for comments_down
+          const replyPost = null; // No replyPost for comments_down
+          return {likePost, likeComment, likeReply, commentPost, replyPost};
+      } else if (notification.notificationType === 'replies_down') {
+          const likeReply = (notification.reactionType && notification.replyID) ? `${notification.userName} ${notification.reactionType}d your reply` : '';
+          const likeComment = null; // No likeComment for replies_down
+          const commentPost = null; // No commentPost for replies_down
+          const likePost = null; // No likePost for replies_down
+          const replyPost = null; // No replyPost for replies_down
+        return {likePost, likeComment,likeReply, commentPost, replyPost };
+      }
+      return '';
+
+    }
+    function ensureNotificationsDropdownTitle(dropdownElement) {
+      // Check if the dropdown element exists and if the title already exists
+      if (!dropdownElement || dropdownElement.querySelector(".notifications-dropdown-title")) {
+        return;
+      }
+      const titleItem = document.createElement("li");
+      titleItem.className = "dropdown-header notifications-dropdown-title";
+      titleItem.textContent = "Notifications";
+      dropdownElement.appendChild(titleItem);
+    }
+  // Function to create and append notification elements to the notifications dropdown
+    function createNotificationElement(notification, likeComment, commentPost, replyPost, likePost, likeReply, getNotificationsSection, wasNotificationRead) {
+      const notificationMessage = document.createElement("p");
+      // Set the content of the notification elements
+      notificationMessage.textContent = likeComment || commentPost || replyPost || likePost || likeReply;
+      // Calculate the time difference in minutes
+      const minutesAgo = Math.floor((new Date() - new Date(notification.createdAt)) / 60000);
+      // Create the notification elements
+      const notificationListItem = document.createElement("li");
+      notificationListItem.className = `nav-item notification-link ${wasNotificationRead ? '' : 'unread-indicator'}`;
+      // Create the notification link and other elements
+      const notificationLink = document.createElement("a");
+      const profileIcon = document.createElement("figure");
+      const profilePost = document.createElement("div");
+      const unreadIndicator = document.createElement("figure");
+      const timeAgoContainer = document.createElement("div");
+      const notificationTime = document.createElement("p");
+      const notificationSourcePostContainer = document.createElement("div");
+      const notififcationSourcePost = document.createElement("p");
+      notificationTime.textContent = minutesAgo < 1 ? "Just now" : minutesAgo === 1 ? "1 minute ago" : minutesAgo < 60 ? `${minutesAgo} minutes ago` : minutesAgo < 1440 ? `${Math.floor(minutesAgo / 60)} hours ago` : `${Math.floor(minutesAgo / 1440)} days ago`;
+      // Determine the route based on the notification type and IDs
+      let route = (notification.postID && !notification.commentID && !notification.replyID) ?
+        `${notification.onPage}/${notification.postID}` :
+        (notification.postID && notification.commentID && !notification.replyID) ?
+        `${notification.onPage}/${notification.postID}/${notification.commentID}` :
+        `${notification.onPage}/${notification.postID}/${notification.commentID}/${notification.replyID}`;
+      // Set the href attribute of the notification link to the determined route
+      notificationLink.href = `#anchor/${route}`;
+      // Add an event listener to handle the click event on the notification link
+      notificationLink.addEventListener('click', (event) => {
+        event.preventDefault();
+        handleNotifcationRoute(route);
+      });
+      notificationLink.className = 'nav-link';
+      notificationTime.className = 'notification-time';
+      notificationMessage.className = 'notification-message';
+      profileIcon.className = 'profile-icon';
+      notificationSourcePostContainer.className = 'notification-source-post-container';
+      notififcationSourcePost.className = 'notification-source-post';
+      profilePost.className = 'profile-post';
+      profileIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg"  fill="currentColor" id="profileIcon" class="bi bi-person-circle" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10.5 8 10.5s4.757.726 5.468-2.13A7 7 0 0 0 8 1z"/></svg>`;
+      // Append the notification elements to the DOM
+      const convertStringToArray = notification.sourcePost.split("");
+      const partOfSourcePost = convertStringToArray.splice(0, 20);
+      notififcationSourcePost.innerText = `"${partOfSourcePost.join("")}..."`;
+      profilePost.appendChild(profileIcon);
+      // Append the notification message and source post container to the profile post
+      profilePost.appendChild(notificationMessage).appendChild(notificationSourcePostContainer).appendChild(notififcationSourcePost);;
+      getNotificationsSection.appendChild(notificationListItem).appendChild(notificationLink).appendChild(profilePost)
+      notificationLink.appendChild(timeAgoContainer).appendChild(notificationTime)
+    }
+</script>
