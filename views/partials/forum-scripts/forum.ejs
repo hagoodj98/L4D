@@ -98,7 +98,7 @@
                 class="reply roboto-condensed"
                 onclick="toggleReplyBox(${(p && p.id) ?? (c && c.id) ?? (r && r.id)}, true, '${p ? 'comment' : c ? 'reply' : ''}')"
               >
-                Comment
+                ${p ? 'Comment' : c ? 'Reply' : ''}
               </button>
             </div>
             <button
