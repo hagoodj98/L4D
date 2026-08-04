@@ -34,8 +34,8 @@
 
       return /*html*/`
 
-        <div id="${c ? 'comments-' + c.post_id : r ? 'replies-' + r.id : ''}" style="${(c || r) ? 'display: none' : ''}">
-          <div class="${p ? 'forum-post-card' : c ? 'forum-comment-card' : 'forum-reply-card'}" id="${p ? 'anchor/${p.id}': c ? 'anchor/${c.id}' : 'anchor/${r.id}'}" style="border-bottom: 1px solid white; ${p ? '' : (c || r) ?? 'margin-left: 20px;'}">
+        <div id="${c ? 'comments-' + c.post_id : r ? 'replies-' + r.comment_id : ''}" style="${(c || r) ? 'display: none' : ''}">
+          <div class="${p ? 'forum-post-card' : c ? 'forum-comment-card' : 'forum-reply-card'} p-2" id="${p ? 'anchor/${p.id}': c ? 'anchor/${c.id}' : 'anchor/${r.id}'}" style="border-bottom: 1px solid white; ${p ? '' : (c) ? 'margin-left: 20px;' : 'margin-left: 40px;'}">
             <div>
               <p style="color: white" class="forum-content">
                   ${(p && p.post) ?? (c && c.comment_post) ?? (r && r.reply_post)}
@@ -50,7 +50,7 @@
             </div>
             <div
               style="display: flex; align-items: center"
-              class="forum-post-actions"
+              class="forum-actions"
             >
               <form onsubmit="handleReaction('like', 'post', ${(p && p.id) ?? (c && c.id) ?? (r && r.id)}); return false;">
                 <input type="hidden" name="post_id" value="${(p && p.id) ?? (c && c.id) ?? (r && r.id)}" />
@@ -101,17 +101,23 @@
                 ${p ? 'Comment' : c ? 'Reply' : ''}
               </button>
             </div>
+             ${r ? '': `
             <button
-              onclick="${p && p.id ? `showAllReplies(${p.id}, true, false, false, 'comment')` : c && c.id ? `showAllReplies(${c.id}, false, true, false, 'reply')` : ''}"
-              id="postcommentButton-${(p && p.id) ?? (c && c.id) ?? (r && r.id)}"
+              onclick="showAllReplies(${(p && p.id) ?? (c && c.id)}, ${p && true}, ${c && true}, false, '${p ? 'comment' : 'reply'}')"
+              id="unhide-${(p && p.id) ?? (c && c.id) ?? (r && r.id)}"
               class="comment postButton  ${((p && p.current_user_reaction === 'comment') ? 'reaction-color' : (c && c.current_user_reaction === 'comment') ? 'reaction-color' : (r && r.current_user_reaction === 'comment') ? 'reaction-color' : '')} "
             >
               <span  style="color: white"> <span id="commentCount-for-post-${(p && p.id) ?? (c && c.id) ?? (r && r.id)}">${(p && p.comment_count) ?? (c && c.reply_count)}</span>  ${p ? 'comments' : c ? 'replies' : ''} </span>
             </button>
-              ${p && p.comments && p.comments.length > 0 && p.comments.map(comment => createCardPostTypeContainer(null, comment, null, day, month, year, time, timeZone)).join('')}
+             `}
+
+
+              ${(p && p.comments && p.comments.length > 0) ? p.comments.map(comment => createCardPostTypeContainer(null, comment, null, day, month, year, time, timeZone)).join('') : ''}
+              ${(p && p.comments && p.comments.length > 0) ? p.comments.map(comment => comment.replies && comment.replies.length > 0 ? comment.replies.map(reply => createCardPostTypeContainer(null, null, reply, day, month, year, time, timeZone)).join('') : '').join('') : ''}
+
           </div>
           <div
-            id="create-comment-for-post-${(p && p.id) ?? (c && c.id) ?? (r && r.id)}"
+            id="${(p && p.id && 'create-comment-for-post-' + p.id) ?? (c && c.id && 'create-reply-for-comment-' + c.id)}"
             style="display: none"
             class="forum-reply-editor-wrap"
           >
@@ -549,6 +555,12 @@
                 finalReplySection.style.display = finalReplySection.style.display === "none" ? "block" : "none";
             } else if (postType === "comment") {
             const commentSection = document.getElementById(`comments-${id}`);
+            const getIDOfReplySection = commentSection.children[1].id;
+            const replySectionID = getIDOfReplySection.split("-")[4];
+            const replySection = document.getElementById(`replies-${replySectionID}`);
+            if (replySection && replySection.style.display === "block") {
+              replySection.style.display = "none";
+            }
             commentSection.style.display = commentSection.style.display === "none" ? "block" : "none";
             }
           }

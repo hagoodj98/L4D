@@ -1385,7 +1385,7 @@ button[type="submit"]:not(.unstyledPaginationButtons):not(.bell-button):hover {
   opacity: 0.95;
 }
 
-.forum-post-actions {
+.forum-actions {
   gap: 6px;
   flex-wrap: wrap;
 }
@@ -1412,7 +1412,7 @@ button[type="submit"]:not(.unstyledPaginationButtons):not(.bell-button):hover {
 .forum-reply-card {
   background: rgba(216, 50, 50, 0.08);
 }
-.forum-reply-card {
+.forum-comment-card {
   background: rgba(110, 151, 49, 0.277);
 }
 .forum-reply-actions {
