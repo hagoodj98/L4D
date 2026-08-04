@@ -102,11 +102,11 @@
               </button>
             </div>
             <button
-              onclick="showAllReplies(${(p && p.id) ?? (c && c.id)}, true, false, false, 'comment')"
+              onclick="${p && p.id ? `showAllReplies(${p.id}, true, false, false, 'comment')` : c && c.id ? `showAllReplies(${c.id}, false, true, false, 'reply')` : ''}"
               id="postcommentButton-${(p && p.id) ?? (c && c.id) ?? (r && r.id)}"
               class="comment postButton  ${((p && p.current_user_reaction === 'comment') ? 'reaction-color' : (c && c.current_user_reaction === 'comment') ? 'reaction-color' : (r && r.current_user_reaction === 'comment') ? 'reaction-color' : '')} "
             >
-              <span  style="color: white"> <span id="commentCount-for-post-${(p && p.id) ?? (c && c.id) ?? (r && r.id)}">${(p && p.comment_count) ?? (c && c.comment_count) ?? (r && r.comment_count)}</span> comments </span>
+              <span  style="color: white"> <span id="commentCount-for-post-${(p && p.id) ?? (c && c.id) ?? (r && r.id)}">${(p && p.comment_count) ?? (c && c.reply_count)}</span>  ${p ? 'comments' : c ? 'replies' : ''} </span>
             </button>
               ${p && p.comments && p.comments.length > 0 && p.comments.map(comment => createCardPostTypeContainer(null, comment, null, day, month, year, time, timeZone)).join('')}
           </div>
