@@ -562,7 +562,9 @@
               window.location.href = redirect.url;
             } else {
                 const data = await response.json();
-                listPosts(data.listAllContent);
+                const forumContent = createForumContent(data.listAllContent);
+                const postsContainer = document.querySelector("#demo");
+                postsContainer.innerHTML = forumContent;
             }
           } catch (err) {
             console.error("Error sorting posts:", err);
@@ -578,17 +580,13 @@
               window.location.href = redirect.url;
             } else {
                 const data = await response.json();
-                listPosts(data.listAllContent);
+                const forumContent = createForumContent(data.listAllContent);
+                const postsContainer = document.querySelector("#demo");
+                postsContainer.innerHTML = forumContent;
             }
           } catch (err) {
             console.error("Error sorting posts:", err);
           }
-        }
-        async function listPosts(listAllContents) {
-
-          const content = createPostContainer(listAllContents);
-
-          document.querySelector(".posts").innerHTML = content;
         }
 
     async function handleReaction(reactionType, postType, id) {
