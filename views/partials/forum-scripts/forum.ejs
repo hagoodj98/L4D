@@ -74,7 +74,8 @@
       const responseButtonText = isPost ? 'Comment' : isComment ? 'Reply' : '';
       const formCardType = isPost ? 'forum-post-card' : isComment ? 'forum-comment-card' : 'forum-reply-card';
       const isNewPostType = (isNewPosttypeContainer && isPost) ? 'new-post' : (isNewPosttypeContainer && isComment) ? 'new-comment' : (isNewPosttypeContainer && isReply) ? 'new-reply' : '';
-      const activeReactionColor = postType.current_user_reaction === 'like' ? 'reaction-color' : postType.current_user_reaction === 'dislike' ? 'reaction-color' : '';
+      const activeLikeReactionColor = postType.current_user_reaction === 'like' ? 'reaction-color' : '';
+      const activeDislikeReactionColor = postType.current_user_reaction === 'dislike' ? 'reaction-color' : '';
       return /*html*/`
           <div>
           </div>
@@ -100,7 +101,7 @@
                 <input type="hidden" name="reaction_type" value="like" />
                 <button
                   id="${likeButtonId}"
-                  class="postButton ${activeReactionColor} "
+                  class="postButton ${activeLikeReactionColor} "
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -121,7 +122,7 @@
                 <input type="hidden" name="reaction_type" value="dislike" />
                 <button
                   id="${dislikeButtonId}"
-                  class="postButton ${activeReactionColor} "
+                  class="postButton ${activeDislikeReactionColor} "
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
