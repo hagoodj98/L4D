@@ -34,7 +34,7 @@
 
       return /*html*/`
 
-          <div class="${p ? 'forum-post-card' : c ? 'forum-comment-card' : 'forum-reply-card'} p-2 ${isNewPosttypeContainer ? 'new-post' : ''}" id="${p ? 'anchor/${p.id}': c ? 'anchor/${c.id}' : 'anchor/${r.id}'}" style="border-bottom: 1px solid white; ${p ? '' : (c) ? 'margin-left: 20px;' : 'margin-left: 40px;'}">
+          <div class="${p ? 'forum-post-card' : c ? 'forum-comment-card' : 'forum-reply-card'} p-2 ${(isNewPosttypeContainer && p) ? 'new-post' : (isNewPosttypeContainer && c) ? 'new-comment' : (isNewPosttypeContainer && r) ? 'new-reply' : ''}" id="${p ? 'anchor/${p.id}': c ? 'anchor/${c.id}' : 'anchor/${r.id}'}" style="border-bottom: 1px solid white; ${p ? '' : (c) ? 'margin-left: 20px;' : 'margin-left: 40px;'}">
             <div>
               <p style="color: white" class="forum-content">
                   ${(p && p.post) ?? (c && c.comment_post) ?? (r && r.reply_post)}
@@ -485,9 +485,11 @@
             if (replySection && replySection.style.display !== "block") {
               replySection.style.display = "block";
             }
+
             if (replySection) {
+
               replySection.insertAdjacentHTML('afterbegin', createCardPostTypeContainer(null, null, newReplyMetaData, true, "<%=user%>"));
-              const insertedReply = replySection.querySelector(".new-sub-reply");
+              const insertedReply = replySection.querySelector(".new-reply");
               if (insertedReply) {
                 requestAnimationFrame(() => {
                   insertedReply.classList.add("fade-bg");
@@ -534,7 +536,7 @@
             if (commentsSection) {
               commentsSection.insertAdjacentHTML('afterbegin', createCardPostTypeContainer(null, newCommentMetaData, null, true, "<%=user%>"));
             }
-            const insertedPost = commentsSection?.querySelector(".new-reply");
+            const insertedPost = commentsSection?.querySelector(".new-comment");
             // Update the comment count and apply fade effect to the new comment
             if (insertedPost) {
               requestAnimationFrame(() => {

@@ -10,8 +10,12 @@
   font-style: normal;
 }
 .new-post,
-.new-reply {
+.new-comment {
   background-color: #6e9731; /* Initial color */
+  transition: background-color 4s ease; /* Handles the fade effect */
+}
+.new-reply {
+  background-color: #8f1f1f; /* Initial color */
   transition: background-color 4s ease; /* Handles the fade effect */
 }
 .notification-source-post-container {
@@ -44,10 +48,7 @@
   padding: 8px 12px;
   font-size: 1.1rem;
 }
-.new-sub-reply {
-  background-color: #8f1f1f; /* Initial color */
-  transition: background-color 4s ease; /* Handles the fade effect */
-}
+
 .notification-link {
   text-decoration: none;
   color: white;
@@ -165,7 +166,7 @@
 .forum-comment-card.new-reply {
   background: #6e9731;
 }
-.forum-reply-card.new-sub-reply {
+.forum-reply-card.new-reply {
   background: #8f1f1f;
 }
 .forum-post-card.new-post.fade-bg {
@@ -174,7 +175,7 @@
 .forum-comment-card.new-reply.fade-bg {
   background-color: rgba(110, 151, 49, 0.277); /* Target color */
 }
-.forum-reply-card.new-sub-reply.fade-bg {
+.forum-reply-card.new-reply.fade-bg {
   background-color: rgba(143, 31, 31, 0.277); /* Target color */
 }
 
