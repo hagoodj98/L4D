@@ -251,6 +251,13 @@
 .nav-item a {
   color: white;
 }
+.revealPostTypesButton {
+  background-color: transparent;
+  border: none;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+}
 .postButton {
   background-color: transparent;
   border: none;
