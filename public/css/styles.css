@@ -163,7 +163,7 @@
   padding: 2px;
 }
 .forum-post-card.new-post,
-.forum-comment-card.new-reply {
+.forum-comment-card.new-comment {
   background: #6e9731;
 }
 .forum-reply-card.new-reply {
@@ -172,7 +172,7 @@
 .forum-post-card.new-post.fade-bg {
   background-color: rgba(110, 151, 49, 0.277); /* Target color */
 }
-.forum-comment-card.new-reply.fade-bg {
+.forum-comment-card.new-comment.fade-bg {
   background-color: rgba(110, 151, 49, 0.277); /* Target color */
 }
 .forum-reply-card.new-reply.fade-bg {

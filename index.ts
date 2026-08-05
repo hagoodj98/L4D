@@ -961,13 +961,17 @@ app.post("/add-comment", async (req, res, next) => {
 
   try {
     const creationTime = new Date().toISOString();
-    const result = await createComment(
+    let result = await createComment(
       commentPost,
       req.user.id,
       postId,
       creationTime,
       currentPage,
     );
+    result = {
+      ...result,
+      type: "comment",
+    };
     return res.json({ success: true, comment: result });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
@@ -1003,13 +1007,17 @@ app.post("/add-reply", async (req, res, next) => {
 
     try {
       const createdAt = new Date().toISOString();
-      const result = await createComment(
+      let result = await createComment(
         commentPost,
         req.user.id,
         postId,
         createdAt,
         currentPage,
       );
+      result = {
+        ...result,
+        type: "reply",
+      };
       return res.json({ success: true, reply: result });
     } catch (err) {
       return next(new ErrorHandler(500, "Internal Server Error", err));
@@ -1048,6 +1056,7 @@ app.post("/add-reply", async (req, res, next) => {
       reply: {
         ...result,
         comment_post: result.reply_post,
+        type: "reply",
       },
       replyMeta: replyMetadata,
       subReply: true,

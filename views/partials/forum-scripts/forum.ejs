@@ -20,6 +20,7 @@
       });
       return { day, month, year, time, timeZone };
     }
+    // Function to highlight the notification item
     function notificationAnimation(postID, postType){
        const itemToHighlight = document.getElementById(`anchor/${postID}`);
        if (itemToHighlight) {
@@ -55,11 +56,29 @@
       const { day, month, year, time, timeZone } = formatTime(p ? p.created_at : c ? c.created_at : r.created_at);
       const postType = p ?? c ?? r;
       const postTypeName = p?.type ?? c?.type ?? r?.type;
-
+      const isPost = postTypeName === "post";
+      const isComment = postTypeName === "comment";
+      const isReply = postTypeName === "reply";
+      const anchorId = `anchor/${postType.id}`;
+      const likeButtonId = isPost ? `postLikeButton-${postType.id}` : isComment ? `commentLikeButton-${postType.id}`: `replyLikeButton-${postType.id}`;
+      const dislikeButtonId = isPost ? `postDislikeButton-${postType.id}` : isComment ? `commentDislikeButton-${postType.id}`: `replyDislikeButton-${postType.id}`;
+      const postTypeNameID = isPost ? 'post_id' : isComment ? 'comment_id' : 'reply_id'; // 'post', 'comment', or 'reply'
+      const dropDownCountID = isPost ? 'commentCount-for-post-' + postType.id : isComment ? 'replyCount-for-comment-' + postType.id : '';
+      const dropDownCountContext =  postType.comment_count ?? postType.reply_count;
+      const dropDownText = isPost ? 'comments' : 'replies';
+      const likeCountId = isPost ? `postLikeCount-${postType.id}` : isComment ? `commentLikeCount-${postType.id}`: `replyLikeCount-${postType.id}`;
+      const dislikeCountId = isPost ? `postDislikeCount-${postType.id}` : isComment ? `commentDislikeCount-${postType.id}`: `replyDislikeCount-${postType.id}`;
+      const createPostTypeSectionID = isPost ? `create-comment-for-post-${postType.id}` : isComment ? `create-reply-for-comment-${postType.id}` : '';
+      const toggleReplyBoxPostType = isPost ? 'comment' : isComment ? 'reply' : '';
+      const handleResponseFunction = isPost ? `handleCommentSubmit(${postType.id}, '${postType.display_name}'); return false;` : isComment ? `handleReplySubmit(${postType.id}, '${postType.display_name}'); return false;` : '';
+      const responseButtonText = isPost ? 'Comment' : isComment ? 'Reply' : '';
+      const formCardType = isPost ? 'forum-post-card' : isComment ? 'forum-comment-card' : 'forum-reply-card';
+      const isNewPostType = (isNewPosttypeContainer && isPost) ? 'new-post' : (isNewPosttypeContainer && isComment) ? 'new-comment' : (isNewPosttypeContainer && isReply) ? 'new-reply' : '';
+      const activeReactionColor = postType.current_user_reaction === 'like' ? 'reaction-color' : postType.current_user_reaction === 'dislike' ? 'reaction-color' : '';
       return /*html*/`
           <div>
           </div>
-          <div class="${postTypeName === 'post' ? 'forum-post-card' : postTypeName === 'comment' ? 'forum-comment-card' : 'forum-reply-card'} p-2 ${(isNewPosttypeContainer && postTypeName === 'post') ? 'new-post' : (isNewPosttypeContainer && postTypeName === 'comment' ) ? 'new-comment' : (isNewPosttypeContainer && postTypeName === 'reply') ? 'new-reply' : ''}" id="${postTypeName === 'post' ? `anchor/${postType.id}`: postTypeName === 'comment' ? `anchor/${postType.id}` : `anchor/${postType.id}`}" style="border-bottom: 1px solid white; ${postTypeName === 'post' ? '' : (postTypeName === 'comment') ? 'margin-left: 20px;' : 'margin-left: 40px;'}">
+          <div class="${formCardType} p-2 ${isNewPostType}" id="${anchorId}" style="border-bottom: 1px solid white; ${postTypeName === 'post' ? '' : (isComment) ? 'margin-left: 20px;' : 'margin-left: 40px;'}">
             <div>
               <p style="color: white" class="forum-content">
                   ${(postType.post) ?? (postType.comment_post) ?? (postType.reply_post)}
@@ -69,19 +88,19 @@
                 <span style="color: #6e9731">  ${(isNewPosttypeContainer ? currentUser :  postType.display_name)} </span>
               </p>
               <p style="color: white" class="forum-date">
-                  ${day}  ${month}  ${year}  at  ${time}  ${timeZone}
+                   ${month}/${day}/${year} at ${time}  ${timeZone}
               </p>
             </div>
             <div
               style="display: flex; align-items: center"
               class="forum-actions"
             >
-              <form onsubmit="handleReaction('like', '${postTypeName === 'post' ? 'post' : postTypeName === 'comment' ? 'comment' : 'reply'}', ${postType.id}); return false;">
-                <input type="hidden" name="${postTypeName === 'post' ? 'post_id' : postTypeName === 'comment' ? 'comment_id' : 'reply_id'}" value="${postType.id}" />
+              <form onsubmit="handleReaction('like', '${postTypeName}', ${postType.id}); return false;">
+                <input type="hidden" name="${postTypeNameID}" value="${postType.id}" />
                 <input type="hidden" name="reaction_type" value="like" />
                 <button
-                  id="${postType.type === 'post' ? 'postLikeButton-' + postType.id : postType.type === 'comment' ? 'commentLikeButton-' + postType.id : 'replyLikeButton-' + postType.id}"
-                  class="postButton  ${postType.current_user_reaction === 'like' ? 'reaction-color' : ''} "
+                  id="${likeButtonId}"
+                  class="postButton ${activeReactionColor} "
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -96,13 +115,13 @@
                   </svg>
                 </button>
               </form>
-              <span id="${postTypeName === 'post' ? 'postLikeCount-' + postType.id : postTypeName === 'comment' ? 'commentLikeCount-' + postType.id : 'replyLikeCount-' + postType.id}" style="color: white"> ${(isNewPosttypeContainer ? '0' : postType.likes)} </span>
-              <form onsubmit="handleReaction('dislike', '${postTypeName === 'post' ? 'post' : postTypeName === 'comment' ? 'comment' : 'reply'}', ${postType.id}); return false;">
-                <input type="hidden" name="${postTypeName === 'post' ? 'post_id' : postTypeName === 'comment' ? 'comment_id' : 'reply_id'}" value="${(isNewPosttypeContainer ? '0' : postType.id)}" />
+              <span id="${likeCountId}" style="color: white"> ${(isNewPosttypeContainer ? '0' : postType.likes)} </span>
+              <form onsubmit="handleReaction('dislike', '${postTypeName}', ${postType.id}); return false;">
+                <input type="hidden" name="${postTypeNameID}" value="${(isNewPosttypeContainer ? '0' : postType.id)}" />
                 <input type="hidden" name="reaction_type" value="dislike" />
                 <button
-                  id="${postTypeName === 'post' ? 'postDislikeButton-' + postType.id : postTypeName === 'comment' ? 'commentDislikeButton-' + postType.id : 'replyDislikeButton-' + postType.id}"
-                  class="postButton  ${postType.current_user_reaction === 'dislike' ? 'reaction-color' : ''} "
+                  id="${dislikeButtonId}"
+                  class="postButton ${activeReactionColor} "
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -117,41 +136,41 @@
                   </svg>
                 </button>
               </form>
-              <span id="${postTypeName === 'post' ? 'postDislikeCount-' + postType.id : postTypeName === 'comment' ? 'commentDislikeCount-' + postType.id : 'replyDislikeCount-' + postType.id}" style="color: white"> ${(isNewPosttypeContainer ? '0' : postType.dislikes)} </span>
+              <span id="${dislikeCountId}" style="color: white"> ${(isNewPosttypeContainer ? '0' : postType.dislikes)} </span>
               <button
                 class="reply roboto-condensed"
-                onclick="toggleReplyBox(${postType.id}, true, '${postTypeName === 'post' ? 'comment' : postTypeName === 'comment' ? 'reply' : ''}')"
+                onclick="toggleReplyBox(${postType.id}, true, '${toggleReplyBoxPostType}')"
               >
-                ${postTypeName === 'post' ? 'Comment' : postTypeName === 'comment' ? 'Reply' : ''}
+                ${responseButtonText}
               </button>
             </div>
             ${r ? '': `
             <button
-              onclick="showAllReplies(${postType.id}, ${postTypeName === 'post' && true}, ${postTypeName === 'comment' && true}, false, '${postTypeName === 'post' ? 'comment' : 'reply'}')"
+              onclick="showAllReplies(${postType.id}, ${isPost}, ${isComment}, false, '${toggleReplyBoxPostType}')"
               id="unhide-${postType.id}"
               class="comment revealPostTypesButton"
             >
-              <span  style="color: white"> <span id="${postTypeName === 'post' ? 'commentCount-for-post-' + postType.id : postTypeName === 'comment' ? 'replyCount-for-comment-' + postType.id : ''}">${(isNewPosttypeContainer ? '0': postTypeName === 'post' ? postType.comment_count : postTypeName === 'comment' ? postType.reply_count : '')}</span>  ${postTypeName === 'post' ? 'comments' : postTypeName === 'comment' ? 'replies' : ''} </span>
+              <span  style="color: white"> <span id="${dropDownCountID}">${(isNewPosttypeContainer ? '0': dropDownCountContext)}</span>  ${dropDownText} </span>
             </button>
              `}
-            ${(postTypeName === 'post' && postType.comments && postType.comments.length > 0) ? `
+            ${(isPost) ? `
               <div id="comments-${postType.id}" style="display: none">
-                ${postType.comments.map(comment => createCardPostTypeContainer(null, comment, null)).join('')}
+                ${postType.comments?.map(comment => createCardPostTypeContainer(null, comment, null)).join('')}
               </div>` : ''
             }
-            ${(postTypeName === 'comment' && postType.replies && postType.replies.length > 0) ? `
+            ${(isComment) ? `
               <div id="replies-${postType.id}" style="display: none">
-                ${postType.replies.map(reply => createCardPostTypeContainer(null, null, reply)).join('')}
+                ${postType.replies?.map(reply => createCardPostTypeContainer(null, null, reply)).join('')}
               </div>` : ''
             }
 
             <div
-              id="${postTypeName === 'post' ? 'create-comment-for-post-' + postType.id : postTypeName === 'comment' ? 'create-reply-for-comment-' + postType.id : ''}"
+              id="${createPostTypeSectionID}"
               style="display: none"
               class="forum-reply-editor-wrap"
             >
-              <form onsubmit="${postTypeName === 'post' ? `handleCommentSubmit(${postType.id}, '${postType.display_name}'); return false;` : postTypeName === 'comment' ? `handleReplySubmit(${postType.id}, '${postType.display_name}'); return false;` : ''}">
-                <input type="hidden" name="${postTypeName === 'post' ? 'post_id' : postTypeName === 'comment' ? 'comment_id' : ''}" value="${postType.id}" />
+              <form onsubmit="${handleResponseFunction}">
+                <input type="hidden" name="${postTypeNameID}" value="${postType.id}" />
                 <div
                   style="display: flex; flex-direction: column"
                   class="forum-reply-editor"
@@ -164,7 +183,7 @@
                     "
                     class="forum-reply-input"
                     name="reply"
-                    placeholder="reply to @${(currentUser) ?? (postTypeName === 'post' ? postType.display_name : postTypeName === 'comment' ? postType.display_name : '')}..."
+                    placeholder="reply to @${(currentUser) ?? (postType.display_name) }..."
                     required
                   ></textarea>
                   <button type="submit">Submit</button>
@@ -318,12 +337,15 @@
         handlePaginationIncrements(paginationNumber, 'increase');
         return false;
       });
+      // Append the new "Next" button to the new list item
       newListItemNext.appendChild(newButtonNext);
+      // Create past buttons for the pages before the current range
       for (let i = 1; i <= paginationState.buttonsHidden; i++) {
         const oldButton = document.getElementById("paginationButton" + i);
         const hiddenButtonHTML = createPageButtons(i, true);
         pastButtons.innerHTML += hiddenButtonHTML.trim();
       }
+      // Create future buttons for the remaining pages after the current range
       for (let i = Math.min(paginationState.end + 1, paginationNumber); i <= paginationNumber - (Math.min(paginationState.end + 1, paginationNumber)); i++) {
         const future = document.getElementById("paginationButton" + i);
         const hiddenButtonHTML = createPageButtons(i, true);
@@ -340,24 +362,24 @@
         forumAnchor.scrollIntoView({ behavior: "smooth", block: "start" });
 
       }
-      async function handlePagination(page) {
-        const offset = (Number(page) - 1) * 4; // Assuming 4 posts per page
-        currentPage = Number(page);
-        try {
-          const response = await fetch(`/forum-pagination?page=${page}&offset=${offset}`);
-          const data = await response.json();
-          // Update the active page button styling
-          document.querySelectorAll(".unstyledPaginationButtons").forEach((button) => {
-            button.classList.toggle("selected",  button.textContent.trim() === String(page));
-          });
-          history.pushState(null, "", `/forum?page=${page}`);
-          const forumContent = createForumContent(data.listAllContent);
-          const postsContainer = document.querySelector("#demo");
-          postsContainer.innerHTML = forumContent;
-        } catch (err) {
-          console.error("Error fetching paginated posts:", err);
-        }
+    async function handlePagination(page) {
+      const offset = (Number(page) - 1) * 4; // Assuming 4 posts per page
+      currentPage = Number(page);
+      try {
+        const response = await fetch(`/forum-pagination?page=${page}&offset=${offset}`);
+        const data = await response.json();
+        // Update the active page button styling
+        document.querySelectorAll(".unstyledPaginationButtons").forEach((button) => {
+          button.classList.toggle("selected",  button.textContent.trim() === String(page));
+        });
+        history.pushState(null, "", `/forum?page=${page}`);
+        const forumContent = createForumContent(data.listAllContent);
+        const postsContainer = document.querySelector("#demo");
+        postsContainer.innerHTML = forumContent;
+      } catch (err) {
+        console.error("Error fetching paginated posts:", err);
       }
+    }
 
       function toggleReplyBox(id, replying = false, postType = null) {
 
@@ -486,9 +508,7 @@
             if (replySection && replySection.style.display !== "block") {
               replySection.style.display = "block";
             }
-
             if (replySection) {
-
               replySection.insertAdjacentHTML('afterbegin', createCardPostTypeContainer(null, null, newReplyMetaData, true, "<%=user%>"));
               const insertedReply = replySection.querySelector(".new-reply");
               if (insertedReply) {
