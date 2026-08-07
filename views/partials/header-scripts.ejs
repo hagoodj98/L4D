@@ -9,6 +9,46 @@
     const pageNumber = routeParts[0];
     if (currentPath !== "/forum") {
       window.location.href = `/forum?page=${pageNumber}/${routeParts.slice(1).join("/")}`;
+    } else {
+        initializePaginationState(Number(pageNumber));
+        paginationState.end = Math.min(paginationState.end, <%= paginationNumber %>);
+        handlePagination(paginationState.start);
+        handlePaginationIncrements( paginationNumber, "decrease", routeParts);
+        setTimeout(async () => {
+         const postID = routeParts[1];
+         const commentID = routeParts[2];
+         const replyID = routeParts[3];
+         if (postID && !commentID && !replyID) {
+           setTimeout(() => {
+             notificationAnimation(postID, "post");
+           }, 500); // Adjust the delay as needed
+         }
+         if (postID && commentID && !replyID) {
+           scrollToForumContent(postID);
+           setTimeout(() => {
+             showAllReplies(postID, true, false, false, "comment");
+           }, 500); // Adjust the delay as needed
+           scrollToForumContent(commentID);
+           setTimeout(() => {
+             notificationAnimation(commentID, "comment");
+           }, 1500); // Adjust the delay as needed
+         }
+         if (postID && commentID && replyID) {
+           scrollToForumContent(`${postID}`);
+           setTimeout(() => {
+             showAllReplies(postID, true, false, false, "comment");
+           }, 500); // Adjust the delay as needed
+           scrollToForumContent(commentID);
+           setTimeout(() => {
+             showAllReplies(commentID, false, true, false, "reply");
+           }, 1500); // Adjust the delay as needed
+           scrollToForumContent(`${commentID}`);
+           setTimeout(() => {
+             scrollToForumContent(`${replyID}`);
+             notificationAnimation(replyID, "reply");
+           }, 2000); // Adjust the delay as needed
+         }
+       }, 500); // Adjust the delay as needed
     }
   }
 
