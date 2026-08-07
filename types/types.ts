@@ -7,7 +7,7 @@ export type NotificationType = {
   commentID?: number | string;
   postID?: number;
   sourcePost?: string;
-  reactionType?: string;
+  reactionType?: boolean | string;
   post?: string;
   onPage: string;
   commentPost?: string;

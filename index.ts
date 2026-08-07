@@ -92,26 +92,27 @@ app.use(async (req, res, next) => {
   if (req.user) {
     //
     // Check if the user's notification state is already cached. If not, fetch it from the database and cache it.
-    /*
     if (!cachedUserNotificationState.has(req.user.id)) {
-      const cachedNotificationsState: NotificationState =
+      const getDatabaseNotificationsState: NotificationState =
         await getNotificationState(req.user.id);
-      const cachedNotifications: NotificationType[] =
-        cachedNotificationsState?.notification_state?.notifications;
-      if (cachedNotifications && cachedNotifications.length > 0) {
-        cachedUserNotificationState.set(req.user.id, cachedNotifications);
+      const toBeCachedNotifications: NotificationType[] =
+        getDatabaseNotificationsState?.notification_state?.notifications;
+      if (toBeCachedNotifications && toBeCachedNotifications.length > 0) {
+        cachedUserNotificationState.set(req.user.id, toBeCachedNotifications);
       }
     }
-      */
     // Retrieve the cached notification state for the authenticated user, if available.
     const cachedNotifications =
       cachedUserNotificationState.get(req.user.id) ?? [];
+    /*
     // If there are cached notifications, use them to avoid unnecessary database queries.
     if (cachedNotifications.length > 0) {
+
       res.locals.notificationState = cachedNotifications;
       res.locals.currentPath = req.path;
       return next(); // Use the cached state and skip fetching from the database
     }
+    */
     // Fetch notifications for posts, comments, and replies for the authenticated user from the database.
     let {
       postsNotificationsSource,
@@ -120,35 +121,87 @@ app.use(async (req, res, next) => {
     } = await fetchAllNotifications(req.user.id);
 
     // Merge all notifications into a single array for the authenticated user.
-    let allSourcedNotifications = [
+    let refreshedNotifcationSource = [
       ...postsNotificationsSource,
       ...commentsNotificationSource,
       ...repliesNotificationsSource,
     ];
     // Process and merge all sourced notifications with the cached notifications.
     const IndividualNotifications = await mergeAllSourcedNotifications(
-      allSourcedNotifications,
+      refreshedNotifcationSource,
     );
+    //Staleness detected. We need to make sure the notifications are up to date as well. User may read all notifications. But another user may undo their reaction to current user's post, etc. We want to make sure any old notifications are shredded from cached array we gotten from database
+    const filteredNotifications = IndividualNotifications?.map(
+      (notification) => {
+        // Check if the current notification matches any cached notification based on various criteria.
+        const cachedNotification = cachedNotifications.find((cacheN) => {
+          const notificationTypeMatch =
+            cacheN.notificationType === notification.notificationType;
+          const postTypeText =
+            cacheN.post === notification.post
+              ? cacheN.post === notification.post
+              : cacheN.commentPost && notification.commentPost
+                ? cacheN.commentPost === notification.commentPost
+                : cacheN.replyPost && notification.replyPost
+                  ? cacheN.replyPost === notification.replyPost
+                  : null;
+          const sameID = cacheN.postID
+            ? cacheN.postID === notification.postID
+            : cacheN.commentID
+              ? cacheN.commentID === notification.commentID
+              : cacheN.replyID
+                ? cacheN.replyID === notification.replyID
+                : null;
+          const reactionTypeMatch =
+            cacheN.reactionType && notification.reactionType
+              ? cacheN.reactionType === notification.reactionType
+              : true; // If either reactionType is null, consider it a match
+          const createdAtMatch = cacheN.createdAt === notification.createdAt;
+          const userMatch = cacheN.userName === notification.userName;
+          // Check if the cached notification matches the current notification based on various criteria.
+          if (
+            notificationTypeMatch &&
+            postTypeText &&
+            sameID &&
+            reactionTypeMatch &&
+            createdAtMatch &&
+            userMatch
+          ) {
+            return {
+              ...notification,
+              id: cacheN.id,
+            };
+          }
+        });
+        return (
+          cachedNotification ?? {
+            ...notification,
+          }
+        );
+      },
+    );
+
     // Mark all individual notifications as unread before saving to the database.
-    const notificationMarkedUnread = IndividualNotifications.map(
-      (notification: Omit<NotificationType, "id" | "wasRead">) => ({
-        id: crypto.randomUUID(),
+    const initializedNotifications = filteredNotifications.map(
+      (notification: NotificationType) => ({
+        id: notification?.id ?? crypto.randomUUID(),
         ...notification,
-        wasRead: false,
+        wasRead: notification?.wasRead ?? false, // Mark as unread if not already read
       }),
     );
+
     // Save the updated notification state to the database.
     const getNotificationsState = await saveNotificationState(
       req.user.id,
-      notificationMarkedUnread,
+      initializedNotifications,
     );
     // Retrieve the updated notification state from the database response.
-    const notifications =
+    const notificationState =
       getNotificationsState.notification_state.notifications;
-    cachedUserNotificationState.set(req.user.id, notifications);
+    cachedUserNotificationState.set(req.user.id, notificationState);
     // Cache the updated notification state for the authenticated user.
     console.log(`Authenticated user: ${req.user.display_name}`);
-    res.locals.notificationState = notifications;
+    res.locals.notificationState = notificationState;
   }
   // Store the current path for active nav link highlighting.
   if (req.path) {
@@ -335,7 +388,9 @@ app.get("/update-notifications", (req, res) => {
                 ? cacheN.replyID === notification.replyID
                 : null;
           const reactionTypeMatch =
-            cacheN.reactionType === notification.reactionType;
+            cacheN.reactionType && notification.reactionType
+              ? cacheN.reactionType === notification.reactionType
+              : true; // If either reactionType is null, consider it a match
           const createdAtMatch = cacheN.createdAt === notification.createdAt;
           const userMatch = cacheN.userName === notification.userName;
           // Check if the cached notification matches the current notification based on various criteria.
@@ -381,7 +436,7 @@ app.get("/update-notifications", (req, res) => {
           notifications: mapNotificationsById,
         };
         // Save the updated notification state to the database because we are pulling from database and need to make sure we save this state in the users table. At this point in the code, there was something added to the notifications array that needs to be persisted. As a result, we call the function to save the current state.
-        await saveNotificationState(userId, mapNotificationsById);
+
         cachedUserNotificationState.set(userId, mapNotificationsById);
         res.write(`data: ${JSON.stringify({ payload })}\n\n`);
         return;
