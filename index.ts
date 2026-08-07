@@ -104,15 +104,7 @@ app.use(async (req, res, next) => {
     // Retrieve the cached notification state for the authenticated user, if available.
     const cachedNotifications =
       cachedUserNotificationState.get(req.user.id) ?? [];
-    /*
-    // If there are cached notifications, use them to avoid unnecessary database queries.
-    if (cachedNotifications.length > 0) {
 
-      res.locals.notificationState = cachedNotifications;
-      res.locals.currentPath = req.path;
-      return next(); // Use the cached state and skip fetching from the database
-    }
-    */
     // Fetch notifications for posts, comments, and replies for the authenticated user from the database.
     let {
       postsNotificationsSource,
