@@ -63,8 +63,6 @@ const port = 3000;
 const cachedUserNotificationState: CacheNotificationState = new Map(); // Map to store notification states for each user
 const saltRounds = 10;
 const isProduction = process.env.NODE_ENV === "production";
-let paginationNumber: number = 0; // Initialize paginationNumber to 0
-let totalPosts: string = "0"; // Initialize totalPosts to "0"
 
 app.use(
   session({
@@ -94,6 +92,7 @@ app.use(async (req, res, next) => {
   if (req.user) {
     //
     // Check if the user's notification state is already cached. If not, fetch it from the database and cache it.
+    /*
     if (!cachedUserNotificationState.has(req.user.id)) {
       const cachedNotificationsState: NotificationState =
         await getNotificationState(req.user.id);
@@ -103,6 +102,7 @@ app.use(async (req, res, next) => {
         cachedUserNotificationState.set(req.user.id, cachedNotifications);
       }
     }
+      */
     // Retrieve the cached notification state for the authenticated user, if available.
     const cachedNotifications =
       cachedUserNotificationState.get(req.user.id) ?? [];
@@ -370,7 +370,7 @@ app.get("/update-notifications", (req, res) => {
     //if none of the notifications are read, including any new notifications, send the count to the client
     if (!areAllNotificationsRead) {
       let payload = {};
-      //we want to check if all notifications aren't read before we determine how many the other individual notifications are unread
+      //we want to check if all notifications are unread before we determine how many the other individual notifications are unread
       const allAreUnread = mapNotificationsById.filter(
         (notification) => !notification.wasRead,
       ).length;
@@ -380,6 +380,9 @@ app.get("/update-notifications", (req, res) => {
           count: allAreUnread,
           notifications: mapNotificationsById,
         };
+        // Save the updated notification state to the database because we are pulling from database and need to make sure we save this state in the users table. At this point in the code, there was something added to the notifications array that needs to be persisted. As a result, we call the function to save the current state.
+        await saveNotificationState(userId, mapNotificationsById);
+        cachedUserNotificationState.set(userId, mapNotificationsById);
         res.write(`data: ${JSON.stringify({ payload })}\n\n`);
         return;
       }

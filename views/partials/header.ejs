@@ -146,4 +146,5 @@
       </div>
     </nav>
 
-  <%- include("header-scripts.ejs") %>
+  <%- include("notification-scripts.ejs") %>
+  <%- include("sse-notification-feed.ejs", { user: locals.user }) %>
