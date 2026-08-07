@@ -61,9 +61,10 @@ const app = express();
 const port = 3000;
 
 const cachedUserNotificationState: CacheNotificationState = new Map(); // Map to store notification states for each user
-
 const saltRounds = 10;
 const isProduction = process.env.NODE_ENV === "production";
+let paginationNumber: number = 0; // Initialize paginationNumber to 0
+let totalPosts: string = "0"; // Initialize totalPosts to "0"
 
 app.use(
   session({
@@ -159,14 +160,19 @@ app.use(async (req, res, next) => {
   }
   next();
 });
-const isUserAuthenticated = (
+const isUserAuthenticated = async (
   req: Express.Request,
-  res: Express.Response & { render: (view: string, options?: any) => void },
+  res: Express.Response & {
+    render: (view: string, options?: any) => void;
+    locals: any;
+  },
   page: string,
 ) => {
   if (!req.isAuthenticated()) return res.render(`${page}.ejs`);
+
   res.render(`${page}.ejs`, {
     currentUser: req.user.display_name,
+    paginationNumber: res.locals.paginationNumber,
   });
 };
 
@@ -451,6 +457,15 @@ app.get("/forum", async (req, res, next) => {
       paginationNumber,
       page: req.query.page ? parseInt(req.query.page as string) : 1,
     });
+  } catch (err) {
+    return next(new ErrorHandler(500, "Internal Server Error", err));
+  }
+});
+app.get("/total-posts", async (req, res, next) => {
+  try {
+    const totalPosts: string = await totalPostsResult();
+    const paginationNumber = Math.ceil(Number(totalPosts) / 4);
+    return res.json({ totalPosts, paginationNumber });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
   }
