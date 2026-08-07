@@ -43,7 +43,8 @@ import {
 } from "./database/repositories/replies_reactions.js";
 import ErrorHandler from "./utils/error.js";
 import { fetchAllNotifications } from "./database/repositories/user_notifications.js";
-import { getAllSourcedNotifications as mergeAllSourcedNotifications } from "./utils/notificationHelper.js";
+import { getAllSourcedNotifications as mergeAllSourcedNotifications } from "./utils/notification_helpers.ts/parse-individually.js";
+import { buildNotificationState } from "./utils/notification_helpers.ts/buildnotificationstate.js";
 import {
   getNotificationState,
   saveNotificationState,
@@ -55,6 +56,7 @@ import {
   NotificationSource,
   ReplyMetaDataType,
 } from "./types/types.js";
+import { findMatchingNotification } from "./utils/notification_helpers.ts/find-matching.js";
 
 const app = express();
 
@@ -90,7 +92,7 @@ app.use(passport.session());
 app.use(async (req, res, next) => {
   res.locals.user = req.user ? req.user.display_name : null;
   if (req.user) {
-    //
+    const userID = req.user.id;
     // Check if the user's notification state is already cached. If not, fetch it from the database and cache it.
     if (!cachedUserNotificationState.has(req.user.id)) {
       const getDatabaseNotificationsState: NotificationState =
@@ -104,73 +106,13 @@ app.use(async (req, res, next) => {
     // Retrieve the cached notification state for the authenticated user, if available.
     const cachedNotifications =
       cachedUserNotificationState.get(req.user.id) ?? [];
+    // Fetch the latest notifications from the database and build the notification state for the authenticated user.
+    const IndividualNotifications = await buildNotificationState(userID);
 
-    // Fetch notifications for posts, comments, and replies for the authenticated user from the database.
-    let {
-      postsNotificationsSource,
-      commentsNotificationSource,
-      repliesNotificationsSource,
-    } = await fetchAllNotifications(req.user.id);
-
-    // Merge all notifications into a single array for the authenticated user.
-    let refreshedNotifcationSource = [
-      ...postsNotificationsSource,
-      ...commentsNotificationSource,
-      ...repliesNotificationsSource,
-    ];
-    // Process and merge all sourced notifications with the cached notifications.
-    const IndividualNotifications = await mergeAllSourcedNotifications(
-      refreshedNotifcationSource,
-    );
-    //Staleness detected. We need to make sure the notifications are up to date as well. User may read all notifications. But another user may undo their reaction to current user's post, etc. We want to make sure any old notifications are shredded from cached array we gotten from database
-    const filteredNotifications = IndividualNotifications?.map(
-      (notification) => {
-        // Check if the current notification matches any cached notification based on various criteria.
-        const cachedNotification = cachedNotifications.find((cacheN) => {
-          const notificationTypeMatch =
-            cacheN.notificationType === notification.notificationType;
-          const postTypeText =
-            cacheN.post === notification.post
-              ? cacheN.post === notification.post
-              : cacheN.commentPost && notification.commentPost
-                ? cacheN.commentPost === notification.commentPost
-                : cacheN.replyPost && notification.replyPost
-                  ? cacheN.replyPost === notification.replyPost
-                  : null;
-          const sameID = cacheN.postID
-            ? cacheN.postID === notification.postID
-            : cacheN.commentID
-              ? cacheN.commentID === notification.commentID
-              : cacheN.replyID
-                ? cacheN.replyID === notification.replyID
-                : null;
-          const reactionTypeMatch =
-            cacheN.reactionType && notification.reactionType
-              ? cacheN.reactionType === notification.reactionType
-              : true; // If either reactionType is null, consider it a match
-          const createdAtMatch = cacheN.createdAt === notification.createdAt;
-          const userMatch = cacheN.userName === notification.userName;
-          // Check if the cached notification matches the current notification based on various criteria.
-          if (
-            notificationTypeMatch &&
-            postTypeText &&
-            sameID &&
-            reactionTypeMatch &&
-            createdAtMatch &&
-            userMatch
-          ) {
-            return {
-              ...notification,
-              id: cacheN.id,
-            };
-          }
-        });
-        return (
-          cachedNotification ?? {
-            ...notification,
-          }
-        );
-      },
+    // Compare the cached notifications with the newly fetched notifications to find any matching notifications.
+    const filteredNotifications = findMatchingNotification(
+      cachedNotifications,
+      IndividualNotifications,
     );
 
     // Mark all individual notifications as unread before saving to the database.
@@ -191,8 +133,6 @@ app.use(async (req, res, next) => {
     const notificationState =
       getNotificationsState.notification_state.notifications;
     cachedUserNotificationState.set(req.user.id, notificationState);
-    // Cache the updated notification state for the authenticated user.
-    console.log(`Authenticated user: ${req.user.display_name}`);
     res.locals.notificationState = notificationState;
   }
   // Store the current path for active nav link highlighting.
@@ -342,116 +282,71 @@ app.get("/update-notifications", (req, res) => {
 
   // Keep the connection open for future updates
   const intervalId = setInterval(async () => {
-    const userId = req.user.id;
-    const cachedNotifications = cachedUserNotificationState.get(userId) || [];
-    //check to see if there are new notifications for the user by pulling from database
-    const {
-      postsNotificationsSource,
-      commentsNotificationSource,
-      repliesNotificationsSource,
-    } = await fetchAllNotifications(userId);
-    let allSourcedNotifications: NotificationSource[] = [
-      ...postsNotificationsSource,
-      ...commentsNotificationSource,
-      ...repliesNotificationsSource,
-    ];
-    const IndividualNotifications = await mergeAllSourcedNotifications(
-      allSourcedNotifications,
-    );
-    //at this point, the cache is the only aspect with an id. the individual notifications from the database may not have an id yet. So we need to map the id's from the cache if certain keys match.
-    const mapNotificationsById = IndividualNotifications?.map(
-      (notification) => {
-        // Check if the current notification matches any cached notification based on various criteria.
-        const cachedNotification = cachedNotifications.find((cacheN) => {
-          const notificationTypeMatch =
-            cacheN.notificationType === notification.notificationType;
-          const postType = cacheN.post
-            ? cacheN.post === notification.post
-            : cacheN.commentPost
-              ? cacheN.commentPost === notification.commentPost
-              : cacheN.replyPost
-                ? cacheN.replyPost === notification.replyPost
-                : null;
-          const idMatch = cacheN.postID
-            ? cacheN.postID === notification.postID
-            : cacheN.commentID
-              ? cacheN.commentID === notification.commentID
-              : cacheN.replyID
-                ? cacheN.replyID === notification.replyID
-                : null;
-          const reactionTypeMatch =
-            cacheN.reactionType && notification.reactionType
-              ? cacheN.reactionType === notification.reactionType
-              : true; // If either reactionType is null, consider it a match
-          const createdAtMatch = cacheN.createdAt === notification.createdAt;
-          const userMatch = cacheN.userName === notification.userName;
-          // Check if the cached notification matches the current notification based on various criteria.
-          if (
-            idMatch &&
-            notificationTypeMatch &&
-            postType &&
-            reactionTypeMatch &&
-            createdAtMatch &&
-            userMatch
-          ) {
-            return {
-              ...notification,
-              id: cacheN.id,
-            };
-          }
-        });
-        // If no matching cached notification is found, create a new notification with a unique ID and mark it as unread.
-        return (
-          cachedNotification ?? {
-            ...notification,
-            id: crypto.randomUUID(),
-            wasRead: false,
-          }
-        );
-      },
+    const userID = req.user.id;
+    const cachedNotifications = cachedUserNotificationState.get(userID) || [];
+    // Fetch the latest notifications from the database and build the notification state for the authenticated user.
+    const IndividualNotifications = await buildNotificationState(userID);
+
+    // Compare the cached notifications with the newly fetched notifications to find any matching notifications.
+    const filteredAndInitializedNotifications = findMatchingNotification(
+      cachedNotifications,
+      IndividualNotifications,
+      true,
     );
 
-    const areAllNotificationsRead = mapNotificationsById.every(
+    const areAllNotificationsRead = filteredAndInitializedNotifications.every(
       (notification) => notification.wasRead,
     );
     //if none of the notifications are read, including any new notifications, send the count to the client
     if (!areAllNotificationsRead) {
       let payload = {};
       //we want to check if all notifications are unread before we determine how many the other individual notifications are unread
-      const allAreUnread = mapNotificationsById.filter(
+      const allAreUnread = filteredAndInitializedNotifications.filter(
         (notification) => !notification.wasRead,
       ).length;
       // If all notifications are unread, send the count to the client immediately.
-      if (allAreUnread === mapNotificationsById.length) {
+      if (allAreUnread === filteredAndInitializedNotifications.length) {
         payload = {
           count: allAreUnread,
-          notifications: mapNotificationsById,
+          notifications: filteredAndInitializedNotifications,
         };
         // Save the updated notification state to the database because we are pulling from database and need to make sure we save this state in the users table. At this point in the code, there was something added to the notifications array that needs to be persisted. As a result, we call the function to save the current state.
 
-        cachedUserNotificationState.set(userId, mapNotificationsById);
+        cachedUserNotificationState.set(
+          userID,
+          filteredAndInitializedNotifications,
+        );
         res.write(`data: ${JSON.stringify({ payload })}\n\n`);
         return;
       }
       //select the few marked as unread
-      const fewAreUnread = mapNotificationsById.filter(
+      const fewAreUnread = filteredAndInitializedNotifications.filter(
         (notification) => !notification.wasRead,
       );
       // Save the updated notification state to the database because we are pulling from database and need to make sure we save this state in the users table. At this point in the code, there was something added to the notifications array that needs to be persisted. As a result, we call the function to save the current state.
-      await saveNotificationState(userId, mapNotificationsById);
+      await saveNotificationState(userID, filteredAndInitializedNotifications);
       //save to cache
-      cachedUserNotificationState.set(userId, mapNotificationsById);
+      cachedUserNotificationState.set(
+        userID,
+        filteredAndInitializedNotifications,
+      );
       // If only a few notifications are unread, send the count to the client.
       if (fewAreUnread.length > 0) {
         payload = {
           count: fewAreUnread.length,
-          notifications: mapNotificationsById,
+          notifications: filteredAndInitializedNotifications,
         };
       }
       res.write(`data: ${JSON.stringify({ payload })}\n\n`);
       return;
     } else {
-      // If all notifications are read, do nothing and return early.
+      let payload = {};
+      payload = {
+        "updated-notification-feed": filteredAndInitializedNotifications,
+      };
+
+      res.write(`data: ${JSON.stringify({ payload })}\n\n`);
+
       return;
     }
   }, 5000); // Send updates every 5 seconds

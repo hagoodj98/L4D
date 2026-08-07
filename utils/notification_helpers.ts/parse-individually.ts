@@ -2,7 +2,7 @@ import {
   NotificationSource,
   NotificationSourceType,
   NotificationType,
-} from "../types/types.js";
+} from "../../types/types.js";
 
 export const getAllSourcedNotifications = async (
   sourcedNotifications: NotificationSource[],

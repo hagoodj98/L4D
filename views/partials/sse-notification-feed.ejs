@@ -10,26 +10,29 @@
     source.onmessage = (e) => {
       const lengthOfNotifications = JSON.parse(e.data).payload.count;
       const notifications = JSON.parse(e.data).payload.notifications ?? [];
-      if (
-        notificationCountContainer.classList.contains(
-          "notification-count-container-hidden",
-        )
-      ) {
-        notificationCountContainer.classList.remove(
-          "notification-count-container-hidden",
-        );
-      }
-      const notificationsNotRead = notifications.filter(
+      const notificationFeed =
+        JSON.parse(e.data).payload["updated-notification-feed"] ?? [];
+      let notificationRead = [];
+      let notificationsNotRead = [];
+
+      // Update the notification count text
+      notificationsNotRead = notifications.filter(
         (item) => item.wasRead === false,
       );
-      const notificationRead = notifications.filter(
-        (item) => item.wasRead === true,
-      );
-      if (notifications.length > 0) {
+      // Update the notification count text
+      notificationRead = notifications.filter((item) => item.wasRead === true);
+      if (notificationFeed.length > 0 && notifications.length === 0) {
+        notificationRead = notificationFeed;
+      }
+      if (
+        notifications.length > 0 ||
+        (notificationFeed.length > 0 && notifications.length === 0)
+      ) {
         //clear the notifications section before replacing them
         const getNotificationsSection = document.getElementById(
           "notificationsDropdown",
         );
+        //replace all children except the first child (the title) with the new notifications
         getNotificationsSection.replaceChildren(
           getNotificationsSection.firstChild,
         );
@@ -63,10 +66,10 @@
         }
         if (notificationRead.length !== 0) {
           //We don't need to show the notification count for read notifications
+          const getNotificationsSection = document.getElementById(
+            "notificationsDropdown",
+          );
           notificationRead.forEach((item) => {
-            const getNotificationsSection = document.getElementById(
-              "notificationsDropdown",
-            );
             const { likeComment, commentPost, replyPost, likePost, likeReply } =
               createTextForNotificationType(item);
             createNotificationElement(
