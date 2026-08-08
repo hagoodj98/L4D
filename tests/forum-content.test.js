@@ -32,16 +32,19 @@ describe("Forum content flows", () => {
   });
 
   it("does not create post when user is unauthenticated", async () => {
-    const response = await request(app).post("/add-post").type("form").send({
-      newPost: "should not be created",
-    });
+    const response = await request(app)
+      .post("/forum/response-body/add-post")
+      .type("form")
+      .send({
+        newPost: "should not be created",
+      });
 
     expect(response.status).toBe(302);
     expect(response.headers.location).toBe("/login");
     expect(dbState.posts).toHaveLength(0);
   });
 
-  it("creates a reply and renders it in /forumpost", async () => {
+  it("creates a reply and renders it in /forum/pagination", async () => {
     const agent = await registerAndLogin(app, {
       username: "replier",
       email: "replier@example.com",
@@ -58,7 +61,7 @@ describe("Forum content flows", () => {
     expect(dbState.replies).toHaveLength(1);
     expect(reply.comment_post).toBe("this is a test reply");
 
-    const paginationResponse = await agent.get("/forumpagination?page=1");
+    const paginationResponse = await agent.get("/forum/pagination?page=1");
     expect(paginationResponse.status).toBe(200);
     expect(
       paginationResponse.body.listAllContent[0].replies[0].comment_post,
@@ -76,10 +79,8 @@ describe("Forum content flows", () => {
 
     expect(forumResponse.status).toBe(200);
     expect(forumResponse.text).toContain("showAllReplies(");
-    expect(forumResponse.text).toContain('id="postcommentButton-${p.id}"');
-    expect(forumResponse.text).toContain(
-      'id="create-comment-for-post-${p.id}"',
-    );
+    expect(forumResponse.text).toContain("toggleReplyBox(");
+    expect(forumResponse.text).toContain("create-comment-for-post-");
     expect(post.id).toBeGreaterThan(0);
   });
 
@@ -101,7 +102,7 @@ describe("Forum content flows", () => {
     expect(dbState.repliesFinalTier).toHaveLength(1);
     expect(subReply.comment_post).toBe("nested child reply");
 
-    const paginationResponse = await agent.get("/forumpagination?page=1");
+    const paginationResponse = await agent.get("/forum/pagination?page=1");
     expect(paginationResponse.status).toBe(200);
     expect(
       paginationResponse.body.listAllContent[0].replies[0].replies_final_tier[0]

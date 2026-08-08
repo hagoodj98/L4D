@@ -26,7 +26,7 @@ describe("Reaction flows", () => {
     const post = await addPost(agent, "reaction target", dbState);
 
     const reactResponse = await agent
-      .post("/post-reaction")
+      .post("/post-type-reaction/post-reaction")
       .set("Content-Type", "application/json")
       .send({
         post_id: post.id,
@@ -51,10 +51,10 @@ describe("Reaction flows", () => {
     const reply = await addReply(agent, post.id, "reply to react to", dbState);
 
     const reactResponse = await agent
-      .post("/post-reaction")
+      .post("/post-type-reaction/comment-reaction")
       .set("Content-Type", "application/json")
       .send({
-        comment_post_id: reply.id,
+        comment_id: reply.id,
         reaction_type: "dislike",
       });
 
@@ -75,7 +75,7 @@ describe("Reaction flows", () => {
     const post = await addPost(agent, "toggle like post", dbState);
 
     await agent
-      .post("/post-reaction")
+      .post("/post-type-reaction/post-reaction")
       .set("Content-Type", "application/json")
       .send({
         post_id: post.id,
@@ -85,7 +85,7 @@ describe("Reaction flows", () => {
     expect(dbState.postReactions).toHaveLength(1);
 
     const secondResponse = await agent
-      .post("/post-reaction")
+      .post("/post-type-reaction/post-reaction")
       .set("Content-Type", "application/json")
       .send({
         post_id: post.id,
@@ -114,20 +114,20 @@ describe("Reaction flows", () => {
     );
 
     await agent
-      .post("/post-reaction")
+      .post("/post-type-reaction/comment-reaction")
       .set("Content-Type", "application/json")
       .send({
-        comment_post_id: reply.id,
+        comment_id: reply.id,
         reaction_type: "dislike",
       });
 
     expect(dbState.commentReactions).toHaveLength(1);
 
     const secondResponse = await agent
-      .post("/post-reaction")
+      .post("/post-type-reaction/comment-reaction")
       .set("Content-Type", "application/json")
       .send({
-        comment_post_id: reply.id,
+        comment_id: reply.id,
         reaction_type: "dislike",
       });
 
@@ -154,10 +154,10 @@ describe("Reaction flows", () => {
     );
 
     const reactResponse = await agent
-      .post("/post-reaction")
+      .post("/post-type-reaction/reply-reaction")
       .set("Content-Type", "application/json")
       .send({
-        final_reply_id: finalReply.id,
+        reply_id: finalReply.id,
         reaction_type: "like",
       });
 
@@ -169,10 +169,10 @@ describe("Reaction flows", () => {
     expect(dbState.finalReplyReactions[0].reaction_type).toBe("like");
 
     const secondResponse = await agent
-      .post("/post-reaction")
+      .post("/post-type-reaction/reply-reaction")
       .set("Content-Type", "application/json")
       .send({
-        final_reply_id: finalReply.id,
+        reply_id: finalReply.id,
         reaction_type: "like",
       });
 

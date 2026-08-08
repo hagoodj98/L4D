@@ -36,7 +36,7 @@
 
       <div class="auth-divider roboto-condensed mb-3">or create with email</div>
 
-      <form class="auth-form" action="/register" method="POST">
+      <form class="auth-form" action="/auth/register" method="POST">
         <span class="auth-error"
           ><%- locals.error ? locals.error.duplicateInfo : "" %></span
         >
@@ -99,7 +99,7 @@
 
         <p class="auth-bottom-link roboto-condensed text-center mt-3">
           Already have an account?
-          <a href="/login">Login</a>
+          <a href="/auth/login">Login</a>
         </p>
       </form>
     </section>

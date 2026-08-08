@@ -6,12 +6,12 @@ function uniqueSuffix() {
 }
 
 async function registerUser(page, username, email) {
-  await page.goto("/register");
+  await page.goto("/auth/register");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Username").fill(username);
   await page.getByLabel("Password").fill("secret123");
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL(/\/forum$/);
+  await expect(page).toHaveURL(/\/forum(\?page=\d+)?$/);
 }
 
 async function createNotificationScenario(browser, suffix) {
@@ -30,7 +30,7 @@ async function createNotificationScenario(browser, suffix) {
 
   const postResult = await user1Page.evaluate(
     async ({ postText }) => {
-      const response = await fetch("/add-post", {
+      const response = await fetch("/forum/response-body/add-post", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ newPost: postText }),
@@ -47,12 +47,15 @@ async function createNotificationScenario(browser, suffix) {
   await registerUser(user97Page, user97Name, user97Email);
   await user97Page.goto("/forum");
 
-  const likeResponse = await user97Page.request.post("/post-reaction", {
-    data: {
-      post_id: postId,
-      reaction_type: "like",
+  const likeResponse = await user97Page.request.post(
+    "/post-type-reaction/post-reaction",
+    {
+      data: {
+        post_id: postId,
+        reaction_type: "like",
+      },
     },
-  });
+  );
 
   expect(likeResponse.status()).toBe(200);
 
@@ -95,7 +98,7 @@ async function createTwoUserScenario(browser, suffix, scope) {
 async function createPost(page, postText) {
   const result = await page.evaluate(
     async ({ postText }) => {
-      const response = await fetch("/add-post", {
+      const response = await fetch("/forum/response-body/add-post", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ newPost: postText }),
@@ -112,7 +115,7 @@ async function createPost(page, postText) {
 async function addCommentToPost(page, postId, commentText) {
   const result = await page.evaluate(
     async ({ postId, commentText }) => {
-      const response = await fetch("/add-reply", {
+      const response = await fetch("/forum/response-body/add-comment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -126,13 +129,13 @@ async function addCommentToPost(page, postId, commentText) {
   );
 
   expect(result.success).toBe(true);
-  return result.reply;
+  return result.comment;
 }
 
 async function addReplyToComment(page, commentId, replyText) {
   const result = await page.evaluate(
     async ({ commentId, replyText }) => {
-      const response = await fetch("/add-reply", {
+      const response = await fetch("/forum/response-body/add-reply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -155,7 +158,7 @@ async function waitForNotification(ownerPage, expected) {
     .poll(
       async () =>
         ownerPage.evaluate(async (target) => {
-          const response = await fetch("/check-notifications-reloaded", {
+          const response = await fetch("/notifications/load-notifications", {
             method: "GET",
             headers: { "Content-Type": "application/json" },
           });
@@ -222,8 +225,342 @@ async function waitForUnreadNotification(page) {
     .toBeGreaterThan(0);
 }
 
+async function waitForNotificationToDisappear(ownerPage, expected) {
+  await expect
+    .poll(
+      async () =>
+        ownerPage.evaluate(async (target) => {
+          const response = await fetch("/notifications/load-notifications", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          });
+          const payload = await response.json();
+
+          return !payload.notifications.some((notification) => {
+            const notificationType =
+              notification.notificationType ?? notification.notification_type;
+            const userName = notification.userName ?? notification.user_name;
+            const reactionType =
+              notification.reactionType ?? notification.reaction_type;
+            const postId = notification.postID ?? notification.post_id;
+
+            return (
+              notificationType === target.type &&
+              userName === target.userName &&
+              (target.reactionType === null
+                ? reactionType == null
+                : reactionType === target.reactionType) &&
+              String(postId) === String(target.postId)
+            );
+          });
+        }, expected),
+      { timeout: 25_000 },
+    )
+    .toBe(true);
+}
+
+async function waitForReactionIntent(
+  page,
+  postId,
+  reactionType,
+  expectedIntent,
+) {
+  await expect
+    .poll(
+      async () => {
+        try {
+          const response = await page.request.post(
+            "/post-type-reaction/post-reaction",
+            {
+              data: {
+                post_id: String(postId),
+                reaction_type: reactionType,
+              },
+            },
+          );
+
+          if (response.status() !== 200) {
+            return null;
+          }
+
+          const payload = await response.json();
+          return payload.reaction_intent ?? null;
+        } catch {
+          return null;
+        }
+      },
+      { timeout: 20_000 },
+    )
+    .toBe(expectedIntent);
+}
+
+async function expectNotificationHighlight(targetLocator) {
+  await expect
+    .poll(async () =>
+      targetLocator.evaluate((node) => node.classList.contains("highlight")),
+    )
+    .toBe(true);
+}
+
 test.describe("Notification SSE flows", () => {
   test.describe.configure({ timeout: 60_000 });
+
+  test("routes to the notification target when clicked from a non-forum page", async ({
+    browser,
+  }) => {
+    const suffix = uniqueSuffix();
+    const { ownerContext, actorContext, ownerPage, actorPage, actorName } =
+      await createTwoUserScenario(browser, suffix, "route-non-forum");
+
+    try {
+      const post = await createPost(ownerPage, `route anywhere post ${suffix}`);
+
+      await ownerPage.goto("/community");
+
+      const postReactionResponse = await actorPage.request.post(
+        "/post-type-reaction/post-reaction",
+        {
+          data: {
+            post_id: String(post.id),
+            reaction_type: "like",
+          },
+        },
+      );
+      expect(postReactionResponse.status()).toBe(200);
+
+      await waitForNotification(ownerPage, {
+        type: "posts_down",
+        userName: actorName,
+        reactionType: "like",
+        postId: post.id,
+      });
+
+      await waitForUnreadNotification(ownerPage);
+
+      await ownerPage.locator("button.bell-button").click();
+      const link = ownerPage
+        .locator("#notificationsDropdown .notification-link a")
+        .filter({ hasText: actorName })
+        .first();
+      await link.click();
+
+      await expect.poll(async () => ownerPage.url()).toContain("/forum?page=");
+
+      const targetPost = ownerPage.locator(`[id="anchor/${post.id}"]`).first();
+      await expectNotificationHighlight(targetPost);
+    } finally {
+      await ownerContext.close();
+      await actorContext.close();
+    }
+  });
+
+  test("routes to the notification target when clicked while already on forum page", async ({
+    browser,
+  }) => {
+    const suffix = uniqueSuffix();
+    const { ownerContext, actorContext, ownerPage, actorPage, actorName } =
+      await createTwoUserScenario(browser, suffix, "route-forum");
+
+    try {
+      const post = await createPost(ownerPage, `route forum post ${suffix}`);
+      await ownerPage.goto("/forum?page=1");
+
+      const postReactionResponse = await actorPage.request.post(
+        "/post-type-reaction/post-reaction",
+        {
+          data: {
+            post_id: String(post.id),
+            reaction_type: "like",
+          },
+        },
+      );
+      expect(postReactionResponse.status()).toBe(200);
+
+      await waitForNotification(ownerPage, {
+        type: "posts_down",
+        userName: actorName,
+        reactionType: "like",
+        postId: post.id,
+      });
+
+      await waitForUnreadNotification(ownerPage);
+
+      await ownerPage.locator("button.bell-button").click();
+      const link = ownerPage
+        .locator("#notificationsDropdown .notification-link a")
+        .filter({ hasText: actorName })
+        .first();
+      await link.click();
+
+      await expect.poll(async () => ownerPage.url()).toContain("/forum?page=1");
+
+      const targetPost = ownerPage.locator(`[id="anchor/${post.id}"]`).first();
+      await expectNotificationHighlight(targetPost);
+    } finally {
+      await ownerContext.close();
+      await actorContext.close();
+    }
+  });
+
+  test("updates the notification bell count when another user likes your post", async ({
+    browser,
+  }) => {
+    const suffix = uniqueSuffix();
+    const { ownerContext, actorContext, ownerPage, actorPage, actorName } =
+      await createTwoUserScenario(browser, suffix, "bell-like");
+
+    try {
+      const post = await createPost(ownerPage, `bell count post ${suffix}`);
+      await ownerPage.goto("/community");
+
+      const postReactionResponse = await actorPage.request.post(
+        "/post-type-reaction/post-reaction",
+        {
+          data: {
+            post_id: String(post.id),
+            reaction_type: "like",
+          },
+        },
+      );
+      expect(postReactionResponse.status()).toBe(200);
+
+      await waitForNotification(ownerPage, {
+        type: "posts_down",
+        userName: actorName,
+        reactionType: "like",
+        postId: post.id,
+      });
+
+      await expect(ownerPage.locator("#notificationCountText")).toHaveText("1");
+      await expect(
+        ownerPage.locator("#notificationCountContainer"),
+      ).toHaveClass(/notification-count-container/);
+    } finally {
+      await ownerContext.close();
+      await actorContext.close();
+    }
+  });
+
+  test("does not keep a read like notification after the actor unlikes the post", async ({
+    browser,
+  }) => {
+    const suffix = uniqueSuffix();
+    const { ownerContext, actorContext, ownerPage, actorPage, actorName } =
+      await createTwoUserScenario(browser, suffix, "unlike-removal");
+
+    try {
+      const post = await createPost(ownerPage, `unlike cleanup post ${suffix}`);
+      await ownerPage.goto("/forum?page=1");
+
+      const likeResponse = await actorPage.request.post(
+        "/post-type-reaction/post-reaction",
+        {
+          data: {
+            post_id: String(post.id),
+            reaction_type: "like",
+          },
+        },
+      );
+      expect(likeResponse.status()).toBe(200);
+
+      await waitForNotification(ownerPage, {
+        type: "posts_down",
+        userName: actorName,
+        reactionType: "like",
+        postId: post.id,
+      });
+
+      const readNotificationsRequest = ownerPage.waitForResponse(
+        (response) =>
+          response.url().includes("/notifications/read-notifications") &&
+          response.request().method() === "POST",
+      );
+      await ownerPage.locator("button.bell-button").click();
+      await readNotificationsRequest;
+
+      await expect(ownerPage.locator("#notificationCountText")).toHaveText("0");
+
+      await waitForReactionIntent(actorPage, post.id, "like", "remove");
+
+      await waitForNotificationToDisappear(ownerPage, {
+        type: "posts_down",
+        userName: actorName,
+        reactionType: "like",
+        postId: post.id,
+      });
+
+      await ownerPage.reload();
+      await expect(
+        ownerPage.locator("#notificationsDropdown"),
+      ).not.toContainText(`${actorName} liked your post`);
+    } finally {
+      await ownerContext.close();
+      await actorContext.close();
+    }
+  });
+
+  test("does not keep a read like notification when actor unlikes while owner is offline", async ({
+    browser,
+  }) => {
+    const suffix = uniqueSuffix();
+    const { ownerContext, actorContext, ownerPage, actorPage, actorName } =
+      await createTwoUserScenario(browser, suffix, "unlike-offline");
+
+    try {
+      const post = await createPost(ownerPage, `offline unlike post ${suffix}`);
+      await ownerPage.goto("/forum?page=1");
+
+      const likeResponse = await actorPage.request.post(
+        "/post-type-reaction/post-reaction",
+        {
+          data: {
+            post_id: String(post.id),
+            reaction_type: "like",
+          },
+        },
+      );
+      expect(likeResponse.status()).toBe(200);
+
+      await waitForNotification(ownerPage, {
+        type: "posts_down",
+        userName: actorName,
+        reactionType: "like",
+        postId: post.id,
+      });
+
+      const readNotificationsRequest = ownerPage.waitForResponse(
+        (response) =>
+          response.url().includes("/notifications/read-notifications") &&
+          response.request().method() === "POST",
+      );
+      await ownerPage.locator("button.bell-button").click();
+      await readNotificationsRequest;
+
+      await expect(ownerPage.locator("#notificationCountText")).toHaveText("0");
+
+      await ownerPage.close();
+
+      await waitForReactionIntent(actorPage, post.id, "like", "remove");
+
+      const ownerReturnPage = await ownerContext.newPage();
+      await ownerReturnPage.goto("/forum?page=1");
+
+      await waitForNotificationToDisappear(ownerReturnPage, {
+        type: "posts_down",
+        userName: actorName,
+        reactionType: "like",
+        postId: post.id,
+      });
+
+      await ownerReturnPage.reload();
+      await expect(
+        ownerReturnPage.locator("#notificationsDropdown"),
+      ).not.toContainText(`${actorName} liked your post`);
+    } finally {
+      await ownerContext.close();
+      await actorContext.close();
+    }
+  });
 
   test("clicking a notification route scrolls to the targeted final reply and highlights it temporarily", async ({
     browser,
@@ -246,10 +583,10 @@ test.describe("Notification SSE flows", () => {
       );
 
       const finalReplyReactionResponse = await actorPage.request.post(
-        "/post-reaction",
+        "/post-type-reaction/reply-reaction",
         {
           data: {
-            final_reply_id: String(ownerFinalReply.id),
+            reply_id: String(ownerFinalReply.id),
             reaction_type: "like",
           },
         },
@@ -317,11 +654,7 @@ test.describe("Notification SSE flows", () => {
         .first();
 
       await expect.poll(async () => ownerPage.url()).toContain("/forum?page=1");
-      await expect
-        .poll(async () =>
-          targetReply.evaluate((node) => node.classList.contains("highlight")),
-        )
-        .toBe(true);
+      await expectNotificationHighlight(targetReply);
       await expect
         .poll(async () =>
           targetReply.evaluate((node) => node.classList.contains("highlight")),
@@ -344,7 +677,7 @@ test.describe("Notification SSE flows", () => {
       await waitForUnreadNotification(user1Page);
 
       const reloadedState = await user1Page.evaluate(async () => {
-        const response = await fetch("/check-notifications-reloaded");
+        const response = await fetch("/notifications/load-notifications");
         return response.json();
       });
 
@@ -389,7 +722,7 @@ test.describe("Notification SSE flows", () => {
 
       const readNotificationsRequest = user1Page.waitForResponse(
         (response) =>
-          response.url().includes("/read-notifications") &&
+          response.url().includes("/notifications/read-notifications") &&
           response.request().method() === "POST",
       );
 
@@ -434,7 +767,7 @@ test.describe("Notification SSE flows", () => {
       const post = await createPost(ownerPage, postText);
 
       const postReactionResponse = await actorPage.request.post(
-        "/post-reaction",
+        "/post-type-reaction/post-reaction",
         {
           data: {
             post_id: String(post.id),
@@ -500,10 +833,10 @@ test.describe("Notification SSE flows", () => {
       );
 
       const commentReactionResponse = await actorPage.request.post(
-        "/post-reaction",
+        "/post-type-reaction/comment-reaction",
         {
           data: {
-            comment_post_id: String(ownerComment.id),
+            comment_id: String(ownerComment.id),
             reaction_type: "like",
           },
         },
@@ -568,10 +901,10 @@ test.describe("Notification SSE flows", () => {
       );
 
       const finalReplyReactionResponse = await actorPage.request.post(
-        "/post-reaction",
+        "/post-type-reaction/reply-reaction",
         {
           data: {
-            final_reply_id: String(ownerFinalReply.id),
+            reply_id: String(ownerFinalReply.id),
             reaction_type: "dislike",
           },
         },

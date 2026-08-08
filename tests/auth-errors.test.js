@@ -15,7 +15,7 @@ describe("Auth and register error messages", () => {
   it("shows zod validation messages on login page", async () => {
     const agent = request.agent(app);
 
-    const loginResponse = await agent.post("/login").type("form").send({
+    const loginResponse = await agent.post("/auth/login").type("form").send({
       username: "ab",
       password: "123",
     });
@@ -23,7 +23,7 @@ describe("Auth and register error messages", () => {
     expect(loginResponse.status).toBe(302);
     expect(loginResponse.headers.location).toBe("/login");
 
-    const loginPage = await agent.get("/login");
+    const loginPage = await agent.get("/auth/login");
     expect(loginPage.status).toBe(200);
     expect(loginPage.text).toContain(
       "Username must be at least 3 characters long",
@@ -36,7 +36,7 @@ describe("Auth and register error messages", () => {
   it("shows user-not-found message on login page", async () => {
     const agent = request.agent(app);
 
-    const loginResponse = await agent.post("/login").type("form").send({
+    const loginResponse = await agent.post("/auth/login").type("form").send({
       username: "nouser",
       password: "secret123",
     });
@@ -44,7 +44,7 @@ describe("Auth and register error messages", () => {
     expect(loginResponse.status).toBe(302);
     expect(loginResponse.headers.location).toBe("/login");
 
-    const loginPage = await agent.get("/login");
+    const loginPage = await agent.get("/auth/login");
     expect(loginPage.status).toBe(200);
     expect(loginPage.text).toContain("User not found");
   });
@@ -52,15 +52,15 @@ describe("Auth and register error messages", () => {
   it("shows incorrect password message on login page", async () => {
     const agent = request.agent(app);
 
-    await agent.post("/register").type("form").send({
+    await agent.post("/auth/register").type("form").send({
       username: "existinguser",
       email: "existing@example.com",
       password: "secret123",
     });
 
-    await agent.get("/logout");
+    await agent.get("/auth/logout");
 
-    const loginResponse = await agent.post("/login").type("form").send({
+    const loginResponse = await agent.post("/auth/login").type("form").send({
       username: "existinguser",
       password: "wrongpass",
     });
@@ -68,7 +68,7 @@ describe("Auth and register error messages", () => {
     expect(loginResponse.status).toBe(302);
     expect(loginResponse.headers.location).toBe("/login");
 
-    const loginPage = await agent.get("/login");
+    const loginPage = await agent.get("/auth/login");
     expect(loginPage.status).toBe(200);
     expect(loginPage.text).toContain("Incorrect password");
   });
@@ -76,30 +76,33 @@ describe("Auth and register error messages", () => {
   it("shows duplicate user info on register and clears it after one view", async () => {
     const agent = request.agent(app);
 
-    await agent.post("/register").type("form").send({
+    await agent.post("/auth/register").type("form").send({
       username: "dupuser",
       email: "dup@example.com",
       password: "secret123",
     });
 
-    await agent.get("/logout");
+    await agent.get("/auth/logout");
 
-    const duplicateResponse = await agent.post("/register").type("form").send({
-      username: "dupuser",
-      email: "dup@example.com",
-      password: "secret123",
-    });
+    const duplicateResponse = await agent
+      .post("/auth/register")
+      .type("form")
+      .send({
+        username: "dupuser",
+        email: "dup@example.com",
+        password: "secret123",
+      });
 
     expect(duplicateResponse.status).toBe(302);
     expect(duplicateResponse.headers.location).toBe("/register");
 
-    const firstRegisterPage = await agent.get("/register");
+    const firstRegisterPage = await agent.get("/auth/register");
     expect(firstRegisterPage.status).toBe(200);
     expect(firstRegisterPage.text).toContain(
       "You typed an email or username that already exists, try a new one!",
     );
 
-    const secondRegisterPage = await agent.get("/register");
+    const secondRegisterPage = await agent.get("/auth/register");
     expect(secondRegisterPage.status).toBe(200);
     expect(secondRegisterPage.text).not.toContain(
       "You typed an email or username that already exists, try a new one!",
