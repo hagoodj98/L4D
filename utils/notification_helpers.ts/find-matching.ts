@@ -2,11 +2,8 @@ import { NotificationType } from "../../types/types.js";
 
 export const findMatchingNotification = (
   cachedNotifications: NotificationType[],
-  notifications: NotificationType[],
-  incomingNotifications: boolean = false,
+  notifications?: NotificationType[],
 ): NotificationType[] => {
-  let initializedNotifications: NotificationType[];
-  //Staleness detected. We need to make sure the notifications are up to date as well. User may read all notifications. But another user may undo their reaction to current user's post, etc. We want to make sure any old notifications are shredded from cached array we gotten from database
   const filteredNotifications = notifications?.map((notification) => {
     // Check if the current notification matches any cached notification based on various criteria.
     const cachedNotification = cachedNotifications.find((cacheN) => {
@@ -42,38 +39,22 @@ export const findMatchingNotification = (
         createdAtMatch &&
         userMatch
       ) {
+        // If a matching cached notification is found, return it with its original ID.
         return {
           ...notification,
           id: cacheN.id,
         };
       }
     });
-    if (incomingNotifications) {
-      return (
-        cachedNotification ?? {
-          ...notification,
-          id: crypto.randomUUID(),
-          wasRead: false,
-        }
-      );
-    }
+    // If no matching cached notification is found, return the current notification with a new ID and mark it as unread.
+
     return (
       cachedNotification ?? {
         ...notification,
+        id: crypto.randomUUID(),
+        wasRead: false,
       }
     );
   });
-  if (!incomingNotifications) {
-    // Mark all individual notifications as unread before saving to the database.
-    initializedNotifications = filteredNotifications.map(
-      (notification: NotificationType) => ({
-        id: notification?.id ?? crypto.randomUUID(),
-        ...notification,
-        wasRead: notification?.wasRead ?? false, // Mark as unread if not already read
-      }),
-    );
-    return initializedNotifications;
-  }
-  initializedNotifications = filteredNotifications;
-  return initializedNotifications;
+  return filteredNotifications ?? [];
 };

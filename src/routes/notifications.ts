@@ -53,7 +53,6 @@ router.get("/update-notifications", (req, res) => {
     const filteredAndInitializedNotifications = findMatchingNotification(
       cachedNotifications,
       IndividualNotifications,
-      true,
     );
 
     const areAllNotificationsRead = filteredAndInitializedNotifications.every(
@@ -72,10 +71,6 @@ router.get("/update-notifications", (req, res) => {
           count: allAreUnread,
           notifications: filteredAndInitializedNotifications,
         };
-        await saveNotificationState(
-          userID,
-          filteredAndInitializedNotifications,
-        );
         cachedUserNotificationState.set(
           userID,
           filteredAndInitializedNotifications,
@@ -121,12 +116,11 @@ router.get("/update-notifications", (req, res) => {
     res.end();
   });
 });
-
+// Route to load notifications for the authenticated user
 router.get("/load-notifications", (req, res) => {
   if (!req.isAuthenticated()) {
     return res.redirect("/login");
   }
-
   const userId = req.user.id;
   const userNotifications = cachedUserNotificationState.get(userId) || [];
 
