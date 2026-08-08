@@ -6,7 +6,7 @@
     "notificationCountContainer",
   );
   if (typeof EventSource !== undefined) {
-    const source = new EventSource("/update-notifications");
+    const source = new EventSource("/notifications/update-notifications");
     source.onmessage = (e) => {
       const lengthOfNotifications = JSON.parse(e.data).payload.count;
       const notifications = JSON.parse(e.data).payload.notifications ?? [];

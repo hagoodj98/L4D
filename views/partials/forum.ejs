@@ -107,7 +107,7 @@
      currentPage = Number(page);
      try {
        const response = await fetch(
-         `/forum-pagination?page=${page}&offset=${offset}`,
+         `/forum/pagination?page=${page}&offset=${offset}`,
        );
        const data = await response.json();
        // Update the active page button styling
@@ -431,7 +431,7 @@
        if (!postContent) return;
 
        try {
-         const response = await fetch("http://localhost:3000/add-post", {
+         const response = await fetch("http://localhost:3000/forum/response-body/add-post", {
            method: "POST",
            headers: { "Content-Type": "application/json" },
            body: JSON.stringify({ newPost: postContent }),
@@ -466,7 +466,7 @@
            if (!replyInput || !replyInput.value.trim()) return;
 
            const replyValue = replyInput.value.trim();
-           const response = await fetch("http://localhost:3000/add-reply", {
+           const response = await fetch("http://localhost:3000/forum/response-body/add-reply", {
              method: "POST",
              headers: { "Content-Type": "application/json" },
              body: JSON.stringify({ comment_id: commentID, reply_post: replyValue }),
@@ -510,7 +510,7 @@
            if (!commentInput || !commentInput.value.trim()) return;
 
            const commentValue = commentInput.value.trim();
-           const response = await fetch("http://localhost:3000/add-comment", {
+           const response = await fetch("http://localhost:3000/forum/response-body/add-comment", {
              method: "POST",
              headers: { "Content-Type": "application/json" },
              body: JSON.stringify({ post_id: postId, comment_post: commentValue, currentPage }),
@@ -550,7 +550,7 @@
        async function ascendForum() {
 
          try {
-           const response = await fetch("http://localhost:3000/ascend");
+           const response = await fetch("http://localhost:3000/forum/ascend");
            const redirect = await response.redirected ? { url: response.url } : null;
 
            if (redirect) {
@@ -568,7 +568,7 @@
        async function descendForum() {
          // Fetch the sorted posts from the server
          try {
-           const response = await fetch("http://localhost:3000/descend");
+           const response = await fetch("http://localhost:3000/forum/descend");
            const redirect = await response.redirected ? { url: response.url } : null;
            // Check if the response was a redirect
            if (redirect) {
@@ -588,9 +588,9 @@
      //Prevent reference error by ensuring postType is defined
      let postTypes = postType;
        try {
-         const postEndpoint = postTypes === 'post' ? '/post-reaction' : null
-         const commentEndpoint = postTypes === 'comment' ? '/comment-reaction' : null;
-         const replyEndpoint = postTypes === 'reply' ? '/reply-reaction' : null;
+         const postEndpoint = postTypes === 'post' ? '/post-type-reaction/post-reaction' : null
+         const commentEndpoint = postTypes === 'comment' ? '/post-type-reaction/comment-reaction' : null;
+         const replyEndpoint = postTypes === 'reply' ? '/post-type-reaction/reply-reaction' : null;
 
          const response = await fetch(postEndpoint ?? commentEndpoint ?? replyEndpoint, {
            method: "POST",

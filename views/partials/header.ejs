@@ -127,7 +127,7 @@
                 <ul class="dropdown-menu dropdown-menu-end site-dropdown-menu" >
                   <span class="text-white">Profile,</span>
                   <p class="text-white"><%= locals.user %></p>
-                  <li class="nav-item"> <a class="nav-link roboto-condensed" href="/logout"
+                  <li class="nav-item"> <a class="nav-link roboto-condensed" href="/auth/logout"
                   > Logout</a
                 ></li>
                 </ul>
@@ -135,7 +135,7 @@
               
               <% } else { %>
               <li class="nav-item">
-                <a class="nav-link roboto-condensed" href="/login"
+                <a class="nav-link roboto-condensed" href="/auth/login"
                   >Login</a
                 >
               </li>

@@ -1,6 +1,6 @@
 <script>
   async function handleNotifcationRoute(route) {
-    const response = await fetch(`http://localhost:3000/total-posts`);
+    const response = await fetch(`http://localhost:3000/forum/total-posts`);
     const data = await response.json();
     const totalPosts = data.totalPosts;
     const paginationNumber = data.paginationNumber;
@@ -219,7 +219,7 @@
       );
     }
     // Send a POST request to the server to mark notifications as read
-    const response = await fetch("/read-notifications", {
+    const response = await fetch("/notifications/read-notifications", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -238,7 +238,7 @@
       "notification-count-container-hidden";
   }
   document.addEventListener("DOMContentLoaded", async () => {
-    const response = await fetch("/load-notifications", {
+    const response = await fetch("/notifications/load-notifications", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
