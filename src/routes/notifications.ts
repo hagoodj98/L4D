@@ -100,6 +100,9 @@ router.get("/update-notifications", (req, res) => {
       return;
     } else {
       let payload = {};
+      // Keep cache and persisted state in sync even when all notifications are
+      // read (including when reactions are removed and the list becomes empty).
+      cachedUserNotificationState.set(userID, filteredAndInitializedNotifications);
       payload = {
         "updated-notification-feed": filteredAndInitializedNotifications,
       };

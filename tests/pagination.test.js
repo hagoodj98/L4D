@@ -29,7 +29,7 @@ describe("Forum pagination", () => {
 
     await seedPosts(agent, 6);
 
-    const response = await agent.get("/forumpagination?page=1");
+    const response = await agent.get("/forum/pagination?page=1");
 
     expect(response.status).toBe(200);
     const rows = response.body.listAllContent;
@@ -51,7 +51,7 @@ describe("Forum pagination", () => {
 
     await seedPosts(agent, 6);
 
-    const response = await agent.get("/forumpagination?page=2");
+    const response = await agent.get("/forum/pagination?page=2");
 
     expect(response.status).toBe(200);
     const rows = response.body.listAllContent;

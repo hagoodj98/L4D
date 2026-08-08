@@ -60,30 +60,30 @@ describe("OAuth route wiring", () => {
     expect(response.headers.location).toContain("discord");
   });
 
-  it("redirects /auth/google/forum to /login when provider returns an error", async () => {
+  it("redirects /auth/google/forum to /auth/login when provider returns an error", async () => {
     const response = await request(app).get(
       "/auth/google/forum?error=access_denied",
     );
 
     expect(response.status).toBe(302);
-    expect(response.headers.location).toBe("/login");
+    expect(response.headers.location).toBe("/auth/login");
   });
 
-  it("redirects /auth/twitch/forum to /login when provider returns an error", async () => {
+  it("redirects /auth/twitch/forum to /auth/login when provider returns an error", async () => {
     const response = await request(app).get(
       "/auth/twitch/forum?error=access_denied",
     );
 
     expect(response.status).toBe(302);
-    expect(response.headers.location).toBe("/login");
+    expect(response.headers.location).toBe("/auth/login");
   });
 
-  it("redirects /auth/discord/forum to /login when provider returns an error", async () => {
+  it("redirects /auth/discord/forum to /auth/login when provider returns an error", async () => {
     const response = await request(app).get(
       "/auth/discord/forum?error=access_denied",
     );
 
     expect(response.status).toBe(302);
-    expect(response.headers.location).toBe("/login");
+    expect(response.headers.location).toBe("/auth/login");
   });
 });

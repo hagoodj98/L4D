@@ -33,12 +33,15 @@ describe("Auth flows", () => {
       username: "user2",
       email: "user2@example.com",
     });
-    await agent.get("/logout");
+    await agent.get("/auth/logout");
 
-    const loginResponse = await request(app).post("/login").type("form").send({
-      username: "user2",
-      password: "secret123",
-    });
+    const loginResponse = await request(app)
+      .post("/auth/login")
+      .type("form")
+      .send({
+        username: "user2",
+        password: "secret123",
+      });
 
     expect(loginResponse.status).toBe(302);
     expect(loginResponse.headers.location).toBe("/forum");
@@ -51,7 +54,7 @@ describe("Auth flows", () => {
     });
 
     const duplicateResponse = await request(app)
-      .post("/register")
+      .post("/auth/register")
       .type("form")
       .send({
         username: "beta",
@@ -64,16 +67,19 @@ describe("Auth flows", () => {
     expect(dbState.users).toHaveLength(1);
   });
 
-  it("fails login with wrong password and redirects to /login-error", async () => {
+  it("fails login with wrong password and redirects to /login", async () => {
     await registerAndLogin(app, {
       username: "wrongpass",
       email: "wrongpass@example.com",
     });
 
-    const loginResponse = await request(app).post("/login").type("form").send({
-      username: "wrongpass",
-      password: "not-the-password",
-    });
+    const loginResponse = await request(app)
+      .post("/auth/login")
+      .type("form")
+      .send({
+        username: "wrongpass",
+        password: "not-the-password",
+      });
 
     expect(loginResponse.status).toBe(302);
     expect(loginResponse.headers.location).toBe("/login");

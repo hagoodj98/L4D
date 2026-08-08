@@ -47,10 +47,10 @@ test.describe("Navigation and public routes", () => {
     ).toBeVisible();
 
     await page.getByRole("link", { name: "log in" }).click();
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(/\/auth\/login$/);
 
     await page.goto("/forum");
     await page.getByRole("link", { name: "create an account" }).click();
-    await expect(page).toHaveURL(/\/register$/);
+    await expect(page).toHaveURL(/\/auth\/register$/);
   });
 });

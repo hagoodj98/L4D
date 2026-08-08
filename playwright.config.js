@@ -11,7 +11,7 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   webServer: {
-    command: "npm start",
+    command: "npm run build && npm start",
     url: "http://localhost:3000",
     reuseExistingServer: true,
     timeout: 120_000,

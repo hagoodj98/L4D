@@ -12,7 +12,7 @@ describe("Notification read state", () => {
     resetDbState();
   });
 
-  it("persists read notifications and returns the read state after reload", async () => {
+  it("loads cached notifications and persists read state through the public route", async () => {
     dbState.pendingNotificationState = [
       {
         id: "notification-1",
@@ -30,20 +30,22 @@ describe("Notification read state", () => {
       email: "notificationuser@example.com",
     });
 
-    const beforeRead = await agent.get("/check-notifications-reloaded");
+    const beforeRead = await agent.get("/notifications/load-notifications");
 
     expect(beforeRead.status).toBe(200);
     expect(beforeRead.body.notifications).toHaveLength(1);
     expect(beforeRead.body.notifications[0].wasRead).toBe(false);
 
-    const readResponse = await agent.post("/read-notifications").send({});
+    const readResponse = await agent
+      .post("/notifications/read-notifications")
+      .send({});
 
     expect(readResponse.status).toBe(200);
     expect(dbState.users[0].notification_state.notifications[0].wasRead).toBe(
       true,
     );
 
-    const afterReload = await agent.get("/check-notifications-reloaded");
+    const afterReload = await agent.get("/notifications/load-notifications");
 
     expect(afterReload.status).toBe(200);
     expect(afterReload.body.notifications).toHaveLength(1);

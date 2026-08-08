@@ -6,7 +6,7 @@ export async function registerAndLogin(
   { username, email, password = "secret123" },
 ) {
   const agent = request.agent(app);
-  const response = await agent.post("/register").type("form").send({
+  const response = await agent.post("/auth/register").type("form").send({
     username,
     email,
     password,
@@ -20,7 +20,7 @@ export async function registerAndLogin(
 
 export async function addPost(agent, content, dbState) {
   const response = await agent
-    .post("/add-post")
+    .post("/forum/response-body/add-post")
     .set("Content-Type", "application/json")
     .send({
       newPost: content,
@@ -34,7 +34,7 @@ export async function addPost(agent, content, dbState) {
 
 export async function addReply(agent, postId, content, dbState) {
   const response = await agent
-    .post("/add-reply")
+    .post("/forum/response-body/add-comment")
     .set("Content-Type", "application/json")
     .send({
       post_id: String(postId),
@@ -44,12 +44,12 @@ export async function addReply(agent, postId, content, dbState) {
   expect(response.status).toBe(200);
   expect(response.body.success).toBe(true);
 
-  return response.body.reply || dbState.replies[dbState.replies.length - 1];
+  return response.body.comment || dbState.replies[dbState.replies.length - 1];
 }
 
 export async function addSubReply(agent, replyId, content, dbState) {
   const response = await agent
-    .post("/add-reply")
+    .post("/forum/response-body/add-reply")
     .set("Content-Type", "application/json")
     .send({
       reply_id: String(replyId),

@@ -7,19 +7,11 @@ function uniqueSuffix() {
 }
 
 function firstTierRepliesButton(page, id) {
-  return page
-    .locator(
-      `button#postcommentButton-${id}[onclick*="showAllReplies(${id}, true, false"]`,
-    )
-    .first();
+  return page.locator(`button#unhide-${id}`).first();
 }
 
 function secondTierRepliesButton(page, id) {
-  return page
-    .locator(
-      `button#commentButton-${id}[onclick*="showAllReplies(${id}, false, false"]`,
-    )
-    .first();
+  return page.locator(`button#unhide-${id}`).first();
 }
 
 test.describe("Forum authenticated flows", () => {
@@ -31,12 +23,12 @@ test.describe("Forum authenticated flows", () => {
     const email = `e2e-pagination-${suffix}@example.com`;
     const password = "secret123";
 
-    await page.goto("/register");
+    await page.goto("/auth/register");
     await page.getByLabel("Email").fill(email);
     await page.getByLabel("Username").fill(username);
     await page.getByLabel("Password").fill(password);
     await page.getByRole("button", { name: "Create account" }).click();
-    await expect(page).toHaveURL(/\/forum$/);
+    await expect(page).toHaveURL(/\/forum(\?page=\d+)?$/);
 
     const posts = Array.from({ length: 6 }, (_, index) => ({
       text: `Pagination E2E post ${index + 1} ${suffix}`,
@@ -45,7 +37,7 @@ test.describe("Forum authenticated flows", () => {
     await page.evaluate(
       async ({ posts }) => {
         for (const post of posts) {
-          const response = await fetch("/add-post", {
+          const response = await fetch("/forum/response-body/add-post", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ newPost: post.text, current_page: "1" }),
@@ -60,7 +52,7 @@ test.describe("Forum authenticated flows", () => {
     );
 
     await page.goto("/forum?page=1");
-    await expect(page.locator(".forum-post-content").first()).toContainText(
+    await expect(page.locator(".forum-content").first()).toContainText(
       posts[5].text,
     );
     await expect(page.locator("#demo")).not.toContainText(posts[0].text);
@@ -84,18 +76,18 @@ test.describe("Forum authenticated flows", () => {
     const postText = `E2E post ${suffix}`;
     const replyText = `E2E reply ${suffix}`;
 
-    await page.goto("/register");
+    await page.goto("/auth/register");
     await page.getByLabel("Email").fill(email);
     await page.getByLabel("Username").fill(username);
     await page.getByLabel("Password").fill(password);
     await page.getByRole("button", { name: "Create account" }).click();
 
-    await expect(page).toHaveURL(/\/forum$/);
+    await expect(page).toHaveURL(/\/forum(\?page=\d+)?$/);
     await expect(page.getByText("Welcome to the forum")).toBeVisible();
 
     await page.locator("textarea[name='newPost']").fill(postText);
     await page.getByRole("button", { name: "Submit Post" }).click();
-    await expect(page.locator(".forum-post-content").first()).toContainText(
+    await expect(page.locator(".forum-content").first()).toContainText(
       postText,
     );
 
@@ -113,8 +105,8 @@ test.describe("Forum authenticated flows", () => {
     await replyTextarea.fill(replyText);
     await expect(replyTextarea).toHaveValue(replyText);
 
-    await page.goto("/logout");
-    await expect(page).toHaveURL(/\/login$/);
+    await page.goto("/auth/logout");
+    await expect(page).toHaveURL(/\/auth\/login$/);
   });
 
   test("authenticated user can create a nested reply to a reply", async ({
@@ -128,16 +120,18 @@ test.describe("Forum authenticated flows", () => {
     const replyText = `Nested E2E reply ${suffix}`;
     const subReplyText = `Nested E2E sub reply ${suffix}`;
 
-    await page.goto("/register");
+    await page.goto("/auth/register");
     await page.getByLabel("Email").fill(email);
     await page.getByLabel("Username").fill(username);
     await page.getByLabel("Password").fill(password);
     await page.getByRole("button", { name: "Create account" }).click();
 
-    await expect(page).toHaveURL(/\/forum$/);
+    await expect(page).toHaveURL(/\/forum(\?page=\d+)?$/);
 
     await page.locator("textarea[name='newPost']").fill(postText);
     await page.getByRole("button", { name: "Submit Post" }).click();
+
+    await page.reload();
 
     const postCard = page
       .locator(".forum-post-card", { hasText: postText })
@@ -160,7 +154,7 @@ test.describe("Forum authenticated flows", () => {
 
     const replyResult = await page.evaluate(
       async ({ postId, replyText }) => {
-        const response = await fetch("/add-reply", {
+        const response = await fetch("/forum/response-body/add-comment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ post_id: postId, comment_post: replyText }),
@@ -171,13 +165,13 @@ test.describe("Forum authenticated flows", () => {
     );
 
     expect(replyResult.success).toBe(true);
-    expect(replyResult.reply.id).toBeTruthy();
+    expect(replyResult.comment.id).toBeTruthy();
 
-    const replyId = replyResult.reply.id;
+    const replyId = replyResult.comment.id;
 
     const subReplyResult = await page.evaluate(
       async ({ replyId, subReplyText }) => {
-        const response = await fetch("/add-reply", {
+        const response = await fetch("/forum/response-body/add-reply", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -213,16 +207,18 @@ test.describe("Forum authenticated flows", () => {
     const replyText = `Final reply reaction reply ${suffix}`;
     const subReplyText = `Final reply reaction sub reply ${suffix}`;
 
-    await page.goto("/register");
+    await page.goto("/auth/register");
     await page.getByLabel("Email").fill(email);
     await page.getByLabel("Username").fill(username);
     await page.getByLabel("Password").fill(password);
     await page.getByRole("button", { name: "Create account" }).click();
 
-    await expect(page).toHaveURL(/\/forum$/);
+    await expect(page).toHaveURL(/\/forum(\?page=\d+)?$/);
 
     await page.locator("textarea[name='newPost']").fill(postText);
     await page.getByRole("button", { name: "Submit Post" }).click();
+
+    await page.reload();
 
     const postCard = page
       .locator(".forum-post-card", { hasText: postText })
@@ -246,7 +242,7 @@ test.describe("Forum authenticated flows", () => {
 
     const replyResult = await page.evaluate(
       async ({ postId, replyText }) => {
-        const response = await fetch("/add-reply", {
+        const response = await fetch("/forum/response-body/add-comment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ post_id: postId, comment_post: replyText }),
@@ -256,10 +252,10 @@ test.describe("Forum authenticated flows", () => {
       { postId, replyText },
     );
 
-    const replyId = replyResult.reply.id;
+    const replyId = replyResult.comment.id;
     const subReplyResult = await page.evaluate(
       async ({ replyId, subReplyText }) => {
-        const response = await fetch("/add-reply", {
+        const response = await fetch("/forum/response-body/add-reply", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -297,15 +293,17 @@ test.describe("Forum authenticated flows", () => {
     const replyText = `Final reply toggle reply ${suffix}`;
     const subReplyText = `Final reply toggle sub reply ${suffix}`;
 
-    await page.goto("/register");
+    await page.goto("/auth/register");
     await page.getByLabel("Email").fill(email);
     await page.getByLabel("Username").fill(username);
     await page.getByLabel("Password").fill(password);
     await page.getByRole("button", { name: "Create account" }).click();
-    await expect(page).toHaveURL(/\/forum$/);
+    await expect(page).toHaveURL(/\/forum(\?page=\d+)?$/);
 
     await page.locator("textarea[name='newPost']").fill(postText);
     await page.getByRole("button", { name: "Submit Post" }).click();
+
+    await page.reload();
 
     const postCard = page
       .locator(".forum-post-card", { hasText: postText })
@@ -329,7 +327,7 @@ test.describe("Forum authenticated flows", () => {
 
     const replyResult = await page.evaluate(
       async ({ postId, replyText }) => {
-        const response = await fetch("/add-reply", {
+        const response = await fetch("/forum/response-body/add-comment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ post_id: postId, comment_post: replyText }),
@@ -338,11 +336,11 @@ test.describe("Forum authenticated flows", () => {
       },
       { postId, replyText },
     );
-    const replyId = replyResult.reply.id;
+    const replyId = replyResult.comment.id;
 
     const subReplyResult = await page.evaluate(
       async ({ replyId, subReplyText }) => {
-        const response = await fetch("/add-reply", {
+        const response = await fetch("/forum/response-body/add-reply", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -381,15 +379,17 @@ test.describe("Forum authenticated flows", () => {
     const replyText = `Final reply dislike reply ${suffix}`;
     const subReplyText = `Final reply dislike sub reply ${suffix}`;
 
-    await page.goto("/register");
+    await page.goto("/auth/register");
     await page.getByLabel("Email").fill(email);
     await page.getByLabel("Username").fill(username);
     await page.getByLabel("Password").fill(password);
     await page.getByRole("button", { name: "Create account" }).click();
-    await expect(page).toHaveURL(/\/forum$/);
+    await expect(page).toHaveURL(/\/forum(\?page=\d+)?$/);
 
     await page.locator("textarea[name='newPost']").fill(postText);
     await page.getByRole("button", { name: "Submit Post" }).click();
+
+    await page.reload();
 
     const postCard = page
       .locator(".forum-post-card", { hasText: postText })
@@ -413,7 +413,7 @@ test.describe("Forum authenticated flows", () => {
 
     const replyResult = await page.evaluate(
       async ({ postId, replyText }) => {
-        const response = await fetch("/add-reply", {
+        const response = await fetch("/forum/response-body/add-comment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ post_id: postId, comment_post: replyText }),
@@ -422,11 +422,11 @@ test.describe("Forum authenticated flows", () => {
       },
       { postId, replyText },
     );
-    const replyId = replyResult.reply.id;
+    const replyId = replyResult.comment.id;
 
     const subReplyResult = await page.evaluate(
       async ({ replyId, subReplyText }) => {
-        const response = await fetch("/add-reply", {
+        const response = await fetch("/forum/response-body/add-reply", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
