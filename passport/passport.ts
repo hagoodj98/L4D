@@ -59,7 +59,9 @@ passport.use(
     {
       clientID: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
-      callbackURL: "http://localhost:3000/auth/google/forum",
+      callbackURL: process.env.DOMAIN_NAME
+        ? `https://${process.env.DOMAIN_NAME}/auth/google/forum`
+        : "http://localhost:3000/auth/google/forum",
 
       //userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
     },
@@ -122,7 +124,9 @@ passport.use(
       scope: "user:read:email", // Request email access from Twitch
       clientID: TWITCH_CLIENT_ID,
       clientSecret: TWITCH_CLIENT_SECRET,
-      callbackURL: "http://localhost:3000/auth/twitch/forum",
+      callbackURL: process.env.DOMAIN_NAME
+        ? `https://${process.env.DOMAIN_NAME}/auth/twitch/forum`
+        : "http://localhost:3000/auth/twitch/forum",
     },
     async function verify(
       accessToken: unknown,
@@ -184,7 +188,9 @@ passport.use(
     {
       clientID: DISCORD_CLIENT_ID,
       clientSecret: DISCORD_CLIENT_SECRET,
-      callbackURL: "http://localhost:3000/auth/discord/forum",
+      callbackURL: process.env.DOMAIN_NAME
+        ? `https://${process.env.DOMAIN_NAME}/auth/discord/forum`
+        : "http://localhost:3000/auth/discord/forum",
       scope: ["identify", "email"],
     },
     async function verify(
