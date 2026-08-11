@@ -1,6 +1,6 @@
 <script>
   async function handleNotifcationRoute(route) {
-    const response = await fetch(`http://localhost:3000/forum/total-posts`);
+    const response = await fetch(`/forum/total-posts`);
     const data = await response.json();
     const totalPosts = data.totalPosts;
     const paginationNumber = data.paginationNumber;
