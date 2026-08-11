@@ -9,6 +9,10 @@ const db = new pg.Client({
   database: process.env.PG_DATABASE || "forum",
   password: process.env.PG_PASSWORD,
   port: process.env.PG_PORT ? Number(process.env.PG_PORT) : 5432,
+  ssl:
+    process.env.PG_HOST && process.env.PG_HOST !== "localhost"
+      ? { rejectUnauthorized: false }
+      : undefined,
 });
 if (process.env.NODE_ENV !== "test") {
   db.connect();
