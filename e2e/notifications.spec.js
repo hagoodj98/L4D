@@ -11,7 +11,9 @@ async function registerUser(page, username, email) {
   await page.getByLabel("Username").fill(username);
   await page.getByLabel("Password").fill("secret123");
   await page.getByRole("button", { name: "Create account" }).click();
-  await page.waitForURL(/\/forum(\?page=\d+)?$/, { timeout: 15_000 });
+  await expect
+    .poll(() => page.url(), { timeout: 15_000 })
+    .toMatch(/\/forum(\?page=\d+)?$/);
 }
 
 async function createNotificationScenario(browser, suffix) {

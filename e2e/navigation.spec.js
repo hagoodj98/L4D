@@ -39,7 +39,9 @@ test.describe("Navigation and public routes", () => {
     page,
   }) => {
     await page.goto("/forum", { waitUntil: "domcontentloaded" });
-    await page.waitForURL(/\/forum(\?page=\d+)?$/, { timeout: 15_000 });
+    await expect
+      .poll(() => page.url(), { timeout: 15_000 })
+      .toMatch(/\/forum(\?page=\d+)?$/);
     await expect(page.getByText("Browse all posts as a guest")).toBeVisible();
     await expect(
       page.locator("nav[aria-label='Page navigation example']"),
@@ -49,7 +51,9 @@ test.describe("Navigation and public routes", () => {
     await expect(page).toHaveURL(/\/auth\/login$/);
 
     await page.goto("/forum", { waitUntil: "domcontentloaded" });
-    await page.waitForURL(/\/forum(\?page=\d+)?$/, { timeout: 15_000 });
+    await expect
+      .poll(() => page.url(), { timeout: 15_000 })
+      .toMatch(/\/forum(\?page=\d+)?$/);
     await page.getByRole("link", { name: "create an account" }).click();
     await expect(page).toHaveURL(/\/auth\/register$/);
   });

@@ -20,7 +20,9 @@ async function registerUser(page, username, email, password = "secret123") {
   await page.getByLabel("Username").fill(username);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
-  await page.waitForURL(/\/forum(\?page=\d+)?$/, { timeout: 15_000 });
+  await expect
+    .poll(() => page.url(), { timeout: 15_000 })
+    .toMatch(/\/forum(\?page=\d+)?$/);
 }
 
 async function revealFinalReplyControl(page, postId, replyId, controlLocator) {
@@ -156,9 +158,12 @@ test.describe("Forum authenticated flows", () => {
       .getAttribute("value");
     const cleanPostId = postId?.trim();
 
-    const replyResponse = await page.request.post("/forum/response-body/add-comment", {
-      data: { post_id: postId, comment_post: replyText, current_page: "1" },
-    });
+    const replyResponse = await page.request.post(
+      "/forum/response-body/add-comment",
+      {
+        data: { post_id: postId, comment_post: replyText, current_page: "1" },
+      },
+    );
     expect(replyResponse.status()).toBe(200);
     const replyResult = await replyResponse.json();
 
@@ -167,9 +172,16 @@ test.describe("Forum authenticated flows", () => {
 
     const replyId = replyResult.comment.id;
 
-    const subReplyResponse = await page.request.post("/forum/response-body/add-reply", {
-      data: { reply_id: replyId, comment_post: subReplyText, current_page: "1" },
-    });
+    const subReplyResponse = await page.request.post(
+      "/forum/response-body/add-reply",
+      {
+        data: {
+          reply_id: replyId,
+          comment_post: subReplyText,
+          current_page: "1",
+        },
+      },
+    );
     expect(subReplyResponse.status()).toBe(200);
     const subReplyResult = await subReplyResponse.json();
 
@@ -223,16 +235,26 @@ test.describe("Forum authenticated flows", () => {
         .getAttribute("value")
     )?.trim();
 
-    const replyResponse = await page.request.post("/forum/response-body/add-comment", {
-      data: { post_id: postId, comment_post: replyText, current_page: "1" },
-    });
+    const replyResponse = await page.request.post(
+      "/forum/response-body/add-comment",
+      {
+        data: { post_id: postId, comment_post: replyText, current_page: "1" },
+      },
+    );
     expect(replyResponse.status()).toBe(200);
     const replyResult = await replyResponse.json();
 
     const replyId = replyResult.comment.id;
-    const subReplyResponse = await page.request.post("/forum/response-body/add-reply", {
-      data: { reply_id: replyId, comment_post: subReplyText, current_page: "1" },
-    });
+    const subReplyResponse = await page.request.post(
+      "/forum/response-body/add-reply",
+      {
+        data: {
+          reply_id: replyId,
+          comment_post: subReplyText,
+          current_page: "1",
+        },
+      },
+    );
     expect(subReplyResponse.status()).toBe(200);
     const subReplyResult = await subReplyResponse.json();
 
@@ -286,16 +308,26 @@ test.describe("Forum authenticated flows", () => {
         .getAttribute("value")
     )?.trim();
 
-    const replyResponse = await page.request.post("/forum/response-body/add-comment", {
-      data: { post_id: postId, comment_post: replyText, current_page: "1" },
-    });
+    const replyResponse = await page.request.post(
+      "/forum/response-body/add-comment",
+      {
+        data: { post_id: postId, comment_post: replyText, current_page: "1" },
+      },
+    );
     expect(replyResponse.status()).toBe(200);
     const replyResult = await replyResponse.json();
     const replyId = replyResult.comment.id;
 
-    const subReplyResponse = await page.request.post("/forum/response-body/add-reply", {
-      data: { reply_id: replyId, comment_post: subReplyText, current_page: "1" },
-    });
+    const subReplyResponse = await page.request.post(
+      "/forum/response-body/add-reply",
+      {
+        data: {
+          reply_id: replyId,
+          comment_post: subReplyText,
+          current_page: "1",
+        },
+      },
+    );
     expect(subReplyResponse.status()).toBe(200);
     const subReplyResult = await subReplyResponse.json();
     const subReplyId = subReplyResult.reply.id;
@@ -350,16 +382,26 @@ test.describe("Forum authenticated flows", () => {
         .getAttribute("value")
     )?.trim();
 
-    const replyResponse = await page.request.post("/forum/response-body/add-comment", {
-      data: { post_id: postId, comment_post: replyText, current_page: "1" },
-    });
+    const replyResponse = await page.request.post(
+      "/forum/response-body/add-comment",
+      {
+        data: { post_id: postId, comment_post: replyText, current_page: "1" },
+      },
+    );
     expect(replyResponse.status()).toBe(200);
     const replyResult = await replyResponse.json();
     const replyId = replyResult.comment.id;
 
-    const subReplyResponse = await page.request.post("/forum/response-body/add-reply", {
-      data: { reply_id: replyId, comment_post: subReplyText, current_page: "1" },
-    });
+    const subReplyResponse = await page.request.post(
+      "/forum/response-body/add-reply",
+      {
+        data: {
+          reply_id: replyId,
+          comment_post: subReplyText,
+          current_page: "1",
+        },
+      },
+    );
     expect(subReplyResponse.status()).toBe(200);
     const subReplyResult = await subReplyResponse.json();
     const subReplyId = subReplyResult.reply.id;
@@ -368,7 +410,12 @@ test.describe("Forum authenticated flows", () => {
       `#replyDislikeButton-${subReplyId}`,
     );
     await page.reload();
-    await revealFinalReplyControl(page, postId, replyId, finalReplyDislikeButton);
+    await revealFinalReplyControl(
+      page,
+      postId,
+      replyId,
+      finalReplyDislikeButton,
+    );
     await expect(finalReplyDislikeButton).toBeVisible();
     await finalReplyDislikeButton.click();
 
