@@ -72,7 +72,7 @@ router.get("/pagination", async (req, res, next) => {
 });
 
 router.get("/ascend", async (req, res, next) => {
-  if (!req.isAuthenticated()) return res.redirect("/login");
+  if (!req.isAuthenticated()) return res.redirect("/auth/login");
   const validation = sortSchema.safeParse({ sortDirection: "DESC" });
   if (!validation.success) {
     return next(
@@ -87,7 +87,7 @@ router.get("/ascend", async (req, res, next) => {
   });
 });
 router.get("/descend", async (req, res, next) => {
-  if (!req.isAuthenticated()) return res.redirect("/login");
+  if (!req.isAuthenticated()) return res.redirect("/auth/login");
   const validation = sortSchema.safeParse({ sortDirection: "ASC" });
   if (!validation.success) {
     return next(

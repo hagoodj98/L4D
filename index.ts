@@ -81,30 +81,30 @@ app.use((err: unknown, req: any, res: any, _next: any) => {
   if (err instanceof ErrorHandler) {
     if (err.message === "Validation failed") {
       req.session.formErrors = err.details;
-      return res.redirect("/login");
+      return res.redirect("/auth/login");
     }
     if (err.details?.message === "Invalid password") {
       req.session.formErrors = err.details.message;
-      return res.redirect("/login");
+      return res.redirect("/auth/login");
     }
     if (err.details?.message === "User not found") {
       req.session.formErrors = err.details.message;
-      return res.redirect("/login");
+      return res.redirect("/auth/login");
     }
     if (err.message === "Registration failed") {
       req.session.formErrors = err.details;
-      return res.redirect("/register");
+      return res.redirect("/auth/register");
     }
     if (err.message === "User already exists") {
       req.session.formErrors = err.details;
-      return res.redirect("/register");
+      return res.redirect("/auth/register");
     }
     if (
       err.message === "Invalid post data" ||
       err.message === "Invalid reply data"
     ) {
       req.session.formErrors = err.details;
-      return res.redirect("/forumpost");
+      return res.redirect("/forum/forumpost");
     }
   }
   console.error(err);

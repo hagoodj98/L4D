@@ -21,7 +21,7 @@ describe("Auth and register error messages", () => {
     });
 
     expect(loginResponse.status).toBe(302);
-    expect(loginResponse.headers.location).toBe("/login");
+    expect(loginResponse.headers.location).toBe("/auth/login");
 
     const loginPage = await agent.get("/auth/login");
     expect(loginPage.status).toBe(200);
@@ -42,7 +42,7 @@ describe("Auth and register error messages", () => {
     });
 
     expect(loginResponse.status).toBe(302);
-    expect(loginResponse.headers.location).toBe("/login");
+    expect(loginResponse.headers.location).toBe("/auth/login");
 
     const loginPage = await agent.get("/auth/login");
     expect(loginPage.status).toBe(200);
@@ -66,7 +66,7 @@ describe("Auth and register error messages", () => {
     });
 
     expect(loginResponse.status).toBe(302);
-    expect(loginResponse.headers.location).toBe("/login");
+    expect(loginResponse.headers.location).toBe("/auth/login");
 
     const loginPage = await agent.get("/auth/login");
     expect(loginPage.status).toBe(200);
@@ -94,7 +94,7 @@ describe("Auth and register error messages", () => {
       });
 
     expect(duplicateResponse.status).toBe(302);
-    expect(duplicateResponse.headers.location).toBe("/register");
+    expect(duplicateResponse.headers.location).toBe("/auth/register");
 
     const firstRegisterPage = await agent.get("/auth/register");
     expect(firstRegisterPage.status).toBe(200);

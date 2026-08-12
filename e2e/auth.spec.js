@@ -71,7 +71,6 @@ test.describe("Authentication flows", () => {
     await page.getByLabel("Password").fill("wrong-password");
     await page.getByRole("button", { name: "Sign in" }).click();
     await expect(page).toHaveURL(/\/login$/);
-    await page.goto("/auth/login");
     await expect(page.getByText("Incorrect password")).toBeVisible();
 
     await page.goto("/auth/register");
@@ -80,7 +79,6 @@ test.describe("Authentication flows", () => {
     await page.getByLabel("Password").fill(password);
     await page.getByRole("button", { name: "Create account" }).click();
     await expect(page).toHaveURL(/\/register$/);
-    await page.goto("/auth/register");
     await expect(
       page.getByText("already exists", { exact: false }),
     ).toBeVisible();
@@ -95,7 +93,6 @@ test.describe("Authentication flows", () => {
     await page.getByRole("button", { name: "Sign in" }).click();
 
     await expect(page).toHaveURL(/\/login$/);
-    await page.goto("/auth/login");
     await expect(
       page.getByText("Username must be at least 3 characters long"),
     ).toBeVisible();
@@ -110,7 +107,6 @@ test.describe("Authentication flows", () => {
     await page.getByRole("button", { name: "Create account" }).click();
 
     await expect(page).toHaveURL(/\/register$/);
-    await page.goto("/auth/register");
     await expect(
       page.getByText("Username must be at least 3 characters long"),
     ).toBeVisible();

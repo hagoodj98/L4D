@@ -40,7 +40,7 @@ describe("Forum content flows", () => {
       });
 
     expect(response.status).toBe(302);
-    expect(response.headers.location).toBe("/login");
+    expect(response.headers.location).toBe("/auth/login");
     expect(dbState.posts).toHaveLength(0);
   });
 
