@@ -63,7 +63,7 @@ describe("Auth flows", () => {
       });
 
     expect(duplicateResponse.status).toBe(302);
-    expect(duplicateResponse.headers.location).toBe("/register");
+    expect(duplicateResponse.headers.location).toBe("/auth/register");
     expect(dbState.users).toHaveLength(1);
   });
 
@@ -82,6 +82,6 @@ describe("Auth flows", () => {
       });
 
     expect(loginResponse.status).toBe(302);
-    expect(loginResponse.headers.location).toBe("/login");
+    expect(loginResponse.headers.location).toBe("/auth/login");
   });
 });
