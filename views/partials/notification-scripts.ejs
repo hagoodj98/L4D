@@ -5,19 +5,33 @@
     const totalPosts = data.totalPosts;
     const paginationNumber = data.paginationNumber;
     const currentPath = window.location.pathname;
-    const routeParts = route.split("/");
+    const routeParts = route.split("/").map((part) => part.trim());
     const pageNumber = routeParts[0];
+    const postID = routeParts[1];
+    const commentID = routeParts[2];
+    const replyID = routeParts[3];
     if (currentPath !== "/forum") {
-      window.location.href = `/forum?page=${pageNumber}/${routeParts.slice(1).join("/")}`;
+      const params = new URLSearchParams();
+      params.set("page", pageNumber);
+      if (postID) params.set("postID", postID);
+      if (commentID) params.set("commentID", commentID);
+      if (replyID) params.set("replyID", replyID);
+      window.location.href = `/forum?${params.toString()}`;
     } else {
-      initializePaginationState(Number(pageNumber));
+      const outOfRange = initializePaginationState(
+        Number(pageNumber),
+        paginationNumber,
+      );
+
+      if (outOfRange) {
+        handlePaginationIncrements(paginationNumber, "decrease", routeParts);
+        handlePagination(pageNumber);
+      } else {
+        handlePaginationIncrements(paginationNumber, "decrease", routeParts);
+        handlePagination(paginationState.start);
+      }
       paginationState.end = Math.min(paginationState.end, paginationNumber);
-      handlePagination(paginationState.start);
-      handlePaginationIncrements(paginationNumber, "decrease", routeParts);
       setTimeout(async () => {
-        const postID = routeParts[1];
-        const commentID = routeParts[2];
-        const replyID = routeParts[3];
         if (postID && !commentID && !replyID) {
           setTimeout(() => {
             notificationAnimation(postID, "post");
