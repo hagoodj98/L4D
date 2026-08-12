@@ -38,9 +38,8 @@ test.describe("Navigation and public routes", () => {
   test("forum guest actions and pagination area are visible", async ({
     page,
   }) => {
-    await page.goto("/forum");
-
-    await expect(page).toHaveURL(/\/forum/);
+    await page.goto("/forum", { waitUntil: "domcontentloaded" });
+    await page.waitForURL(/\/forum(\?page=\d+)?$/, { timeout: 15_000 });
     await expect(page.getByText("Browse all posts as a guest")).toBeVisible();
     await expect(
       page.locator("nav[aria-label='Page navigation example']"),
@@ -49,7 +48,8 @@ test.describe("Navigation and public routes", () => {
     await page.getByRole("link", { name: "log in" }).click();
     await expect(page).toHaveURL(/\/auth\/login$/);
 
-    await page.goto("/forum");
+    await page.goto("/forum", { waitUntil: "domcontentloaded" });
+    await page.waitForURL(/\/forum(\?page=\d+)?$/, { timeout: 15_000 });
     await page.getByRole("link", { name: "create an account" }).click();
     await expect(page).toHaveURL(/\/auth\/register$/);
   });

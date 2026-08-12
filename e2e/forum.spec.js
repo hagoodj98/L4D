@@ -14,6 +14,32 @@ function secondTierRepliesButton(page, id) {
   return page.locator(`button#unhide-${id}`).first();
 }
 
+async function registerUser(page, username, email, password = "secret123") {
+  await page.goto("/auth/register");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Username").fill(username);
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Create account" }).click();
+  await page.waitForURL(/\/forum(\?page=\d+)?$/, { timeout: 15_000 });
+}
+
+async function revealFinalReplyControl(page, postId, replyId, controlLocator) {
+  const firstTier = firstTierRepliesButton(page, postId);
+  const secondTier = secondTierRepliesButton(page, replyId);
+
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    if (await controlLocator.isVisible()) return;
+    if (await firstTier.isVisible()) {
+      await firstTier.click();
+    }
+    await page.waitForTimeout(120);
+    if (await secondTier.isVisible()) {
+      await secondTier.click();
+    }
+    await page.waitForTimeout(180);
+  }
+}
+
 test.describe("Forum authenticated flows", () => {
   test("authenticated user can paginate forum posts and see page-specific content", async ({
     page,
@@ -23,33 +49,23 @@ test.describe("Forum authenticated flows", () => {
     const email = `e2e-pagination-${suffix}@example.com`;
     const password = "secret123";
 
-    await page.goto("/auth/register");
-    await page.getByLabel("Email").fill(email);
-    await page.getByLabel("Username").fill(username);
-    await page.getByLabel("Password").fill(password);
-    await page.getByRole("button", { name: "Create account" }).click();
-    await expect(page).toHaveURL(/\/forum(\?page=\d+)?$/);
+    await registerUser(page, username, email, password);
 
     const posts = Array.from({ length: 6 }, (_, index) => ({
       text: `Pagination E2E post ${index + 1} ${suffix}`,
     }));
 
-    await page.evaluate(
-      async ({ posts }) => {
-        for (const post of posts) {
-          const response = await fetch("/forum/response-body/add-post", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ newPost: post.text, current_page: "1" }),
-          });
-          const payload = await response.json();
-          if (!payload.success) {
-            throw new Error("Failed to create pagination seed post");
-          }
-        }
-      },
-      { posts },
-    );
+    for (const post of posts) {
+      const response = await page.request.post(
+        "/forum/response-body/add-post",
+        {
+          data: { newPost: post.text, current_page: "1" },
+        },
+      );
+      expect(response.status()).toBe(200);
+      const payload = await response.json();
+      expect(payload.success).toBe(true);
+    }
 
     await page.goto("/forum?page=1");
     await expect(page.locator(".forum-content").first()).toContainText(
@@ -76,13 +92,7 @@ test.describe("Forum authenticated flows", () => {
     const postText = `E2E post ${suffix}`;
     const replyText = `E2E reply ${suffix}`;
 
-    await page.goto("/auth/register");
-    await page.getByLabel("Email").fill(email);
-    await page.getByLabel("Username").fill(username);
-    await page.getByLabel("Password").fill(password);
-    await page.getByRole("button", { name: "Create account" }).click();
-
-    await expect(page).toHaveURL(/\/forum(\?page=\d+)?$/);
+    await registerUser(page, username, email, password);
     await expect(page.getByText("Welcome to the forum")).toBeVisible();
 
     await page.locator("textarea[name='newPost']").fill(postText);
@@ -120,13 +130,7 @@ test.describe("Forum authenticated flows", () => {
     const replyText = `Nested E2E reply ${suffix}`;
     const subReplyText = `Nested E2E sub reply ${suffix}`;
 
-    await page.goto("/auth/register");
-    await page.getByLabel("Email").fill(email);
-    await page.getByLabel("Username").fill(username);
-    await page.getByLabel("Password").fill(password);
-    await page.getByRole("button", { name: "Create account" }).click();
-
-    await expect(page).toHaveURL(/\/forum(\?page=\d+)?$/);
+    await registerUser(page, username, email, password);
 
     await page.locator("textarea[name='newPost']").fill(postText);
     await page.getByRole("button", { name: "Submit Post" }).click();
@@ -152,37 +156,22 @@ test.describe("Forum authenticated flows", () => {
       .getAttribute("value");
     const cleanPostId = postId?.trim();
 
-    const replyResult = await page.evaluate(
-      async ({ postId, replyText }) => {
-        const response = await fetch("/forum/response-body/add-comment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ post_id: postId, comment_post: replyText }),
-        });
-        return response.json();
-      },
-      { postId, replyText },
-    );
+    const replyResponse = await page.request.post("/forum/response-body/add-comment", {
+      data: { post_id: postId, comment_post: replyText, current_page: "1" },
+    });
+    expect(replyResponse.status()).toBe(200);
+    const replyResult = await replyResponse.json();
 
     expect(replyResult.success).toBe(true);
     expect(replyResult.comment.id).toBeTruthy();
 
     const replyId = replyResult.comment.id;
 
-    const subReplyResult = await page.evaluate(
-      async ({ replyId, subReplyText }) => {
-        const response = await fetch("/forum/response-body/add-reply", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            reply_id: replyId,
-            comment_post: subReplyText,
-          }),
-        });
-        return response.json();
-      },
-      { replyId, subReplyText },
-    );
+    const subReplyResponse = await page.request.post("/forum/response-body/add-reply", {
+      data: { reply_id: replyId, comment_post: subReplyText, current_page: "1" },
+    });
+    expect(subReplyResponse.status()).toBe(200);
+    const subReplyResult = await subReplyResponse.json();
 
     expect(subReplyResult.success).toBe(true);
     expect(subReplyResult.subReply).toBe(true);
@@ -207,13 +196,7 @@ test.describe("Forum authenticated flows", () => {
     const replyText = `Final reply reaction reply ${suffix}`;
     const subReplyText = `Final reply reaction sub reply ${suffix}`;
 
-    await page.goto("/auth/register");
-    await page.getByLabel("Email").fill(email);
-    await page.getByLabel("Username").fill(username);
-    await page.getByLabel("Password").fill(password);
-    await page.getByRole("button", { name: "Create account" }).click();
-
-    await expect(page).toHaveURL(/\/forum(\?page=\d+)?$/);
+    await registerUser(page, username, email, password);
 
     await page.locator("textarea[name='newPost']").fill(postText);
     await page.getByRole("button", { name: "Submit Post" }).click();
@@ -240,41 +223,24 @@ test.describe("Forum authenticated flows", () => {
         .getAttribute("value")
     )?.trim();
 
-    const replyResult = await page.evaluate(
-      async ({ postId, replyText }) => {
-        const response = await fetch("/forum/response-body/add-comment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ post_id: postId, comment_post: replyText }),
-        });
-        return response.json();
-      },
-      { postId, replyText },
-    );
+    const replyResponse = await page.request.post("/forum/response-body/add-comment", {
+      data: { post_id: postId, comment_post: replyText, current_page: "1" },
+    });
+    expect(replyResponse.status()).toBe(200);
+    const replyResult = await replyResponse.json();
 
     const replyId = replyResult.comment.id;
-    const subReplyResult = await page.evaluate(
-      async ({ replyId, subReplyText }) => {
-        const response = await fetch("/forum/response-body/add-reply", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            reply_id: replyId,
-            comment_post: subReplyText,
-          }),
-        });
-        return response.json();
-      },
-      { replyId, subReplyText },
-    );
+    const subReplyResponse = await page.request.post("/forum/response-body/add-reply", {
+      data: { reply_id: replyId, comment_post: subReplyText, current_page: "1" },
+    });
+    expect(subReplyResponse.status()).toBe(200);
+    const subReplyResult = await subReplyResponse.json();
 
     const subReplyId = subReplyResult.reply.id;
 
-    await page.reload();
-    await firstTierRepliesButton(page, postId).click();
-    await secondTierRepliesButton(page, replyId).click();
-
     const finalReplyLikeButton = page.locator(`#replyLikeButton-${subReplyId}`);
+    await page.reload();
+    await revealFinalReplyControl(page, postId, replyId, finalReplyLikeButton);
     await expect(finalReplyLikeButton).toBeVisible();
     await finalReplyLikeButton.click();
 
@@ -293,12 +259,7 @@ test.describe("Forum authenticated flows", () => {
     const replyText = `Final reply toggle reply ${suffix}`;
     const subReplyText = `Final reply toggle sub reply ${suffix}`;
 
-    await page.goto("/auth/register");
-    await page.getByLabel("Email").fill(email);
-    await page.getByLabel("Username").fill(username);
-    await page.getByLabel("Password").fill(password);
-    await page.getByRole("button", { name: "Create account" }).click();
-    await expect(page).toHaveURL(/\/forum(\?page=\d+)?$/);
+    await registerUser(page, username, email, password);
 
     await page.locator("textarea[name='newPost']").fill(postText);
     await page.getByRole("button", { name: "Submit Post" }).click();
@@ -325,40 +286,23 @@ test.describe("Forum authenticated flows", () => {
         .getAttribute("value")
     )?.trim();
 
-    const replyResult = await page.evaluate(
-      async ({ postId, replyText }) => {
-        const response = await fetch("/forum/response-body/add-comment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ post_id: postId, comment_post: replyText }),
-        });
-        return response.json();
-      },
-      { postId, replyText },
-    );
+    const replyResponse = await page.request.post("/forum/response-body/add-comment", {
+      data: { post_id: postId, comment_post: replyText, current_page: "1" },
+    });
+    expect(replyResponse.status()).toBe(200);
+    const replyResult = await replyResponse.json();
     const replyId = replyResult.comment.id;
 
-    const subReplyResult = await page.evaluate(
-      async ({ replyId, subReplyText }) => {
-        const response = await fetch("/forum/response-body/add-reply", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            reply_id: replyId,
-            comment_post: subReplyText,
-          }),
-        });
-        return response.json();
-      },
-      { replyId, subReplyText },
-    );
+    const subReplyResponse = await page.request.post("/forum/response-body/add-reply", {
+      data: { reply_id: replyId, comment_post: subReplyText, current_page: "1" },
+    });
+    expect(subReplyResponse.status()).toBe(200);
+    const subReplyResult = await subReplyResponse.json();
     const subReplyId = subReplyResult.reply.id;
 
-    await page.reload();
-    await firstTierRepliesButton(page, postId).click();
-    await secondTierRepliesButton(page, replyId).click();
-
     const finalReplyLikeButton = page.locator(`#replyLikeButton-${subReplyId}`);
+    await page.reload();
+    await revealFinalReplyControl(page, postId, replyId, finalReplyLikeButton);
     await expect(finalReplyLikeButton).toBeVisible();
     await finalReplyLikeButton.click();
     await expect(finalReplyLikeButton).toHaveClass(/reaction-color/);
@@ -379,12 +323,7 @@ test.describe("Forum authenticated flows", () => {
     const replyText = `Final reply dislike reply ${suffix}`;
     const subReplyText = `Final reply dislike sub reply ${suffix}`;
 
-    await page.goto("/auth/register");
-    await page.getByLabel("Email").fill(email);
-    await page.getByLabel("Username").fill(username);
-    await page.getByLabel("Password").fill(password);
-    await page.getByRole("button", { name: "Create account" }).click();
-    await expect(page).toHaveURL(/\/forum(\?page=\d+)?$/);
+    await registerUser(page, username, email, password);
 
     await page.locator("textarea[name='newPost']").fill(postText);
     await page.getByRole("button", { name: "Submit Post" }).click();
@@ -411,42 +350,25 @@ test.describe("Forum authenticated flows", () => {
         .getAttribute("value")
     )?.trim();
 
-    const replyResult = await page.evaluate(
-      async ({ postId, replyText }) => {
-        const response = await fetch("/forum/response-body/add-comment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ post_id: postId, comment_post: replyText }),
-        });
-        return response.json();
-      },
-      { postId, replyText },
-    );
+    const replyResponse = await page.request.post("/forum/response-body/add-comment", {
+      data: { post_id: postId, comment_post: replyText, current_page: "1" },
+    });
+    expect(replyResponse.status()).toBe(200);
+    const replyResult = await replyResponse.json();
     const replyId = replyResult.comment.id;
 
-    const subReplyResult = await page.evaluate(
-      async ({ replyId, subReplyText }) => {
-        const response = await fetch("/forum/response-body/add-reply", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            reply_id: replyId,
-            comment_post: subReplyText,
-          }),
-        });
-        return response.json();
-      },
-      { replyId, subReplyText },
-    );
+    const subReplyResponse = await page.request.post("/forum/response-body/add-reply", {
+      data: { reply_id: replyId, comment_post: subReplyText, current_page: "1" },
+    });
+    expect(subReplyResponse.status()).toBe(200);
+    const subReplyResult = await subReplyResponse.json();
     const subReplyId = subReplyResult.reply.id;
-
-    await page.reload();
-    await firstTierRepliesButton(page, postId).click();
-    await secondTierRepliesButton(page, replyId).click();
 
     const finalReplyDislikeButton = page.locator(
       `#replyDislikeButton-${subReplyId}`,
     );
+    await page.reload();
+    await revealFinalReplyControl(page, postId, replyId, finalReplyDislikeButton);
     await expect(finalReplyDislikeButton).toBeVisible();
     await finalReplyDislikeButton.click();
 

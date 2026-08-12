@@ -11,7 +11,7 @@ async function registerUser(page, username, email) {
   await page.getByLabel("Username").fill(username);
   await page.getByLabel("Password").fill("secret123");
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL(/\/forum(\?page=\d+)?$/);
+  await page.waitForURL(/\/forum(\?page=\d+)?$/, { timeout: 15_000 });
 }
 
 async function createNotificationScenario(browser, suffix) {
@@ -28,18 +28,14 @@ async function createNotificationScenario(browser, suffix) {
 
   await registerUser(user1Page, user1Name, user1Email);
 
-  const postResult = await user1Page.evaluate(
-    async ({ postText }) => {
-      const response = await fetch("/forum/response-body/add-post", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newPost: postText }),
-      });
-
-      return response.json();
+  const postResponse = await user1Page.request.post(
+    "/forum/response-body/add-post",
+    {
+      data: { newPost: postText, current_page: "1" },
     },
-    { postText },
   );
+  expect(postResponse.status()).toBe(200);
+  const postResult = await postResponse.json();
 
   expect(postResult.success).toBe(true);
   const postId = String(postResult.post.id);
@@ -96,57 +92,41 @@ async function createTwoUserScenario(browser, suffix, scope) {
 }
 
 async function createPost(page, postText) {
-  const result = await page.evaluate(
-    async ({ postText }) => {
-      const response = await fetch("/forum/response-body/add-post", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newPost: postText }),
-      });
-      return response.json();
-    },
-    { postText },
-  );
+  const response = await page.request.post("/forum/response-body/add-post", {
+    data: { newPost: postText, current_page: "1" },
+  });
+  expect(response.status()).toBe(200);
+  const result = await response.json();
 
   expect(result.success).toBe(true);
   return result.post;
 }
 
 async function addCommentToPost(page, postId, commentText) {
-  const result = await page.evaluate(
-    async ({ postId, commentText }) => {
-      const response = await fetch("/forum/response-body/add-comment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          post_id: String(postId),
-          comment_post: commentText,
-        }),
-      });
-      return response.json();
+  const response = await page.request.post("/forum/response-body/add-comment", {
+    data: {
+      post_id: String(postId),
+      comment_post: commentText,
+      current_page: "1",
     },
-    { postId, commentText },
-  );
+  });
+  expect(response.status()).toBe(200);
+  const result = await response.json();
 
   expect(result.success).toBe(true);
   return result.comment;
 }
 
 async function addReplyToComment(page, commentId, replyText) {
-  const result = await page.evaluate(
-    async ({ commentId, replyText }) => {
-      const response = await fetch("/forum/response-body/add-reply", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          reply_id: String(commentId),
-          comment_post: replyText,
-        }),
-      });
-      return response.json();
+  const response = await page.request.post("/forum/response-body/add-reply", {
+    data: {
+      reply_id: String(commentId),
+      comment_post: replyText,
+      current_page: "1",
     },
-    { commentId, replyText },
-  );
+  });
+  expect(response.status()).toBe(200);
+  const result = await response.json();
 
   expect(result.success).toBe(true);
   expect(result.subReply).toBe(true);
