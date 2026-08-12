@@ -159,17 +159,27 @@
    });
    // Function to format the time
    function formatTime(createTime){
-     const created = new Date(createTime);
-     const day = created.getDate().toString().padStart(2, "0");
-     const month = created.toLocaleString("default", { month: "short" }); // e.g. 'Mar'
-     const year = created.getFullYear();
-     const timeZone = created
-       .toLocaleTimeString("default", { timeZoneName: "short" })
-       .split(" ")[2]; // e.g. 'PST'
-     const time = created.toLocaleTimeString("default", {
+     const raw = String(createTime ?? "").trim();
+     const isoLike = raw.includes("T") ? raw : raw.replace(" ", "T");
+     const hasTimeZone = /(?:Z|[+\-]\d{2}:?\d{2})$/i.test(isoLike);
+     const normalized = hasTimeZone ? isoLike : `${isoLike}Z`;
+     const created = new Date(normalized);
+
+     const validDate = Number.isNaN(created.getTime()) ? new Date(raw) : created;
+     const day = validDate.getDate().toString().padStart(2, "0");
+     const month = validDate.toLocaleString("default", { month: "short" });
+     const year = validDate.getFullYear();
+     const time = validDate.toLocaleTimeString("default", {
        hour: "2-digit",
        minute: "2-digit",
      });
+     const zonePart = new Intl.DateTimeFormat("default", {
+       timeZoneName: "short",
+     })
+       .formatToParts(validDate)
+       .find((part) => part.type === "timeZoneName");
+     const timeZone = zonePart?.value ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+
      return { day, month, year, time, timeZone };
    }
 
@@ -396,12 +406,27 @@
        }
      }
      function formatTime(dateString){
-       const date = new Date(dateString);
-       const day = date.getDate();
-       const month = date.getMonth() + 1;
-       const year = date.getFullYear();
-       const time = date.toLocaleTimeString();
-       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+       const raw = String(dateString ?? "").trim();
+       const isoLike = raw.includes("T") ? raw : raw.replace(" ", "T");
+       const hasTimeZone = /(?:Z|[+\-]\d{2}:?\d{2})$/i.test(isoLike);
+       const normalized = hasTimeZone ? isoLike : `${isoLike}Z`;
+       const date = new Date(normalized);
+
+       const validDate = Number.isNaN(date.getTime()) ? new Date(raw) : date;
+       const day = validDate.getDate().toString().padStart(2, "0");
+       const month = validDate.getMonth() + 1;
+       const year = validDate.getFullYear();
+       const time = validDate.toLocaleTimeString("default", {
+         hour: "2-digit",
+         minute: "2-digit",
+       });
+       const zonePart = new Intl.DateTimeFormat("default", {
+         timeZoneName: "short",
+       })
+         .formatToParts(validDate)
+         .find((part) => part.type === "timeZoneName");
+       const timeZone = zonePart?.value ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+
        return { day, month, year, time, timeZone };
      }
      function showAllReplies(id, isCommentSection = false, isReplySection = false, replied = false, postType = null) {
@@ -454,7 +479,7 @@
          const data = await response.json();
          if (data.success) {
            textarea.value = "";
-           const newPost = data.post;
+           const newPost = data.postMetaData;
            // Prepend the new post to the list of posts
            const postsContainer = document.querySelector("#demo");
            // Insert the new post at the beginning of the posts container
@@ -489,9 +514,9 @@
 
            await handleRedirect(response);
            const data = await response.json();
-           if (!data.success || !data.reply) return;
+           if (!data.success || !data.replyMetaData) return;
 
-           const newReplyMetaData = data.reply;
+           const newReplyMetaData = data.replyMetaData;
            if (replySection && replySection.style.display !== "block") {
              replySection.style.display = "block";
            }
@@ -533,9 +558,9 @@
 
            await handleRedirect(response);
            const data = await response.json();
-           if (!data.success || !data.comment) return;
+           if (!data.success || !data.commentMetaData) return;
 
-           const newCommentMetaData = data.comment;
+           const newCommentMetaData = data.commentMetaData;
            if (commentsSection && commentsSection.style.display !== "block") {
              commentsSection.style.display = "block";
            }

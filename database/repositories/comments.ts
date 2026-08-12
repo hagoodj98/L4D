@@ -1,5 +1,4 @@
 import db from "../databaseConnection.js";
-
 export const createComment = async (
   comment_post: string | null,
   user_id: number,

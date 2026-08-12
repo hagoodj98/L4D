@@ -1,7 +1,7 @@
 import db from "../databaseConnection.js";
 
 export const createReply = async (
-  comment_post: string | null,
+  reply_post: string | null,
   user_id: number,
   comment_id: string | null,
   created_at: string,
@@ -14,7 +14,7 @@ export const createReply = async (
     RETURNING id, reply_post, comment_id, created_at, on_page
   `;
   const result = await db.query(insertReplyQuery, [
-    comment_post,
+    reply_post,
     user_id,
     comment_id,
     created_at,

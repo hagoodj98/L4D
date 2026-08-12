@@ -4,8 +4,7 @@ import { createReply } from "../../database/repositories/replies.js";
 import { createPost } from "../../database/repositories/posts.js";
 import { postSchema, replySchema } from "../../utils/zodSchemas.js";
 import ErrorHandler from "../../utils/error.js";
-import { ReplyMetaDataType } from "../../types/types.js";
-
+import type { CommentMeta, PostMeta, ReplyMeta } from "../../types/types.js";
 const router = express.Router();
 
 router.post("/add-post", async (req, res, next) => {
@@ -22,8 +21,14 @@ router.post("/add-post", async (req, res, next) => {
   const currentPage = String(req.body.current_page);
   try {
     const createdAt = new Date().toISOString();
-    const result = await createPost(post, req.user.id, createdAt, currentPage);
-    return res.json({ success: true, post: result });
+    let result = await createPost(post, req.user.id, createdAt, currentPage);
+    const postMetaBody: PostMeta = {
+      type: "post",
+      id: result.id,
+      ...result,
+    };
+
+    return res.json({ success: true, postMetaData: postMetaBody });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
   }
@@ -55,11 +60,13 @@ router.post("/add-comment", async (req, res, next) => {
       creationTime,
       currentPage,
     );
-    result = {
-      ...result,
+    const commentMetaBody: CommentMeta = {
       type: "comment",
+      id: result.id,
+      ...result,
     };
-    return res.json({ success: true, comment: result });
+
+    return res.json({ success: true, commentMetaData: commentMetaBody });
   } catch (err) {
     return next(new ErrorHandler(500, "Internal Server Error", err));
   }
@@ -82,27 +89,23 @@ router.post("/add-reply", async (req, res, next) => {
   const currentPage = String(req.body.current_page);
   try {
     const createdAt = new Date().toISOString();
-    const result = await createReply(
+    let result = await createReply(
       replyPost,
       req.user.id,
       commentID,
       createdAt,
       currentPage,
     );
-    const replyMetadata: ReplyMetaDataType = {
+
+    const replyMetaBody: ReplyMeta = {
+      type: "reply",
       id: result.id,
-      commentID: commentID,
-      replyPost: replyPost,
-      createdAt: createdAt,
+      ...result,
     };
+
     return res.json({
       success: true,
-      reply: {
-        ...result,
-        comment_post: result.reply_post,
-        type: "reply",
-      },
-      replyMeta: replyMetadata,
+      replyMetaData: replyMetaBody,
       subReply: true,
     });
   } catch (err) {

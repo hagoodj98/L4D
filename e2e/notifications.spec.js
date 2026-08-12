@@ -38,9 +38,10 @@ async function createNotificationScenario(browser, suffix) {
   );
   expect(postResponse.status()).toBe(200);
   const postResult = await postResponse.json();
+  const postMeta = postResult.postMetaData ?? postResult.post;
 
   expect(postResult.success).toBe(true);
-  const postId = String(postResult.post.id);
+  const postId = String(postMeta.id);
 
   await registerUser(user97Page, user97Name, user97Email);
   await user97Page.goto("/forum");
@@ -101,7 +102,7 @@ async function createPost(page, postText) {
   const result = await response.json();
 
   expect(result.success).toBe(true);
-  return result.post;
+  return result.postMetaData ?? result.post;
 }
 
 async function addCommentToPost(page, postId, commentText) {
@@ -116,7 +117,7 @@ async function addCommentToPost(page, postId, commentText) {
   const result = await response.json();
 
   expect(result.success).toBe(true);
-  return result.comment;
+  return result.commentMetaData ?? result.comment;
 }
 
 async function addReplyToComment(page, commentId, replyText) {
@@ -132,7 +133,7 @@ async function addReplyToComment(page, commentId, replyText) {
 
   expect(result.success).toBe(true);
   expect(result.subReply).toBe(true);
-  return result.reply;
+  return result.replyMetaData ?? result.reply;
 }
 
 async function waitForNotification(ownerPage, expected) {
