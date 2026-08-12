@@ -166,11 +166,12 @@ test.describe("Forum authenticated flows", () => {
     );
     expect(replyResponse.status()).toBe(200);
     const replyResult = await replyResponse.json();
+    const replyMeta = replyResult.commentMetaData ?? replyResult.comment;
 
     expect(replyResult.success).toBe(true);
-    expect(replyResult.comment.id).toBeTruthy();
+    expect(replyMeta?.id).toBeTruthy();
 
-    const replyId = replyResult.comment.id;
+    const replyId = replyMeta.id;
 
     const subReplyResponse = await page.request.post(
       "/forum/response-body/add-reply",
@@ -184,9 +185,11 @@ test.describe("Forum authenticated flows", () => {
     );
     expect(subReplyResponse.status()).toBe(200);
     const subReplyResult = await subReplyResponse.json();
+    const subReplyMeta = subReplyResult.replyMetaData ?? subReplyResult.reply;
 
     expect(subReplyResult.success).toBe(true);
     expect(subReplyResult.subReply).toBe(true);
+    expect(subReplyMeta?.id).toBeTruthy();
 
     await page.reload();
     await firstTierRepliesButton(page, cleanPostId).click();
@@ -243,8 +246,9 @@ test.describe("Forum authenticated flows", () => {
     );
     expect(replyResponse.status()).toBe(200);
     const replyResult = await replyResponse.json();
+    const replyMeta = replyResult.commentMetaData ?? replyResult.comment;
 
-    const replyId = replyResult.comment.id;
+    const replyId = replyMeta.id;
     const subReplyResponse = await page.request.post(
       "/forum/response-body/add-reply",
       {
@@ -257,8 +261,9 @@ test.describe("Forum authenticated flows", () => {
     );
     expect(subReplyResponse.status()).toBe(200);
     const subReplyResult = await subReplyResponse.json();
+    const subReplyMeta = subReplyResult.replyMetaData ?? subReplyResult.reply;
 
-    const subReplyId = subReplyResult.reply.id;
+    const subReplyId = subReplyMeta.id;
 
     const finalReplyLikeButton = page.locator(`#replyLikeButton-${subReplyId}`);
     await page.reload();
@@ -316,7 +321,8 @@ test.describe("Forum authenticated flows", () => {
     );
     expect(replyResponse.status()).toBe(200);
     const replyResult = await replyResponse.json();
-    const replyId = replyResult.comment.id;
+    const replyMeta = replyResult.commentMetaData ?? replyResult.comment;
+    const replyId = replyMeta.id;
 
     const subReplyResponse = await page.request.post(
       "/forum/response-body/add-reply",
@@ -330,7 +336,8 @@ test.describe("Forum authenticated flows", () => {
     );
     expect(subReplyResponse.status()).toBe(200);
     const subReplyResult = await subReplyResponse.json();
-    const subReplyId = subReplyResult.reply.id;
+    const subReplyMeta = subReplyResult.replyMetaData ?? subReplyResult.reply;
+    const subReplyId = subReplyMeta.id;
 
     const finalReplyLikeButton = page.locator(`#replyLikeButton-${subReplyId}`);
     await page.reload();
@@ -390,7 +397,8 @@ test.describe("Forum authenticated flows", () => {
     );
     expect(replyResponse.status()).toBe(200);
     const replyResult = await replyResponse.json();
-    const replyId = replyResult.comment.id;
+    const replyMeta = replyResult.commentMetaData ?? replyResult.comment;
+    const replyId = replyMeta.id;
 
     const subReplyResponse = await page.request.post(
       "/forum/response-body/add-reply",
@@ -404,7 +412,8 @@ test.describe("Forum authenticated flows", () => {
     );
     expect(subReplyResponse.status()).toBe(200);
     const subReplyResult = await subReplyResponse.json();
-    const subReplyId = subReplyResult.reply.id;
+    const subReplyMeta = subReplyResult.replyMetaData ?? subReplyResult.reply;
+    const subReplyId = subReplyMeta.id;
 
     const finalReplyDislikeButton = page.locator(
       `#replyDislikeButton-${subReplyId}`,

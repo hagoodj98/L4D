@@ -18,7 +18,9 @@ describe("Forum script regressions", () => {
     const source = fs.readFileSync(forumPartialPath, "utf8");
     const block = extractHandlePostSubmitBlock(source);
 
-    expect(block).toContain("const insertedPost = postsContainer.querySelector(\".new-post\")");
+    expect(block).toContain(
+      'const insertedPost = postsContainer.querySelector(".new-post")',
+    );
     expect(block).not.toContain(".new-reply");
   });
 });
