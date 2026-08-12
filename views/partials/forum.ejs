@@ -339,10 +339,25 @@
      `;
      }
 
-    function initializePaginationState(page) {
-     paginationState.start = page;
-     paginationState.end = page + 9;
-     paginationState.buttonsHidden = page - 1;
+    function initializePaginationState(page, paginationNumber) {
+      // Set the initial state for pagination
+      const max = paginationNumber;
+      // Calculate the start and end based on the current page
+      const min = paginationNumber - 9;
+      // If the current page is within the range of min and max, set the start and end accordingly. Otherwise, set the start to the current page and end to current page + 9.
+      if(page >= min && page <= max) {
+        paginationState.start = min;
+        paginationState.end = max;
+        paginationState.buttonsHidden = min - 1;
+        return true; // Indicate that the page is out of range
+      } else {
+        paginationState.start = page;
+        paginationState.end = page + 9;
+        paginationState.buttonsHidden = page - 1;
+        return false; // Indicate that the page is within range
+      }
+
+
     }
 
    let currentPage = 1;
@@ -622,24 +637,30 @@
 
    document.addEventListener("DOMContentLoaded", async () => {
      const list = <%- JSON.stringify(listAllContent) %>;
-     if (!Array.isArray(list) || list.length === 0) return;
+     if (!Array.isArray(list) || list.length === 0) {
+      window.location.href = "/forum";// Redirect to the forum page if the list is empty
+     };
      const forumContent = createForumContent(list);
      document.getElementById("demo").innerHTML = forumContent;
+
      // Highlight the current page button in the pagination
-     const urlQuery = new URLSearchParams(window.location.search).get("page") || "1";
-     const routeParts = urlQuery.split("/");
-     const page = routeParts[0];
-     initializePaginationState(Number(page));
-     if(urlQuery){
-       const postID = routeParts[1];
-       const commentID = routeParts[2];
-       const replyID = routeParts[3];
+      const pageNumber = new URLSearchParams(window.location.search).get("page") || "1";
+      const postID = new URLSearchParams(window.location.search).get("postID");
+      const commentID = new URLSearchParams(window.location.search).get("commentID");
+      const replyID = new URLSearchParams(window.location.search).get("replyID");
+      const routeParts = [pageNumber, postID, commentID, replyID];
+      const maxPage = <%= paginationNumber %>;
+      const outOfRange = initializePaginationState(Number(pageNumber), maxPage);
+      if (outOfRange) {
+         handlePaginationIncrements(<%= paginationNumber %>, "decrease", routeParts);
+         handlePagination(pageNumber);
+      } else {
+          handlePaginationIncrements(<%= paginationNumber %>, "decrease", routeParts);
+          handlePagination(paginationState.start);
+      }
        // Ensure the end does not exceed the total number of pages
        paginationState.end = Math.min(paginationState.end, <%= paginationNumber %>);
-       handlePagination(paginationState.start);
-       handlePaginationIncrements(<%= paginationNumber %>, "decrease", routeParts);
-       //ignore the first part and join
-       //const anchorId = routeParts.slice(1).join("/");
+
        setTimeout(async () => {
          if (postID && !commentID && !replyID) {
            scrollToForumContent(postID);
@@ -673,7 +694,6 @@
            }, 2000); // Adjust the delay as needed
          }
        }, 500); // Adjust the delay as needed
-     }
 
    });
 </script>
