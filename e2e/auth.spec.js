@@ -21,7 +21,7 @@ test.describe("Authentication flows", () => {
     await page.getByLabel("Username").fill(username);
     await page.getByLabel("Password").fill(password);
     await page.getByRole("button", { name: "Create account" }).click();
-    await expect(page).toHaveURL(/\/forum$/);
+    await expect(page).toHaveURL(/\/forum(\?page=\d+)?$/);
 
     const cookies = await context.cookies();
     const sessionCookie = cookies.find(
@@ -62,7 +62,7 @@ test.describe("Authentication flows", () => {
     await page.getByLabel("Username").fill(username);
     await page.getByLabel("Password").fill(password);
     await page.getByRole("button", { name: "Create account" }).click();
-    await expect(page).toHaveURL(/\/forum$/);
+    await expect(page).toHaveURL(/\/forum(\?page=\d+)?$/);
 
     await page.goto("/auth/logout");
     await expect(page).toHaveURL(/\/auth\/login$/);
