@@ -31,22 +31,19 @@ export const findMatchingNotification = (
       const createdAtMatch = cacheN.createdAt === notification.createdAt;
       const userMatch = cacheN.userName === notification.userName;
       // Check if the cached notification matches the current notification based on various criteria.
-      if (
+      return (
         notificationTypeMatch &&
         postTypeText &&
         sameID &&
         reactionTypeMatch &&
         createdAtMatch &&
         userMatch
-      ) {
-        // If a matching cached notification is found, return it with its original ID.
-        return {
-          ...notification,
-          id: cacheN.id,
-        };
-      }
+      );
     });
     // If no matching cached notification is found, return the current notification with a new ID and mark it as unread.
+    if (cachedNotification) {
+      cachedNotification.onPage = notification.onPage;
+    }
 
     return (
       cachedNotification ?? {

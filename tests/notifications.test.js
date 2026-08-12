@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { dbState, resetDbState, setupPgMock } from "./helpers/forum-mock.js";
 import { registerAndLogin } from "./helpers/forum-test-helpers.js";
+import { findMatchingNotification } from "../utils/notification_helpers.ts/find-matching.js";
 
 setupPgMock();
 process.env.NODE_ENV = "test";
@@ -50,5 +51,38 @@ describe("Notification read state", () => {
     expect(afterReload.status).toBe(200);
     expect(afterReload.body.notifications).toHaveLength(1);
     expect(afterReload.body.notifications[0].wasRead).toBe(true);
+  });
+
+  it("refreshes the cached onPage value when an existing notification matches newer data", () => {
+    const cachedNotifications = [
+      {
+        id: "notification-1",
+        userName: "user97",
+        notificationType: "posts_down",
+        reactionType: "like",
+        postID: 1,
+        post: "mock post",
+        createdAt: "2026-07-01T12:00:00.000Z",
+        onPage: "1/1",
+        wasRead: false,
+      },
+    ];
+
+    const incomingNotifications = [
+      {
+        ...cachedNotifications[0],
+        onPage: "2/4",
+      },
+    ];
+
+    const result = findMatchingNotification(
+      cachedNotifications,
+      incomingNotifications,
+    );
+
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe("notification-1");
+    expect(result[0].onPage).toBe("2/4");
+    expect(cachedNotifications[0].onPage).toBe("2/4");
   });
 });
