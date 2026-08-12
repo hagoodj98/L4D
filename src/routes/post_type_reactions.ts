@@ -23,7 +23,7 @@ import ErrorHandler from "../../utils/error.js";
 const router = express.Router();
 
 router.post("/post-reaction", async (req, res, next) => {
-  if (!req.isAuthenticated()) return res.redirect("/login");
+  if (!req.isAuthenticated()) return res.redirect("/auth/login");
 
   const rawData: {
     post_id?: number;
@@ -86,7 +86,7 @@ router.post("/post-reaction", async (req, res, next) => {
   }
 });
 router.post("/comment-reaction", async (req, res, next) => {
-  if (!req.isAuthenticated()) return res.redirect("/login");
+  if (!req.isAuthenticated()) return res.redirect("/auth/login");
 
   const rawData: {
     comment_id?: number;
@@ -142,7 +142,7 @@ router.post("/comment-reaction", async (req, res, next) => {
   }
 });
 router.post("/reply-reaction", async (req, res, next) => {
-  if (!req.isAuthenticated()) return res.redirect("/login");
+  if (!req.isAuthenticated()) return res.redirect("/auth/login");
 
   const rawData: {
     reply_id?: number;
