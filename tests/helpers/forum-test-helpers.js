@@ -29,7 +29,11 @@ export async function addPost(agent, content, dbState) {
   expect(response.status).toBe(200);
   expect(response.body.success).toBe(true);
 
-  return response.body.post || dbState.posts[dbState.posts.length - 1];
+  return (
+    response.body.postMetaData ||
+    response.body.post ||
+    dbState.posts[dbState.posts.length - 1]
+  );
 }
 
 export async function addReply(agent, postId, content, dbState) {
@@ -44,7 +48,11 @@ export async function addReply(agent, postId, content, dbState) {
   expect(response.status).toBe(200);
   expect(response.body.success).toBe(true);
 
-  return response.body.comment || dbState.replies[dbState.replies.length - 1];
+  return (
+    response.body.commentMetaData ||
+    response.body.comment ||
+    dbState.replies[dbState.replies.length - 1]
+  );
 }
 
 export async function addSubReply(agent, replyId, content, dbState) {
@@ -61,6 +69,7 @@ export async function addSubReply(agent, replyId, content, dbState) {
   expect(response.body.subReply).toBe(true);
 
   return (
+    response.body.replyMetaData ||
     response.body.reply ||
     dbState.repliesFinalTier[dbState.repliesFinalTier.length - 1]
   );

@@ -10,19 +10,17 @@ export type NotificationType = {
   reactionType?: boolean | string;
   post?: string;
   onPage: string;
+  type?: string;
   commentPost?: string;
   replyPost?: string;
   wasRead?: boolean;
+  userID?: number;
 };
 export type NotificationState = {
   notification_state: {
     notifications: NotificationType[];
   };
 };
-export type ReplyMetaDataType = Pick<
-  NotificationType,
-  "id" | "replyPost" | "commentID" | "createdAt"
->;
 export type NotificationSource = Pick<NotificationType, "id"> & {
   notification_type?: string;
   sourcePostType?: string;
@@ -47,29 +45,15 @@ export interface User {
     notifications: NotificationType[];
   };
 }
-export interface Comment {
-  id: number;
-  comment_post: string;
-  user_id: number;
-  post_id: string;
-  created_at: string;
-  updated_at?: string;
-  parent_comment_id?: string | null;
-}
-export interface Reply {
-  id: number;
-  created_at: string;
-  user_id: number;
-  reply_post: string;
-  comment_id: string;
-}
-export interface Post {
-  id: number;
-  post: string;
-  user_id: number;
-  created_at: string;
-  updated_at?: string;
-}
+export type PostMeta = Pick<NotificationType, "id" | "post" | "type"> &
+  Pick<NotificationSourceType, "created_at">;
+export type CommentMeta = Pick<
+  NotificationType,
+  "id" | "commentPost" | "type"
+> &
+  Pick<NotificationSourceType, "created_at" | "comment_id" | "comment_post">;
+export type ReplyMeta = Pick<NotificationType, "id" | "type"> &
+  Pick<NotificationSourceType, "created_at" | "reply_post" | "comment_id">;
 export interface ReactionType {
   reaction_type: string;
 }
