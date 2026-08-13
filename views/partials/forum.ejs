@@ -9,6 +9,9 @@
      direction,
      routePath = null,
    ) {
+    if(direction === "stop") {
+      return; // Exit the function if the direction is "stop"
+    }
     const currentPageSelected = parseInt(new URLSearchParams(window.location.search).get("page") || "1", 10);
 
     if (direction === "decrease") {
@@ -148,7 +151,7 @@
        newListItemNext,
      );
    }
-   async function handlePagination(page) {
+   async function handlePagination(page, oldPage = null) {
      const offset = (Number(page) - 1) * 4; // Assuming 4 posts per page
      currentPage = Number(page);
      try {
@@ -170,7 +173,10 @@
        const postsContainer = document.querySelector("#demo");
        postsContainer.innerHTML = forumContent;
        const paginationInfo = document.getElementById("paginationInfo");
+      scrollToForumContent()
+
       paginationInfo.textContent = ` Page ${page} of <%= paginationNumber %> `;
+
      } catch (err) {
        console.error("Error fetching paginated posts:", err);
      }
@@ -239,7 +245,6 @@
      return content;
    }
    function createCardPostTypeContainer(p, c, r, isNewPosttypeContainer = false, currentUser = null) {
-
      const { day, month, year, time, timeZone } = formatTime(p ? p.created_at : c ? c.created_at : r.created_at);
      const postType = p ?? c ?? r;
      const postTypeName = p?.type ?? c?.type ?? r?.type;
@@ -351,7 +356,6 @@
                ${postType.replies?.map(reply => createCardPostTypeContainer(null, null, reply)).join('')}
              </div>` : ''
            }
-
            <div
              id="${createPostTypeSectionID}"
              style="display: none"
@@ -414,13 +418,10 @@
         paginationState.buttonsHidden = page - 1;
         return false; // Indicate that the page is within range
       }
-
-
     }
-
    let currentPage = 1;
-   function scrollToForumContent(idSection) {
-       const forumAnchor = document.getElementById(`anchor/${idSection}`);
+   function scrollToForumContent() {
+       const forumAnchor = document.getElementById(`anchor/top-forum`);
        if (!forumAnchor) return;
        forumAnchor.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -708,7 +709,8 @@
      }
 
 
-   document.addEventListener("DOMContentLoaded", async () => {
+  document.addEventListener("DOMContentLoaded", async () => {
+
      const list = <%- JSON.stringify(listAllContent) %>;
      if (!Array.isArray(list) || list.length === 0) {
       window.location.href = "/forum";// Redirect to the forum page if the list is empty
@@ -725,10 +727,10 @@
       const maxPage = <%= paginationNumber %>;
       const outOfRange = initializePaginationState(Number(pageNumber), maxPage);
       if (outOfRange) {
-         handlePaginationIncrements(<%= paginationNumber %>, "decrease", routeParts);
+         handlePaginationIncrements(<%= paginationNumber %>, "stop", routeParts);
          handlePagination(pageNumber);
       } else {
-          handlePaginationIncrements(<%= paginationNumber %>, "decrease", routeParts);
+          handlePaginationIncrements(<%= paginationNumber %>, "stop", routeParts);
           handlePagination(paginationState.start);
       }
        // Ensure the end does not exceed the total number of pages
@@ -769,4 +771,12 @@
        }, 500); // Adjust the delay as needed
 
    });
+    window.addEventListener('pagehide', (event) => {
+      if (event.persisted) {
+        console.log('The page is moving into the bfcache.');
+        // Keep connections open if safe, or clean up temporary states
+      } else {
+        console.log('The page is being destroyed/unloaded.');
+      }
+      });
 </script>
