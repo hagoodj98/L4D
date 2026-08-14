@@ -771,12 +771,4 @@
        }, 500); // Adjust the delay as needed
 
    });
-    window.addEventListener('pagehide', (event) => {
-      if (event.persisted) {
-        console.log('The page is moving into the bfcache.');
-        // Keep connections open if safe, or clean up temporary states
-      } else {
-        console.log('The page is being destroyed/unloaded.');
-      }
-      });
 </script>

@@ -117,3 +117,20 @@
     $("#nickcontent").slideToggle();
   });
 </script>
+<script>
+  window.addEventListener("popstate", (event) => {
+    if (window.location.href.includes("forum")) {
+      const getCurrentButtonSelected = document.getElementById(
+        `paginationButton${currentPage}`,
+      );
+      if (getCurrentButtonSelected) {
+        getCurrentButtonSelected.classList.remove("selected");
+        // Remove focus from the button to prevent it from being highlighted
+        getCurrentButtonSelected.blur();
+      }
+      const page =
+        new URLSearchParams(window.location.search).get("page") || "1";
+      handlePagination(page);
+    }
+  });
+</script>
