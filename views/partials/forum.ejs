@@ -7,176 +7,175 @@
     async function handlePaginationIncrements(
      paginationNumber,
      direction,
-     routePath = null,
+      isPopState = false
    ) {
     if(direction === "stop") {
       return; // Exit the function if the direction is "stop"
     }
     const currentPageSelected = parseInt(new URLSearchParams(window.location.search).get("page") || "1", 10);
-
     if (direction === "decrease") {
       if (paginationState.start <= 1) return; // Prevent going below the first page
       const currentMaxPagination = parseInt(document.getElementById("paginationIncrease").value, 10);
       const currentMinPagination = parseInt(document.getElementById("paginationDecrease").value, 10);
-      if(currentPageSelected === currentMinPagination){
-        paginationState.end = currentPageSelected - 1;
-        paginationState.start = paginationState.end - 9;
-        paginationState.buttonsHidden = paginationState.start - 1;
-        handlePagination(currentPageSelected - 1);
-      }
-      else if(currentPageSelected > currentMinPagination && currentPageSelected <= currentMaxPagination){
-        // If the current page is within the visible range, we don't need to change the start and end, but we can still update the buttonsHidden count
-        if(currentPageSelected <= 10){
-          // If the current page is less than or equal to 10, reset the pagination to show the first 10 pages
-          paginationState.start = 1;
-          paginationState.end = 10;
-          paginationState.buttonsHidden = 0;
-          // Call handlePagination to update the displayed content for the new page
+      if(isPopState && currentPageSelected < currentMinPagination) {
+        paginationState.start = currentPageSelected;
+        paginationState.end = currentPageSelected + 9;
+        paginationState.buttonsHidden = currentPageSelected - 1;
+       // handlePagination(currentPageSelected);
+      } else if(isPopState && currentPageSelected === currentMinPagination) {
+        return; // Do nothing if the current page is equal to the minimum pagination value
+      } else{
+        if (currentPageSelected === currentMinPagination) {
+          paginationState.buttonsHidden--;
+          paginationState.start--;
+          paginationState.end--;
           handlePagination(currentPageSelected - 1);
-          history.pushState(null, "", `/forum?page=${paginationState.start}`);
+        } else if(currentPageSelected > currentMinPagination && currentPageSelected <= currentMaxPagination) {
+        // If the current page is within the visible range, we don't need to change the start and end, but we can still update the buttonsHidden count
+            if(currentPageSelected <= 10){
+              // If the current page is less than or equal to 10, reset the pagination to show the first 10 pages
+              paginationState.start = 1;
+              paginationState.end = 10;
+              paginationState.buttonsHidden = 0;
+              // Call handlePagination to update the displayed content for the new page
+              handlePagination(currentPageSelected - 1);
+            }
+            else{
+              paginationState.end = currentPageSelected - 1;
+              paginationState.start = paginationState.end - 9;
+              paginationState.buttonsHidden = paginationState.start - 1;
+              handlePagination(currentPageSelected - 1);
+            }
         }
-        else{
-          paginationState.end = currentPageSelected - 1;
-          paginationState.start = paginationState.end - 9;
+      }
+      } else if (direction === "increase") {
+        if (paginationState.end >= paginationNumber) return; // Prevent going beyond the last page
+          const currentMaxPagination = parseInt(document.getElementById("paginationIncrease").value, 10);
+          const currentMinPagination = parseInt(document.getElementById("paginationDecrease").value, 10);
+
+        if (currentPageSelected >= paginationNumber - 9 && currentPageSelected <= paginationNumber) {
+          // If the current page is within the last 10 pages, we need to adjust the start and end to show the last 10 pages
+          paginationState.start = paginationNumber - 9;
+          paginationState.end = paginationNumber;
           paginationState.buttonsHidden = paginationState.start - 1;
-          handlePagination(currentPageSelected - 1);
-        }
-      }
-      console.log("Current Min Pagination:", currentMinPagination);
-    } else if (direction === "increase") {
-      if (paginationState.end >= paginationNumber) return; // Prevent going beyond the last page
-        const currentMaxPagination = parseInt(document.getElementById("paginationIncrease").value, 10);
-        const currentMinPagination = parseInt(document.getElementById("paginationDecrease").value, 10);
-
-      if (currentPageSelected >= paginationNumber - 9 && currentPageSelected <= paginationNumber) {
-        // If the current page is within the last 10 pages, we need to adjust the start and end to show the last 10 pages
-        paginationState.start = paginationNumber - 9;
-        paginationState.end = paginationNumber;
-        paginationState.buttonsHidden = paginationState.start - 1;
-        handlePagination(currentPageSelected + 1);
-        history.pushState(null, "", `/forum?page=${currentPageSelected + 1}`);
-      } else if (currentPageSelected > currentMinPagination && currentPageSelected < currentMaxPagination) {
-        // If the current page is within the visible range, we don't need to change the start and end, but we can still update the buttonsHidden count
-        paginationState.start = currentPageSelected + 1;
-        paginationState.end = paginationState.start + 9;
-        handlePagination(paginationState.start);
-        paginationState.buttonsHidden = paginationState.start - 1;
-        history.pushState(null, "", `/forum?page=${currentPageSelected + 1}`);
-
-      } else if (currentPageSelected === currentMaxPagination) {
-        paginationState.start = currentPageSelected + 1;
-        paginationState.end = paginationState.start + 9;
-        paginationState.buttonsHidden = paginationState.start - 1;
-        handlePagination(currentPageSelected + 1);
-        history.pushState(null, "", `/forum?page=${currentPageSelected + 1}`);
-      } else {
-          paginationState.start = paginationState.start + 1;
+          handlePagination(currentPageSelected + 1);
+        } else if (currentPageSelected > currentMinPagination && currentPageSelected < currentMaxPagination) {
+          // If the current page is within the visible range, we don't need to change the start and end, but we can still update the buttonsHidden count
+          paginationState.start = isPopState ? currentPageSelected  : currentPageSelected + 1;
+          paginationState.end = paginationState.start + 9;
+          paginationState.buttonsHidden = paginationState.start - 1;
+          if(!isPopState) {
+            handlePagination(paginationState.start);
+          }
+        } else if (currentPageSelected === currentMaxPagination) {
+          paginationState.start = currentPageSelected + 1;
           paginationState.end = paginationState.start + 9;
           paginationState.buttonsHidden = paginationState.start - 1;
           handlePagination(currentPageSelected + 1);
-          history.pushState(null, "", `/forum?page=${paginationState.start}`);
-        }
+        } else {
+            paginationState.start = paginationState.start + 1;
+            paginationState.end = paginationState.start + 9;
+            paginationState.buttonsHidden = paginationState.start - 1;
+            handlePagination(currentPageSelected + 1);
+          }
       }
-    const paginationControls = document.getElementById("paginationControls");
-    let currentButtons = document.createElement("div");
-    let pastButtons = document.createElement("div");
-    let futureButtons = document.createElement("div");
-    //replace the buttons with the new range of buttons and their new ids so we can keep track of them
-    for (let i = paginationState.start; i <= paginationState.end; i++) {
-      if (i > paginationNumber) break; // Stop if we exceed the total number of pages
+      const paginationControls = document.getElementById("paginationControls");
+      let currentButtons = document.createElement("div");
+      let pastButtons = document.createElement("div");
+      let futureButtons = document.createElement("div");
+      //replace the buttons with the new range of buttons and their new ids so we can keep track of them
+      for (let i = paginationState.start; i <= paginationState.end; i++) {
+        if (i > paginationNumber) break; // Stop if we exceed the total number of pages
 
-      const newButtonHTML = createPageButtons(
-        i
-      );
-      currentButtons.innerHTML += newButtonHTML.trim();
-    }
+        const newButtonHTML = createPageButtons(
+          i
+        );
+        currentButtons.innerHTML += newButtonHTML.trim();
+      }
 
-     document.getElementById("paginationDecrease").value = paginationState.start;
-     document.getElementById("paginationIncrease").value = paginationState.end;
-     const newListItem = document.createElement("li");
-     const newButton = document.createElement("button");
-     newListItem.className = "page-item";
-     newButton.type = "button";
-     newButton.setAttribute("aria-label", "Previous");
-     newButton.className = "page-link";
-     newButton.value = paginationState.start;
-     //add event listener to the new button to handle the click event
-     newButton.addEventListener("click", function () {
-       handlePaginationIncrements(paginationNumber, "decrease", true);
-       return false;
-     });
-     newButton.innerHTML = '<span aria-hidden="true">&laquo;</span>';
-     newButton.id = "paginationDecrease";
-     newListItem.appendChild(newButton);
-     const newListItemNext = document.createElement("li");
-     const newButtonNext = document.createElement("button");
-     newListItemNext.className = "page-item";
-     newButtonNext.type = "button";
-     newButtonNext.setAttribute("aria-label", "Next");
-     newButtonNext.className = "page-link";
-     newButtonNext.value = paginationState.end;
-     newButtonNext.innerHTML = '<span aria-hidden="true">&raquo;</span>';
-     newButtonNext.id = "paginationIncrease";
-     newButtonNext.addEventListener("click", function () {
-       handlePaginationIncrements(paginationNumber, "increase", true);
-       return false;
-     });
-     // Append the new "Next" button to the new list item
-     newListItemNext.appendChild(newButtonNext);
-     // Create past buttons for the pages before the current range
-     for (let i = 1; i <= paginationState.buttonsHidden; i++) {
-       const oldButton = document.getElementById("paginationButton" + i);
-       const hiddenButtonHTML = createPageButtons(i, true);
-       pastButtons.innerHTML += hiddenButtonHTML.trim();
-     }
-     // Create future buttons for the remaining pages after the current range
-     for (
-       let i = Math.min(paginationState.end + 1, paginationNumber);
-       i <= paginationNumber - Math.min(paginationState.end + 1, paginationNumber);
-       i++
-     ) {
-       const future = document.getElementById("paginationButton" + i);
-       const hiddenButtonHTML = createPageButtons(i, true);
-       futureButtons.innerHTML += hiddenButtonHTML.trim();
-     }
+      document.getElementById("paginationDecrease").value = paginationState.start;
+      document.getElementById("paginationIncrease").value = paginationState.end;
+      const newListItem = document.createElement("li");
+      const newButton = document.createElement("button");
+      newListItem.className = "page-item";
+      newButton.type = "button";
+      newButton.setAttribute("aria-label", "Previous");
+      newButton.className = "page-link";
+      newButton.value = paginationState.start;
+      //add event listener to the new button to handle the click event
+      newButton.addEventListener("click", function () {
+        handlePaginationIncrements(paginationNumber, "decrease");
+        return false;
+      });
+      newButton.innerHTML = '<span aria-hidden="true">&laquo;</span>';
+      newButton.id = "paginationDecrease";
+      newListItem.appendChild(newButton);
+      const newListItemNext = document.createElement("li");
+      const newButtonNext = document.createElement("button");
+      newListItemNext.className = "page-item";
+      newButtonNext.type = "button";
+      newButtonNext.setAttribute("aria-label", "Next");
+      newButtonNext.className = "page-link";
+      newButtonNext.value = paginationState.end;
+      newButtonNext.innerHTML = '<span aria-hidden="true">&raquo;</span>';
+      newButtonNext.id = "paginationIncrease";
+      newButtonNext.addEventListener("click", function () {
+        handlePaginationIncrements(paginationNumber, "increase");
+        return false;
+      });
+      // Append the new "Next" button to the new list item
+      newListItemNext.appendChild(newButtonNext);
+      // Create past buttons for the pages before the current range
+      for (let i = 1; i <= paginationState.buttonsHidden; i++) {
+        const oldButton = document.getElementById("paginationButton" + i);
+        const hiddenButtonHTML = createPageButtons(i, true);
+        pastButtons.innerHTML += hiddenButtonHTML.trim();
+      }
+      // Create future buttons for the remaining pages after the current range
+      for (
+        let i = Math.min(paginationState.end + 1, paginationNumber);
+        i <= paginationNumber - Math.min(paginationState.end + 1, paginationNumber);
+        i++
+      ) {
+        const future = document.getElementById("paginationButton" + i);
+        const hiddenButtonHTML = createPageButtons(i, true);
+        futureButtons.innerHTML += hiddenButtonHTML.trim();
+      }
      // Remove all buttons except the first and last
      // Update the pagination controls with the new buttons with new initialized page numbers
-    const paginationInfo = document.getElementById("paginationInfo");
-    paginationInfo.textContent = ` Page ${currentPageSelected + 1}  of ${paginationNumber} `;
-     paginationControls.replaceChildren(
-       newListItem,
-       ...pastButtons.children,
-       ...currentButtons.children,
-       ...futureButtons.children,
-       newListItemNext,
-     );
+
+      paginationControls.replaceChildren(
+        newListItem,
+        ...pastButtons.children,
+        ...currentButtons.children,
+        ...futureButtons.children,
+        newListItemNext,
+      );
    }
-   async function handlePagination(page, oldPage = null) {
-     const offset = (Number(page) - 1) * 4; // Assuming 4 posts per page
-     currentPage = Number(page);
-     try {
-       const response = await fetch(
-         `/forum/pagination?page=${page}&offset=${offset}`,
-       );
-       const data = await response.json();
+  async function handlePagination(page, oldPage = null) {
+    const offset = (Number(page) - 1) * 4; // Assuming 4 posts per page
+    try {
+      if(!oldPage){
+        currentPage = Number(page);
+        const response = await fetch(`/forum/pagination?page=${page}&offset=${offset}`,);
+        const data = await response.json();
        // Update the active page button styling
-       document
-         .querySelectorAll(".unstyledPaginationButtons")
-         .forEach((button) => {
+        document.querySelectorAll(".unstyledPaginationButtons").forEach((button) => {
            button.classList.toggle(
              "selected",
              button.textContent.trim() === String(page),
            );
-         });
-       history.pushState(null, "", `/forum?page=${page}`);
-       const forumContent = createForumContent(data.listAllContent);
-       const postsContainer = document.querySelector("#demo");
-       postsContainer.innerHTML = forumContent;
-       const paginationInfo = document.getElementById("paginationInfo");
-      scrollToForumContent()
-
-      paginationInfo.textContent = ` Page ${page} of <%= paginationNumber %> `;
-
+        });
+        history.pushState(null, "", `/forum?page=${page}`);
+        const forumContent = createForumContent(data.listAllContent);
+        const postsContainer = document.querySelector("#demo");
+        postsContainer.innerHTML = forumContent;
+        const paginationInfo = document.getElementById("paginationInfo");
+        scrollToForumContent()
+        paginationInfo.textContent = ` Page ${page} of <%= paginationNumber %> `;
+      }
+      const totalPages = <%= paginationNumber %>;
+      return totalPages;
      } catch (err) {
        console.error("Error fetching paginated posts:", err);
      }
@@ -392,6 +391,7 @@
          <button
            class="page-link unstyledPaginationButtons"
            type="button"
+            id="paginationButton${i}"
            style="display: ${hidden ? 'none' : 'inline-block'};"
            onclick="handlePagination(${i})"
          >
