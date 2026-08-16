@@ -190,6 +190,8 @@
         newListItemNext,
       );
    }
+  // Rebuild the visible page from URL-derived route data so history navigation
+  // and notification routes do not reuse stale pagination content.
   async function handlePagination(page, isPopState = false, routeParts = null, differentRoot = false) {
     const offset = (Number(page) - 1) * 4; // Assuming 4 posts per page
     const postID = routeParts ? routeParts[1] : null;
@@ -800,6 +802,8 @@
      document.getElementById("demo").innerHTML = forumContent;
 
      // Highlight the current page button in the pagination
+      // Treat the URL as the source of truth when this page is restored or
+      // reached from a notification, rather than trusting prior JS state.
       const pageNumber = new URLSearchParams(window.location.search).get("page") || "1";
       const postID = new URLSearchParams(window.location.search).get("postID");
       const commentID = new URLSearchParams(window.location.search).get("commentID");

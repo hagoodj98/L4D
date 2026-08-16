@@ -11,6 +11,8 @@
       const postID = routeParts[1];
       const commentID = routeParts[2];
       const replyID = routeParts[3];
+      // A full navigation carries target IDs in the URL when arriving from
+      // another page; forum-to-forum routing instead refreshes content in place.
       if (currentPath !== "/forum") {
         const params = new URLSearchParams();
         params.set("page", pageNumber);
@@ -19,6 +21,8 @@
         if (replyID) params.set("replyID", replyID);
         window.location.href = `/forum?${params.toString()}&differentRoot=true`;
       } else {
+        // Reset the visible pagination window before loading the notification's
+        // page so a prior route cannot leave stale page controls or content.
         const inRange = initializePaginationState(
           Number(pageNumber),
           paginationNumber,
