@@ -46,7 +46,12 @@
                 paginationState.start = 1;
                 paginationState.end = 10;
                 paginationState.buttonsHidden = 0;
-              } else {
+              }else if(incomingPage > 10 && incomingPage >= paginationNumber - 9 && incomingPage <= paginationNumber){
+                paginationState.start = paginationNumber - 9;
+                paginationState.end = paginationNumber;
+                paginationState.buttonsHidden = paginationState.start - 1;
+              }
+              else {
                 paginationState.end = incomingPage - 1;
                 paginationState.start = paginationState.end - 9;
                 paginationState.buttonsHidden = paginationState.start - 1;

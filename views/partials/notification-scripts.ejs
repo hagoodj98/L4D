@@ -27,7 +27,13 @@
         if (inRange) {
           let leavingPage = currentPage; // Store the current page before updating it
           let deselectCurrentButton;
-          handlePaginationIncrements(paginationNumber, "decrease", false, true);
+          handlePaginationIncrements(
+            paginationNumber,
+            "decrease",
+            false,
+            true,
+            Number(pageNumber),
+          );
           deselectCurrentButton = document.getElementById(
             `paginationButton${leavingPage}`,
           );
