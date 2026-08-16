@@ -1,69 +1,109 @@
 <script>
   async function handleNotifcationRoute(route) {
-    const response = await fetch(`/forum/total-posts`);
-    const data = await response.json();
-    const totalPosts = data.totalPosts;
-    const paginationNumber = data.paginationNumber;
-    const currentPath = window.location.pathname;
-    const routeParts = route.split("/").map((part) => part.trim());
-    const pageNumber = routeParts[0];
-    const postID = routeParts[1];
-    const commentID = routeParts[2];
-    const replyID = routeParts[3];
-    if (currentPath !== "/forum") {
-      const params = new URLSearchParams();
-      params.set("page", pageNumber);
-      if (postID) params.set("postID", postID);
-      if (commentID) params.set("commentID", commentID);
-      if (replyID) params.set("replyID", replyID);
-      window.location.href = `/forum?${params.toString()}`;
-    } else {
-      const outOfRange = initializePaginationState(
-        Number(pageNumber),
-        paginationNumber,
-      );
-
-      if (outOfRange) {
-        handlePaginationIncrements(paginationNumber, "decrease", routeParts);
-        handlePagination(pageNumber);
+    try {
+      const response = await fetch(`/forum/total-posts`);
+      const data = await response.json();
+      const totalPosts = data.totalPosts;
+      const paginationNumber = data.paginationNumber;
+      const currentPath = window.location.pathname;
+      const routeParts = route.split("/").map((part) => part.trim());
+      const pageNumber = routeParts[0];
+      const postID = routeParts[1];
+      const commentID = routeParts[2];
+      const replyID = routeParts[3];
+      if (currentPath !== "/forum") {
+        const params = new URLSearchParams();
+        params.set("page", pageNumber);
+        if (postID) params.set("postID", postID);
+        if (commentID) params.set("commentID", commentID);
+        if (replyID) params.set("replyID", replyID);
+        window.location.href = `/forum?${params.toString()}`;
       } else {
-        handlePaginationIncrements(paginationNumber, "decrease", routeParts);
-        handlePagination(paginationState.start);
+        const inRange = initializePaginationState(
+          Number(pageNumber),
+          paginationNumber,
+        );
+
+        if (inRange) {
+          let leavingPage = currentPage; // Store the current page before updating it
+          let deselectCurrentButton;
+          handlePaginationIncrements(paginationNumber, "decrease", false, true);
+          deselectCurrentButton = document.getElementById(
+            `paginationButton${leavingPage}`,
+          );
+          if (deselectCurrentButton) {
+            deselectCurrentButton.classList.remove("selected");
+            deselectCurrentButton.blur();
+          }
+          currentPage = Number(pageNumber);
+          await handlePagination(pageNumber);
+          const newButtonSelected = document.getElementById(
+            `paginationButton${currentPage}`,
+          );
+          if (newButtonSelected) {
+            newButtonSelected.classList.add("selected");
+            const paginationInfo = document.getElementById("paginationInfo");
+            paginationInfo.textContent = ` Page ${currentPage} of  ${paginationNumber} `;
+          }
+        } else {
+          let leavingPage = currentPage; // Store the current page before updating it
+          let deselectCurrentButton;
+
+          handlePaginationIncrements(
+            paginationNumber,
+            "decrease",
+            false,
+            true,
+            Number(pageNumber),
+          );
+          deselectCurrentButton = document.getElementById(
+            `paginationButton${leavingPage}`,
+          );
+          if (deselectCurrentButton) {
+            deselectCurrentButton.classList.remove("selected");
+            deselectCurrentButton.blur();
+          }
+
+          await handlePagination(
+            Number(pageNumber) <= 10 ? pageNumber : paginationState.start,
+          );
+        }
+        paginationState.end = Math.min(paginationState.end, paginationNumber);
+        setTimeout(async () => {
+          if (postID && !commentID && !replyID) {
+            scrollToForumContent(postID);
+            setTimeout(() => {
+              notificationAnimation(postID, "post");
+            }, 500); // Adjust the delay as needed
+          }
+          if (postID && commentID && !replyID) {
+            scrollToForumContent(postID);
+            setTimeout(() => {
+              showAllReplies(postID, true, false, false, "comment");
+            }, 500); // Adjust the delay as needed
+            scrollToForumContent(commentID);
+            setTimeout(() => {
+              notificationAnimation(commentID, "comment");
+            }, 1500); // Adjust the delay as needed
+          }
+          if (postID && commentID && replyID) {
+            scrollToForumContent(`${postID}`);
+            setTimeout(() => {
+              showAllReplies(postID, true, false, false, "comment");
+            }, 500); // Adjust the delay as needed
+            scrollToForumContent(commentID);
+            setTimeout(() => {
+              showAllReplies(commentID, false, true, false, "reply");
+            }, 1500); // Adjust the delay as needed
+            scrollToForumContent(`${commentID}`);
+            setTimeout(() => {
+              scrollToForumContent(`${replyID}`);
+              notificationAnimation(replyID, "reply");
+            }, 2000); // Adjust the delay as needed
+          }
+        }, 500); // Adjust the delay as needed
       }
-      paginationState.end = Math.min(paginationState.end, paginationNumber);
-      setTimeout(async () => {
-        if (postID && !commentID && !replyID) {
-          setTimeout(() => {
-            notificationAnimation(postID, "post");
-          }, 500); // Adjust the delay as needed
-        }
-        if (postID && commentID && !replyID) {
-          scrollToForumContent(postID);
-          setTimeout(() => {
-            showAllReplies(postID, true, false, false, "comment");
-          }, 500); // Adjust the delay as needed
-          scrollToForumContent(commentID);
-          setTimeout(() => {
-            notificationAnimation(commentID, "comment");
-          }, 1500); // Adjust the delay as needed
-        }
-        if (postID && commentID && replyID) {
-          scrollToForumContent(`${postID}`);
-          setTimeout(() => {
-            showAllReplies(postID, true, false, false, "comment");
-          }, 500); // Adjust the delay as needed
-          scrollToForumContent(commentID);
-          setTimeout(() => {
-            showAllReplies(commentID, false, true, false, "reply");
-          }, 1500); // Adjust the delay as needed
-          scrollToForumContent(`${commentID}`);
-          setTimeout(() => {
-            scrollToForumContent(`${replyID}`);
-            notificationAnimation(replyID, "reply");
-          }, 2000); // Adjust the delay as needed
-        }
-      }, 500); // Adjust the delay as needed
-    }
+    } catch (error) {}
   }
 
   // Function to create and append notification elements to the notifications dropdown
@@ -232,93 +272,101 @@
         item.classList.remove("unread-indicator"),
       );
     }
-    // Send a POST request to the server to mark notifications as read
-    const response = await fetch("/notifications/read-notifications", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    // If the response is not OK, log an error message and return
-    if (!response.ok) {
-      console.error("Failed to mark notifications as read");
-      return;
+    try {
+      // Send a POST request to the server to mark notifications as read
+      const response = await fetch("/notifications/read-notifications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      // If the response is not OK, log an error message and return
+      if (!response.ok) {
+        console.error("Failed to mark notifications as read");
+        return;
+      }
+      const notificationCountElement = document.getElementById(
+        "notificationCountText",
+      );
+      notificationCountElement.textContent = "0";
+      notificationCountContainer.className =
+        "notification-count-container-hidden";
+    } catch (error) {
+      console.error("Error marking notifications as read:", error);
     }
-    const notificationCountElement = document.getElementById(
-      "notificationCountText",
-    );
-    notificationCountElement.textContent = "0";
-    notificationCountContainer.className =
-      "notification-count-container-hidden";
   }
   document.addEventListener("DOMContentLoaded", async () => {
-    const response = await fetch("/notifications/load-notifications", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const data = await response.json();
-    const notificationsDropdown = document.getElementById(
-      "notificationsDropdown",
-    );
-    // Ensure the notifications dropdown title is present
-    ensureNotificationsDropdownTitle(notificationsDropdown);
-    const getAllOtherUsersNotifications = data.notifications;
-    const notificationsNotRead = getAllOtherUsersNotifications.filter(
-      (item) => item.wasRead === false,
-    );
-    const notificationRead = getAllOtherUsersNotifications.filter(
-      (item) => item.wasRead === true,
-    );
-    if (getAllOtherUsersNotifications.length > 0) {
-      if (notificationsNotRead.length !== 0) {
-        const notificationCountContainer = document.getElementById(
-          "notificationCountContainer",
-        );
-        const notificationCountElement = document.getElementById(
-          "notificationCountText",
-        );
-        notificationCountElement.textContent = notificationsNotRead.length;
-        notificationCountContainer.className = "notification-count-container";
-        notificationsNotRead.forEach((item) => {
-          const getNotificationsSection = document.getElementById(
-            "notificationsDropdown",
+    try {
+      const response = await fetch("/notifications/load-notifications", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      const notificationsDropdown = document.getElementById(
+        "notificationsDropdown",
+      );
+      // Ensure the notifications dropdown title is present
+      ensureNotificationsDropdownTitle(notificationsDropdown);
+      const getAllOtherUsersNotifications = data.notifications;
+      const notificationsNotRead = getAllOtherUsersNotifications.filter(
+        (item) => item.wasRead === false,
+      );
+      const notificationRead = getAllOtherUsersNotifications.filter(
+        (item) => item.wasRead === true,
+      );
+      if (getAllOtherUsersNotifications.length > 0) {
+        if (notificationsNotRead.length !== 0) {
+          const notificationCountContainer = document.getElementById(
+            "notificationCountContainer",
           );
-          const { likeComment, commentPost, replyPost, likePost, likeReply } =
-            createTextForNotificationType(item);
-          createNotificationElement(
-            item,
-            likeComment,
-            commentPost,
-            replyPost,
-            likePost,
-            likeReply,
-            getNotificationsSection,
-            false,
+          const notificationCountElement = document.getElementById(
+            "notificationCountText",
           );
-        });
+          notificationCountElement.textContent = notificationsNotRead.length;
+          notificationCountContainer.className = "notification-count-container";
+          notificationsNotRead.forEach((item) => {
+            const getNotificationsSection = document.getElementById(
+              "notificationsDropdown",
+            );
+            const { likeComment, commentPost, replyPost, likePost, likeReply } =
+              createTextForNotificationType(item);
+            createNotificationElement(
+              item,
+              likeComment,
+              commentPost,
+              replyPost,
+              likePost,
+              likeReply,
+              getNotificationsSection,
+              false,
+            );
+          });
+        }
+        if (notificationRead.length !== 0) {
+          //We don't need to show the notification count for read notifications
+          notificationRead.forEach((item) => {
+            const getNotificationsSection = document.getElementById(
+              "notificationsDropdown",
+            );
+            const { likeComment, commentPost, replyPost, likePost, likeReply } =
+              createTextForNotificationType(item);
+            createNotificationElement(
+              item,
+              likeComment,
+              commentPost,
+              replyPost,
+              likePost,
+              likeReply,
+              getNotificationsSection,
+              true,
+            );
+          });
+        }
       }
-      if (notificationRead.length !== 0) {
-        //We don't need to show the notification count for read notifications
-        notificationRead.forEach((item) => {
-          const getNotificationsSection = document.getElementById(
-            "notificationsDropdown",
-          );
-          const { likeComment, commentPost, replyPost, likePost, likeReply } =
-            createTextForNotificationType(item);
-          createNotificationElement(
-            item,
-            likeComment,
-            commentPost,
-            replyPost,
-            likePost,
-            likeReply,
-            getNotificationsSection,
-            true,
-          );
-        });
-      }
+    } catch (error) {
+      console.error("Error loading notifications:", error);
     }
   });
 </script>
