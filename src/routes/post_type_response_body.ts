@@ -8,7 +8,7 @@ import type { CommentMeta, PostMeta, ReplyMeta } from "../../types/types.js";
 const router = express.Router();
 
 router.post("/add-post", async (req, res, next) => {
-  if (!req.isAuthenticated()) return res.redirect("/login");
+  if (!req.isAuthenticated()) return res.redirect("/auth/login");
 
   const post = req.body.newPost;
 
@@ -34,7 +34,7 @@ router.post("/add-post", async (req, res, next) => {
   }
 });
 router.post("/add-comment", async (req, res, next) => {
-  if (!req.isAuthenticated()) return res.redirect("/login");
+  if (!req.isAuthenticated()) return res.redirect("/auth/login");
 
   const postId = req.body.post_id ? String(req.body.post_id) : null;
   const commentPost = req.body.comment_post
@@ -72,7 +72,7 @@ router.post("/add-comment", async (req, res, next) => {
   }
 });
 router.post("/add-reply", async (req, res, next) => {
-  if (!req.isAuthenticated()) return res.redirect("/login");
+  if (!req.isAuthenticated()) return res.redirect("/auth/login");
 
   const commentID = String(req.body.comment_id ?? req.body.reply_id);
   const replyPost = String(req.body.reply_post ?? req.body.comment_post);
