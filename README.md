@@ -143,6 +143,31 @@ npm run test:e2e
 - In test/CI environments, provider credentials can use placeholder values.
 - If you want full live OAuth sign-in, use real provider client IDs/secrets and matching callback URLs.
 
+## Final Project Notes and Trade-Offs
+
+This project began as a Vanilla JavaScript redesign and was intentionally
+completed in that architecture. The forum now uses URL-driven pagination and
+notification routes so a notification can restore its target page and content
+without relying on stale in-memory pagination state. Back and forward navigation
+through those routes was manually verified before project close-out.
+
+The following improvements are intentionally out of scope for this version:
+
+- The notification bell remains inside the mobile offcanvas navigation rather
+  than receiving a separate mobile-first placement.
+- Forum and notification client scripts contain duplicated and imperative DOM
+  logic that could be consolidated into smaller modules.
+- Pagination and notification routing can be further simplified and optimized;
+  the existing code favors preserving the working Vanilla JavaScript behavior
+  of the project as it closes.
+- A React implementation would provide clearer component boundaries and state
+  management, but a framework rewrite would not be proportional to this
+  project’s remaining scope.
+- Browser back/forward cache behavior was manually tested. Automated coverage
+  for it is deferred because it requires browser-level tests that create forum
+  data.
+- Chose not to enhance pagination navigating given the scope of this project
+
 ## DB Troubleshooting
 
 If `npm run db:init` fails with an error like:
@@ -174,7 +199,3 @@ error: relation "posts" does not exist
 ```
 
 your schema has not been initialized yet. Run `npm run db:init` first, then restart the app.
-
-
-*****NOTE******
-There is alot of duplicate code in the forumScripts file, in particular, that I will address.
