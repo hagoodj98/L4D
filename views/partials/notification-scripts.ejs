@@ -42,7 +42,7 @@
             deselectCurrentButton.blur();
           }
           currentPage = Number(pageNumber);
-          await handlePagination(pageNumber);
+          await handlePagination(pageNumber, false, routeParts);
           const newButtonSelected = document.getElementById(
             `paginationButton${currentPage}`,
           );
@@ -72,6 +72,8 @@
 
           await handlePagination(
             Number(pageNumber) <= 10 ? pageNumber : paginationState.start,
+            false,
+            routeParts,
           );
         }
         paginationState.end = Math.min(paginationState.end, paginationNumber);
