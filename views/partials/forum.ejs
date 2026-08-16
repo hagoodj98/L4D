@@ -4,125 +4,257 @@
       end: 10,
       buttonsHidden: 0,
    };
-    async function handlePaginationIncrements(
-     paginationNumber,
-     direction,
-     routePath = null,
-   ) {
-     if (direction === "decrease") {
-       if (paginationState.start <= 1) return; // Prevent going below the first page
-     } else if (direction === "increase") {
-       if (paginationState.end >= paginationNumber) return; // Prevent going beyond the last page
-     }
-     const paginationControls = document.getElementById("paginationControls");
-     let currentButtons = document.createElement("div");
-     let pastButtons = document.createElement("div");
-     let futureButtons = document.createElement("div");
+    async function handlePaginationIncrements(paginationNumber, direction, isPopState = false, routingBetweenNotifications = false, incomingPage = null) {
 
-     //replace the buttons with the new range of buttons and their new ids so we can keep track of them
-     for (let i = paginationState.start; i <= paginationState.end; i++) {
-       if (i > paginationNumber) break; // Stop if we exceed the total number of pages
+    const currentPageSelected = parseInt(new URLSearchParams(window.location.search).get("page"), 10);
+    const postID = new URLSearchParams(window.location.search).get("postID");
+    let differentRoot = false;
+    if (!currentPageSelected) {
+      differentRoot = true;
+    }
+    if (direction === "decrease") {
+      if (paginationState.start <= 1) return; // Prevent going below the first page
+      const currentMaxPagination = parseInt(document.getElementById("paginationIncrease").value, 10);
+      const currentMinPagination = parseInt(document.getElementById("paginationDecrease").value, 10);
+      if(isPopState && currentPageSelected <= 10){
+        paginationState.start = 1;
+        paginationState.end = 10;
+        paginationState.buttonsHidden = 0;
+      } else if(isPopState && currentPageSelected < currentMinPagination) {
+        paginationState.start = currentPageSelected;
+        paginationState.end = currentPageSelected + 9;
+        paginationState.buttonsHidden = currentPageSelected - 1;
+       // handlePagination(currentPageSelected);
+      } else if(isPopState && currentPageSelected === currentMinPagination) {
+        return; // Do nothing if the current page is equal to the minimum pagination value
+      } else if(isPopState && currentPageSelected >= paginationNumber - 9 && currentPageSelected <= paginationNumber) {
+        paginationState.start = paginationNumber - 9;
+        paginationState.end = paginationNumber;
+        paginationState.buttonsHidden = paginationState.start - 1;
+      }
+      else{
+        if (currentPageSelected === currentMinPagination) {
+          paginationState.buttonsHidden--;
+          paginationState.start--;
+          paginationState.end--;
+          if(!postID){
+            handlePagination(currentPageSelected - 1, false, null, differentRoot);
+          }
+        } else if(currentPageSelected > currentMinPagination && currentPageSelected <= currentMaxPagination) {
 
-       const newButtonHTML = createPageButtons(
-         routePath ? i : direction === "increase" ? i + 1 : i - 1,
-       );
-       currentButtons.innerHTML += newButtonHTML.trim();
-     }
+          // If the current page is within the visible range, we don't need to change the start and end, but we can still update the buttonsHidden count
+            if(currentPageSelected <= 10){
+              if (!routingBetweenNotifications) {
+                // If the current page is less than or equal to 10, reset the pagination to show the first 10 pages
+                paginationState.start = 1;
+                paginationState.end = 10;
+                paginationState.buttonsHidden = 0;
+                if(!postID){
+                  handlePagination(currentPageSelected - 1, false, null, differentRoot);
+                }
+              }
+            } else if (routingBetweenNotifications && currentPageSelected > 10 && incomingPage) {
+              if(incomingPage <= 10){
+                paginationState.start = 1;
+                paginationState.end = 10;
+                paginationState.buttonsHidden = 0;
+              }else if(incomingPage > 10 && incomingPage >= paginationNumber - 9 && incomingPage <= paginationNumber){
+                paginationState.start = paginationNumber - 9;
+                paginationState.end = paginationNumber;
+                paginationState.buttonsHidden = paginationState.start - 1;
+              }
+              else {
+                paginationState.end = incomingPage - 1;
+                paginationState.start = paginationState.end - 9;
+                paginationState.buttonsHidden = paginationState.start - 1;
+              }
 
-     if (direction === "decrease") {
-       routePath ? null : paginationState.buttonsHidden--;
-       routePath ? null : paginationState.start--;
-       routePath ? null : paginationState.end--;
-       handlePagination(paginationState.start);
-       //update the url
-       history.pushState(null, "", `/forum?page=${paginationState.start}`);
-     } else if (direction === "increase") {
-       paginationState.buttonsHidden++;
-       paginationState.start++;
-       paginationState.end++;
-       handlePagination(paginationState.start);
-       history.pushState(null, "", `/forum?page=${paginationState.start}`);
-     }
-     document.getElementById("paginationDecrease").value = paginationState.start;
-     document.getElementById("paginationIncrease").value = paginationState.end;
-     const newListItem = document.createElement("li");
-     const newButton = document.createElement("button");
-     newListItem.className = "page-item";
-     newButton.type = "button";
-     newButton.setAttribute("aria-label", "Previous");
-     newButton.className = "page-link";
-     newButton.value = paginationState.start;
-     //add event listener to the new button to handle the click event
-     newButton.addEventListener("click", function () {
-       handlePaginationIncrements(paginationNumber, "decrease");
-       return false;
-     });
-     newButton.innerHTML = '<span aria-hidden="true">&laquo;</span>';
-     newButton.id = "paginationDecrease";
-     newListItem.appendChild(newButton);
-     const newListItemNext = document.createElement("li");
-     const newButtonNext = document.createElement("button");
-     newListItemNext.className = "page-item";
-     newButtonNext.type = "button";
-     newButtonNext.setAttribute("aria-label", "Next");
-     newButtonNext.className = "page-link";
-     newButtonNext.value = paginationState.end;
-     newButtonNext.innerHTML = '<span aria-hidden="true">&raquo;</span>';
-     newButtonNext.id = "paginationIncrease";
-     newButtonNext.addEventListener("click", function () {
-       handlePaginationIncrements(paginationNumber, "increase");
-       return false;
-     });
-     // Append the new "Next" button to the new list item
-     newListItemNext.appendChild(newButtonNext);
-     // Create past buttons for the pages before the current range
-     for (let i = 1; i <= paginationState.buttonsHidden; i++) {
-       const oldButton = document.getElementById("paginationButton" + i);
-       const hiddenButtonHTML = createPageButtons(i, true);
-       pastButtons.innerHTML += hiddenButtonHTML.trim();
-     }
-     // Create future buttons for the remaining pages after the current range
-     for (
-       let i = Math.min(paginationState.end + 1, paginationNumber);
-       i <=
-       paginationNumber - Math.min(paginationState.end + 1, paginationNumber);
-       i++
-     ) {
-       const future = document.getElementById("paginationButton" + i);
-       const hiddenButtonHTML = createPageButtons(i, true);
-       futureButtons.innerHTML += hiddenButtonHTML.trim();
-     }
+            } else {
+              paginationState.end = currentPageSelected - 1;
+              paginationState.start = paginationState.end - 9;
+              paginationState.buttonsHidden = paginationState.start - 1;
+              if(!postID){
+                // Call handlePagination to update the displayed content for the new page
+                handlePagination(currentPageSelected - 1, false, null, differentRoot);
+              }
+            }
+        }
+      }
+      } else if (direction === "increase") {
+        if (paginationState.end >= paginationNumber) return; // Prevent going beyond the last page
+          const currentMaxPagination = parseInt(document.getElementById("paginationIncrease").value, 10);
+          const currentMinPagination = parseInt(document.getElementById("paginationDecrease").value, 10);
+
+        if (currentPageSelected >= paginationNumber - 9 && currentPageSelected <= paginationNumber) {
+          // If the current page is within the last 10 pages, we need to adjust the start and end to show the last 10 pages
+          paginationState.start = paginationNumber - 9;
+          paginationState.end = paginationNumber;
+          paginationState.buttonsHidden = paginationState.start - 1;
+          if(!postID){
+            handlePagination(currentPageSelected + 1, false, null, differentRoot);
+          }
+        } else if (currentPageSelected > currentMinPagination && currentPageSelected < currentMaxPagination) {
+          // If the current page is within the visible range, we don't need to change the start and end, but we can still update the buttonsHidden count
+          paginationState.start = isPopState ? currentPageSelected  : currentPageSelected + 1;
+          paginationState.end = paginationState.start + 9;
+          paginationState.buttonsHidden = paginationState.start - 1;
+          if(!postID) {
+            handlePagination(paginationState.start, false, null, differentRoot);
+          }
+        } else if (currentPageSelected === currentMaxPagination) {
+          paginationState.start = currentPageSelected + 1;
+          paginationState.end = paginationState.start + 9;
+          paginationState.buttonsHidden = paginationState.start - 1;
+          if(!postID) {
+            handlePagination(currentPageSelected + 1, false, null, differentRoot);
+          }
+        } else {
+            paginationState.start = paginationState.start + 1;
+            paginationState.end = paginationState.start + 9;
+            paginationState.buttonsHidden = paginationState.start - 1;
+            if(!postID) {
+              handlePagination(currentPageSelected + 1, false, null, differentRoot);
+            }
+          }
+      }
+      const paginationControls = document.getElementById("paginationControls");
+      let currentButtons = document.createElement("div");
+      let pastButtons = document.createElement("div");
+      let futureButtons = document.createElement("div");
+      //replace the buttons with the new range of buttons and their new ids so we can keep track of them
+      for (let i = paginationState.start; i <= paginationState.end; i++) {
+        if (i > paginationNumber) break; // Stop if we exceed the total number of pages
+
+        const newButtonHTML = createPageButtons(
+          i
+        );
+        currentButtons.innerHTML += newButtonHTML.trim();
+      }
+
+      document.getElementById("paginationDecrease").value = paginationState.start;
+      document.getElementById("paginationIncrease").value = paginationState.end;
+      const newListItem = document.createElement("li");
+      const newButton = document.createElement("button");
+      newListItem.className = "page-item";
+      newButton.type = "button";
+      newButton.setAttribute("aria-label", "Previous");
+      newButton.className = "page-link";
+      newButton.value = paginationState.start;
+      //add event listener to the new button to handle the click event
+      newButton.addEventListener("click", function () {
+        handlePaginationIncrements(paginationNumber, "decrease");
+        return false;
+      });
+      newButton.innerHTML = '<span aria-hidden="true">&laquo;</span>';
+      newButton.id = "paginationDecrease";
+      newListItem.appendChild(newButton);
+      const newListItemNext = document.createElement("li");
+      const newButtonNext = document.createElement("button");
+      newListItemNext.className = "page-item";
+      newButtonNext.type = "button";
+      newButtonNext.setAttribute("aria-label", "Next");
+      newButtonNext.className = "page-link";
+      newButtonNext.value = paginationState.end;
+      newButtonNext.innerHTML = '<span aria-hidden="true">&raquo;</span>';
+      newButtonNext.id = "paginationIncrease";
+      newButtonNext.addEventListener("click", function () {
+        handlePaginationIncrements(paginationNumber, "increase");
+        return false;
+      });
+      // Append the new "Next" button to the new list item
+      newListItemNext.appendChild(newButtonNext);
+      // Create past buttons for the pages before the current range
+      for (let i = 1; i <= paginationState.buttonsHidden; i++) {
+        const oldButton = document.getElementById("paginationButton" + i);
+        const hiddenButtonHTML = createPageButtons(i, true);
+        pastButtons.innerHTML += hiddenButtonHTML.trim();
+      }
+      // Create future buttons for the remaining pages after the current range
+      for (
+        let i = Math.min(paginationState.end + 1, paginationNumber);
+        i <= paginationNumber - Math.min(paginationState.end + 1, paginationNumber);
+        i++
+      ) {
+        const future = document.getElementById("paginationButton" + i);
+        const hiddenButtonHTML = createPageButtons(i, true);
+        futureButtons.innerHTML += hiddenButtonHTML.trim();
+      }
      // Remove all buttons except the first and last
      // Update the pagination controls with the new buttons with new initialized page numbers
-     paginationControls.replaceChildren(
-       newListItem,
-       ...pastButtons.children,
-       ...currentButtons.children,
-       ...futureButtons.children,
-       newListItemNext,
-     );
+
+      paginationControls.replaceChildren(
+        newListItem,
+        ...pastButtons.children,
+        ...currentButtons.children,
+        ...futureButtons.children,
+        newListItemNext,
+      );
    }
-   async function handlePagination(page) {
-     const offset = (Number(page) - 1) * 4; // Assuming 4 posts per page
-     currentPage = Number(page);
-     try {
-       const response = await fetch(
-         `/forum/pagination?page=${page}&offset=${offset}`,
-       );
-       const data = await response.json();
+  async function handlePagination(page, isPopState = false, routeParts = null, differentRoot = false) {
+    const offset = (Number(page) - 1) * 4; // Assuming 4 posts per page
+    const postID = routeParts ? routeParts[1] : null;
+    const commentID = routeParts ? routeParts[2] : null;
+    const replyID = routeParts ? routeParts[3] : null;
+
+    try {
+      if(!isPopState) {
+        let data;
+        currentPage = Number(page);
+        if(!differentRoot && !postID){
+          const response = await fetch(`/forum/pagination?page=${page}&offset=${offset}`);
+          data = await response.json();
+          // Update the active page button styling
+          const forumContent = createForumContent(data.listAllContent);
+          const postsContainer = document.querySelector("#demo");
+          postsContainer.innerHTML = forumContent;
+        }
+        // const data = await response.json();
        // Update the active page button styling
-       document
-         .querySelectorAll(".unstyledPaginationButtons")
-         .forEach((button) => {
+        document.querySelectorAll(".unstyledPaginationButtons").forEach((button) => {
            button.classList.toggle(
              "selected",
              button.textContent.trim() === String(page),
            );
-         });
-       history.pushState(null, "", `/forum?page=${page}`);
-       const forumContent = createForumContent(data.listAllContent);
-       const postsContainer = document.querySelector("#demo");
-       postsContainer.innerHTML = forumContent;
+        });
+        if(!differentRoot) {
+          history.pushState(null, "", `/forum?page=${page}${postID ? `&postID=${postID}` : ""}${commentID ? `&commentID=${commentID}` : ""}${replyID ? `&replyID=${replyID}` : ""}`);
+          const response = await fetch(`/forum/pagination?page=${page}&offset=${offset}`);
+          const data = await response.json();
+          const forumContent = createForumContent(data.listAllContent);
+          const postsContainer = document.querySelector("#demo");
+          postsContainer.innerHTML = forumContent;
+        } else {
+          history.replaceState(null,"",`/forum?page=${page}&differentRoot=${differentRoot}`)
+          scrollToForumContent()
+          const paginationInfo = document.getElementById("paginationInfo");
+          paginationInfo.textContent = ` Page ${page} of <%= paginationNumber %> `;
+        }
+
+      }
+      if (isPopState && routeParts) {
+        const response = await fetch(`/forum/pagination?page=${page}&offset=${offset}`);
+        const data = await response.json();
+        const forumContent = createForumContent(data.listAllContent);
+        const postsContainer = document.querySelector("#demo");
+        postsContainer.innerHTML = forumContent;
+        setTimeout(async () => {
+         if (postID && commentID && !replyID) {
+           setTimeout(() => {
+             showAllReplies(postID, true, false, false, "comment");
+           }, 500); // Adjust the delay as needed
+         }
+         if (postID && commentID && replyID) {
+           setTimeout(() => {
+             showAllReplies(postID, true, false, false, "comment");
+           }, 500); // Adjust the delay as needed
+           setTimeout(() => {
+             showAllReplies(commentID, false, true, false, "reply");
+           }, 1500); // Adjust the delay as needed
+         }
+        }, 500); // Adjust the delay as needed
+      }
+      const totalPages = <%= paginationNumber %>;
+      return totalPages;
      } catch (err) {
        console.error("Error fetching paginated posts:", err);
      }
@@ -191,7 +323,6 @@
      return content;
    }
    function createCardPostTypeContainer(p, c, r, isNewPosttypeContainer = false, currentUser = null) {
-
      const { day, month, year, time, timeZone } = formatTime(p ? p.created_at : c ? c.created_at : r.created_at);
      const postType = p ?? c ?? r;
      const postTypeName = p?.type ?? c?.type ?? r?.type;
@@ -303,7 +434,6 @@
                ${postType.replies?.map(reply => createCardPostTypeContainer(null, null, reply)).join('')}
              </div>` : ''
            }
-
            <div
              id="${createPostTypeSectionID}"
              style="display: none"
@@ -340,6 +470,7 @@
          <button
            class="page-link unstyledPaginationButtons"
            type="button"
+            id="paginationButton${i}"
            style="display: ${hidden ? 'none' : 'inline-block'};"
            onclick="handlePagination(${i})"
          >
@@ -366,13 +497,10 @@
         paginationState.buttonsHidden = page - 1;
         return false; // Indicate that the page is within range
       }
-
-
     }
-
    let currentPage = 1;
-   function scrollToForumContent(idSection) {
-       const forumAnchor = document.getElementById(`anchor/${idSection}`);
+   function scrollToForumContent(idSection = null) {
+       const forumAnchor = idSection ? document.getElementById(`anchor/${idSection}`) : document.getElementById(`anchor/top-forum`);
        if (!forumAnchor) return;
        forumAnchor.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -660,7 +788,10 @@
      }
 
 
-   document.addEventListener("DOMContentLoaded", async () => {
+  document.addEventListener("DOMContentLoaded", async () => {
+
+    let isPageQueryPresent = window.location.search.includes('page');
+
      const list = <%- JSON.stringify(listAllContent) %>;
      if (!Array.isArray(list) || list.length === 0) {
       window.location.href = "/forum";// Redirect to the forum page if the list is empty
@@ -673,15 +804,17 @@
       const postID = new URLSearchParams(window.location.search).get("postID");
       const commentID = new URLSearchParams(window.location.search).get("commentID");
       const replyID = new URLSearchParams(window.location.search).get("replyID");
+      const differentRoot = new URLSearchParams(window.location.search).get("differentRoot");
       const routeParts = [pageNumber, postID, commentID, replyID];
       const maxPage = <%= paginationNumber %>;
       const outOfRange = initializePaginationState(Number(pageNumber), maxPage);
       if (outOfRange) {
-         handlePaginationIncrements(<%= paginationNumber %>, "decrease", routeParts);
-         handlePagination(pageNumber);
+        handlePaginationIncrements(<%= paginationNumber %>, 'decrease');
+        handlePagination(pageNumber, false, routeParts, isPageQueryPresent ?? differentRoot);
+
       } else {
-          handlePaginationIncrements(<%= paginationNumber %>, "decrease", routeParts);
-          handlePagination(paginationState.start);
+        handlePaginationIncrements(<%= paginationNumber %>, "decrease");
+        handlePagination(postID ? pageNumber : paginationState.start, false, routeParts, (!isPageQueryPresent) ? true : (isPageQueryPresent && !differentRoot) ? true  : differentRoot);
       }
        // Ensure the end does not exceed the total number of pages
        paginationState.end = Math.min(paginationState.end, <%= paginationNumber %>);

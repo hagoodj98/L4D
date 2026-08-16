@@ -436,6 +436,23 @@ textarea::placeholder {
   #specialinfectedtitle h1 {
     font-size: 40px;
   }
+  #paginationDecrease,
+  #paginationIncrease {
+    background-color: transparent;
+    border: none;
+    color: #6e9731;
+    font-size: 1.2rem;
+  }
+  .unstyledPaginationButtons {
+    border: 2px solid #6e9731;
+    color: white;
+    background-color: #6e97317a;
+    padding: 0;
+    border-radius: 10px;
+    width: 40px;
+    padding: 7px 10px;
+    cursor: pointer;
+  }
   #communitytitle h1 {
     font-size: 40px;
   }
@@ -1075,6 +1092,24 @@ textarea::placeholder {
   .halfsized img {
     margin: auto;
   }
+  #paginationDecrease,
+  #paginationIncrease {
+    background-color: transparent;
+    border: none;
+    color: #6e9731;
+    font-size: 1.2rem;
+  }
+  .unstyledPaginationButtons {
+    border: 2px solid #6e9731;
+    color: white;
+    background-color: #6e97317a;
+    padding: 0;
+    border-radius: 10px;
+    width: 40px;
+    padding: 7px 10px;
+    cursor: pointer;
+    margin: 0 5px;
+  }
 }
 
 @media (min-width: 1200px) {
@@ -1230,16 +1265,13 @@ button[type="submit"]:not(.unstyledPaginationButtons):not(.bell-button) {
   color: #6e9731;
   background-color: none;
 }
-.unstyledPaginationButtons {
-  border: none;
-  color: #6e9731;
-  padding: 0;
-  width: 30px;
-  padding: 7px 10px;
-  cursor: pointer;
+
+.unstyledPaginationButtons:hover {
+  background-color: #f23030;
+  color: white;
 }
 .unstyledPaginationButtons.selected {
-  background-color: #6e9731;
+  background-color: #f23030;
   color: white;
 }
 
@@ -1253,6 +1285,10 @@ button[type="submit"]:not(.unstyledPaginationButtons):not(.bell-button):hover {
   background-color: rgba(255, 255, 255, 0.06);
 }
 
+#paginationDecrease:hover,
+#paginationIncrease:hover {
+  color: white;
+}
 .site-dropdown-menu {
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 10px;

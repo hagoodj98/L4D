@@ -6,6 +6,7 @@ import {
 import ErrorHandler from "../../utils/error.js";
 import { sortSchema } from "../../utils/zodSchemas.js";
 import { NotificationSource } from "../../types/types.js";
+import { url } from "zod";
 
 const router = express.Router();
 
@@ -14,6 +15,10 @@ router.get("/", async (req, res, next) => {
   if (!validation.success) {
     return res.status(400).send("Invalid sort direction");
   }
+  if (!req.query.page) {
+    req.query.page = "1";
+  }
+
   const limit = req.query.limit ? parseInt(req.query.limit as string) : 4;
   const offset = req.query.page
     ? (parseInt(req.query.page as string) - 1) * limit

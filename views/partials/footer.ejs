@@ -117,3 +117,62 @@
     $("#nickcontent").slideToggle();
   });
 </script>
+<script>
+  window.addEventListener("popstate", async (event) => {
+    //debugger;
+    const url = new URL(window.location.href);
+    if (url.pathname === "/forum") {
+      let deselectCurrentButton = null;
+      let direction;
+      let pageToDeselect = currentPage; // Store the current page before updating it
+
+      if (
+        (url.searchParams.has("page") &&
+          Number(url.searchParams.get("page")) !== pageToDeselect) ||
+        (url.searchParams.has("page") && !url.searchParams.get("postID"))
+      ) {
+        deselectCurrentButton = document.getElementById(
+          `paginationButton${pageToDeselect}`,
+        );
+        if (deselectCurrentButton) {
+          deselectCurrentButton.classList.remove("selected");
+          // Remove focus from the button to prevent it from being highlighted
+          deselectCurrentButton.blur();
+        }
+        if (Number(url.searchParams.get("page")) > pageToDeselect) {
+          direction = "increase";
+        } else {
+          direction = "decrease";
+        }
+        currentPage = Number(url.searchParams.get("page"));
+        const routeParts = [
+          url.searchParams.get("page"),
+          url.searchParams.get("postID"),
+          url.searchParams.get("commentID"),
+          url.searchParams.get("replyID"),
+        ];
+        const totalPages = await handlePagination(
+          currentPage,
+          true,
+          routeParts,
+        ); // Pass true to indicate it's a popstate event
+        handlePaginationIncrements(totalPages, direction, true); // Pass true to indicate it's a popstate event
+        const newButtonSelected = document.getElementById(
+          `paginationButton${currentPage}`,
+        );
+        if (newButtonSelected) {
+          newButtonSelected.classList.add("selected");
+          const paginationInfo = document.getElementById("paginationInfo");
+          paginationInfo.textContent = ` Page ${currentPage} of  ${totalPages} `;
+        }
+      } else {
+        if (
+          (url.pathname === "/forum" && !url.searchParams.get("page")) ||
+          (url.pathname === "/forum" && url.searchParams.get("postID"))
+        ) {
+          history.go(-1); //  Go back one step in history if no page parameter is present
+        }
+      }
+    }
+  });
+</script>
