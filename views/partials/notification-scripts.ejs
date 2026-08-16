@@ -17,7 +17,7 @@
         if (postID) params.set("postID", postID);
         if (commentID) params.set("commentID", commentID);
         if (replyID) params.set("replyID", replyID);
-        window.location.href = `/forum?${params.toString()}`;
+        window.location.href = `/forum?${params.toString()}&differentRoot=true`;
       } else {
         const inRange = initializePaginationState(
           Number(pageNumber),
@@ -163,7 +163,7 @@
           ? `${notification.onPage}/${notification.postID}/${notification.commentID}`
           : `${notification.onPage}/${notification.postID}/${notification.commentID}/${notification.replyID}`;
     // Set the href attribute of the notification link to the determined route
-    notificationLink.href = `#anchor/${route}`;
+    // notificationLink.href = `#anchor/${route}`;
     // Add an event listener to handle the click event on the notification link
     notificationLink.addEventListener("click", (event) => {
       event.preventDefault();
