@@ -167,6 +167,9 @@ The following improvements are intentionally out of scope for this version:
   for it is deferred because it requires browser-level tests that create forum
   data.
 - Chose not to enhance pagination navigating given the scope of this project
+- Did not implement age of post types in notification.For example, if notification is over than x, then don't fetch.
+- This is cosmetic. User logs in and routes to page 1. If they select a notification which is in the same range of 1-10, the pagination does route to the correct page, but does not initialize it between 1-10. For example, routed to page 1, then selecting a notification that belongs to page 8, you will see the pagination state starting from 7-16ish. Which is why more implemented functions would help avoid this kind of issues. But I'm not going any further here.
+
 
 ## DB Troubleshooting
 
