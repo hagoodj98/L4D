@@ -157,7 +157,7 @@ The following improvements are intentionally out of scope for this version:
   than receiving a separate mobile-first placement.
 - Forum and notification client scripts contain duplicated and imperative DOM
   logic that could be consolidated into smaller modules.
-- Pagination and notification routing can be further simplified and optimized using more functions;
+- Pagination and notification routing can be further simplified and optimized;
   the existing code favors preserving the working Vanilla JavaScript behavior
   of the project as it closes.
 - A React implementation would provide clearer component boundaries and state
@@ -166,8 +166,7 @@ The following improvements are intentionally out of scope for this version:
 - Browser back/forward cache behavior was manually tested. Automated coverage
   for it is deferred because it requires browser-level tests that create forum
   data.
-- Chose not to enhance pagination navigating given the scope of this project to the point where I can consider every possiblility
-- There is a cosmetic issue. Once logged in, you are routed to page 1. If you select a notification routing to page 8, still within 1-10, the changes are made properly. However, if you perform bf, hit back, then forward, you would notice the pagination starts at 8 instead of 1, since 8 is now the selected page. Should not be an issue. Very small detail.
+- Chose not to enhance pagination navigating given the scope of this project
 
 ## DB Troubleshooting
 
