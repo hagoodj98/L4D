@@ -79,6 +79,8 @@
             false,
             routeParts,
           );
+          const paginationInfo = document.getElementById("paginationInfo");
+          paginationInfo.textContent = ` Page ${currentPage} of  ${paginationNumber} `;
         }
         paginationState.end = Math.min(paginationState.end, paginationNumber);
         setTimeout(async () => {
