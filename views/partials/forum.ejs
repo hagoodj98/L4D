@@ -33,19 +33,26 @@
         paginationState.buttonsHidden = paginationState.start - 1;
       }
       else{
-         if(currentPageSelected >= currentMinPagination && currentPageSelected <= currentMaxPagination) {
+        if (currentPageSelected === currentMinPagination) {
+          paginationState.buttonsHidden--;
+          paginationState.start--;
+          paginationState.end--;
+          if(!postID){
+            handlePagination(currentPageSelected - 1, false, null, differentRoot);
+          }
+        } else if(currentPageSelected > currentMinPagination && currentPageSelected <= currentMaxPagination) {
 
           // If the current page is within the visible range, we don't need to change the start and end, but we can still update the buttonsHidden count
-          if(currentPageSelected <= 10){
-            if (!routingBetweenNotifications || currentPageSelected <= 10) {
-              // If the current page is less than or equal to 10, reset the pagination to show the first 10 pages
-              paginationState.start = 1;
-              paginationState.end = 10;
-              paginationState.buttonsHidden = 0;
-              if(!postID){
-                handlePagination(currentPageSelected - 1, false, null, differentRoot);
+            if(currentPageSelected <= 10){
+              if (!routingBetweenNotifications) {
+                // If the current page is less than or equal to 10, reset the pagination to show the first 10 pages
+                paginationState.start = 1;
+                paginationState.end = 10;
+                paginationState.buttonsHidden = 0;
+                if(!postID){
+                  handlePagination(currentPageSelected - 1, false, null, differentRoot);
+                }
               }
-            }
             } else if (routingBetweenNotifications && currentPageSelected > 10 && incomingPage) {
               if(incomingPage <= 10){
                 paginationState.start = 1;
@@ -61,13 +68,7 @@
                 paginationState.start = paginationState.end - 9;
                 paginationState.buttonsHidden = paginationState.start - 1;
               }
-            } else if (currentPageSelected === currentMinPagination) {
-              paginationState.buttonsHidden--;
-              paginationState.start--;
-              paginationState.end--;
-            if(!postID){
-              handlePagination(currentPageSelected - 1, false, null, differentRoot);
-            }
+
             } else {
               paginationState.end = currentPageSelected - 1;
               paginationState.start = paginationState.end - 9;
